@@ -3080,7 +3080,7 @@ describe('MongoDBAdapter Functions', () => {
       }
     });
 
-    it.only('ChangeUserPassword changes the password of the user', async () => {
+    it('ChangeUserPassword changes the password of the user', async () => {
       const user = {
         username: 'Test User',
         password: 'Test',
@@ -3097,7 +3097,7 @@ describe('MongoDBAdapter Functions', () => {
       expect(bcrypt.compareSync('New Test', dbUser.password)).toBe(true);
     });
 
-    it.only('ChangeUserPassword throws error if the old password does not match with the existing one', async (done) => {
+    it('ChangeUserPassword throws error if the old password does not match with the existing one', async (done) => {
       const user = {
         username: 'Test User',
         password: 'Test',
@@ -3121,7 +3121,7 @@ describe('MongoDBAdapter Functions', () => {
       }
     });
 
-    it.only('ChangeUserPassword throws error if the user does not exists', async (done) => {
+    it('ChangeUserPassword throws error if the user does not exists', async (done) => {
       try {
         await database.changeUserPassword({
           username: 'admin',
@@ -3138,7 +3138,7 @@ describe('MongoDBAdapter Functions', () => {
       }
     });
 
-    it.only('ChangeUserPassword throws error if the username is not defined', async (done) => {
+    it('ChangeUserPassword throws error if the username is not defined', async (done) => {
       try {
         await database.changeUserPassword({
         });
@@ -3152,7 +3152,7 @@ describe('MongoDBAdapter Functions', () => {
       }
     });
 
-    it.only('ChangeUserPassword throws error if the username is not type of string', async (done) => {
+    it('ChangeUserPassword throws error if the username is not type of string', async (done) => {
       try {
         await database.changeUserPassword({
           username: false,
@@ -3167,7 +3167,7 @@ describe('MongoDBAdapter Functions', () => {
       }
     });
 
-    it.only('ChangeUserPassword throws error if the oldPassword is not defined', async (done) => {
+    it('ChangeUserPassword throws error if the oldPassword is not defined', async (done) => {
       try {
         await database.changeUserPassword({
           username: 'Test',
@@ -3182,7 +3182,7 @@ describe('MongoDBAdapter Functions', () => {
       }
     });
 
-    it.only('ChangeUserPassword throws error if the oldPassword is not type of string', async (done) => {
+    it('ChangeUserPassword throws error if the oldPassword is not type of string', async (done) => {
       try {
         await database.changeUserPassword({
           username: 'Test',
@@ -3198,7 +3198,7 @@ describe('MongoDBAdapter Functions', () => {
       }
     });
 
-    it.only('ChangeUserPassword throws error if the newPassword is not defined', async (done) => {
+    it('ChangeUserPassword throws error if the newPassword is not defined', async (done) => {
       try {
         await database.changeUserPassword({
           username: 'Test',
@@ -3214,7 +3214,7 @@ describe('MongoDBAdapter Functions', () => {
       }
     });
 
-    it.only('ChangeUserPassword throws error if the newPassword is not type of string', async (done) => {
+    it('ChangeUserPassword throws error if the newPassword is not type of string', async (done) => {
       try {
         await database.changeUserPassword({
           username: 'Test',

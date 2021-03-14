@@ -1,5 +1,5 @@
 <template>
-  <div class="p-5 overflow-auto">
+  <div class="p-2 overflow-auto">
     <div class="flex items-center space-x-5">
       <h2 class="text-lg font-bold">Devices</h2>
       <button
@@ -33,7 +33,7 @@
         :device="dev"
         :ref="'device' + dev.serialnumber"
         :class="[(device === dev.serialnumber) ? 'transform scale-105': '']"
-        class="m-5 flex-shrink-0 w-96 border-primary border shadow-lg duration-200">
+        class="m-5 flex-shrink-0 w-80 md:w-96 border-primary border shadow-lg duration-200">
       </UVCDevice>
     </router-link>
     <UVCForm
@@ -56,14 +56,14 @@
         type="text"
         placeholder="123456789"
         class="rounded p-2 border-2 border-gray-500 mb-4">
-      <div class="">
+      <div class="flex flex-col md:inline-block md:float-left">
         <button class="float-left p-2 font-semibold hover:transform hover:scale-105 transition-all
           text-red-500"
           v-show="isFormEdit"
-          @click="deleteDevice(formDevice.serialnumber)">
+          @click="deleteDevice(formDevice)">
           Delete
         </button>
-        <div class="float-right space-x-2">
+        <div class="flex flex-col md:inline-block md:float-right space-x-2">
           <button class="font-semibold p-2 hover:transform hover:scale-105 transition-all
             bg-primary text-white" type="submit"
             @click="(isFormEdit) ? updateDevice(formDevice) : addDevice(formDevice)">
@@ -83,7 +83,7 @@
       :errorMessage="errorMessage"
       @close="closeGroupForm">
       <h2><span class="font-bold">Device:</span> {{formDevice.name}}</h2>
-      <div class="w-full flex items-center space-x-2">
+      <div class="w-full flex flex-col md:flex-row md:items-center md:space-x-2">
         <label for="device" class="font-bold">Choose the group:</label>
         <select name="device"
           v-model="formSelectedGroup"
@@ -96,17 +96,15 @@
           </option>
         </select>
       </div>
-      <div class="items-center">
-        <div class="float-left">
-          <button
-            v-if="formDevice.group.name"
-            @click="removeGroupAssignment"
-            class="font-semibold p-2 text-red-500
-            hover:transform hover:scale-105 transition-all">
-            Remove assignment
-          </button>
-        </div>
-        <div class="float-right space-x-2">
+      <div class="flex flex-col md:inline-block md:float-left">
+        <button
+          v-if="formDevice.group.name"
+          @click="removeGroupAssignment"
+          class="float-left font-semibold p-2 text-red-500
+          hover:transform hover:scale-105 transition-all">
+          Remove assignment
+        </button>
+        <div class="flex flex-col md:inline-block md:float-right space-x-2">
           <button
             @click="assignDeviceToGroup"
             class="font-semibold p-2 hover:transform hover:scale-105 transition-all
@@ -121,18 +119,23 @@
         </div>
       </div>
     </UVCForm>
+    <ConfirmPrompt
+      ref="confirmPrompt">
+    </ConfirmPrompt>
 
   </div>
 </template>
 <script>
 import UVCDevice from './UVCDevice.vue';
 import UVCForm from '../UVCForm.vue';
+import ConfirmPrompt from '../ConfirmPrompt.vue';
 
 export default {
   name: 'UVCDeviceList',
   components: {
     UVCDevice,
     UVCForm,
+    ConfirmPrompt,
   },
   props: ['device'],
   watch: {
@@ -285,10 +288,12 @@ export default {
     /**
      * Called when the Delete button in the modal is pressed
      */
-    deleteDevice(serialnumber) {
+    async deleteDevice(device) {
       this.showEditForm = false;
-      if (this.$root.$data.socket === null) return;
-      this.$root.$data.socket.emit('device_delete', { serialnumber: `${serialnumber}` });
+      await this.$refs.confirmPrompt.open(`Do you really want to delete device "${device.serialnumber}"?`).then(() => {
+        if (this.$root.$data.socket === null) return;
+        this.$root.$data.socket.emit('device_delete', { serialnumber: `${device.serialnumber}` });
+      }).catch(() => {});
     },
     /**
      * Called when any state in the devices should be changed

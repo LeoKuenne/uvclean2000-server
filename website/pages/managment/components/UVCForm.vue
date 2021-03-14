@@ -5,7 +5,8 @@
     bg-black bg-opacity-50 flex justify-center items-center"
     >
     <form @submit="submit($event)"
-      class="flex flex-col w-9/12 text-color space-y-2 whitespace-nowrap bg-white p-5 rounded"
+      class="flex flex-col w-11/12 max-w-3xl text-color space-y-2 whitespace-nowrap bg-white
+        p-5 rounded"
       @click.stop>
       <h1 class="text-xl font-bold">{{ title }}</h1>
       <h1 class="font-bold pb-5 text-red-500 whitespace-pre-line"

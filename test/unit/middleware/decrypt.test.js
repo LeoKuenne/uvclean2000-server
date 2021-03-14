@@ -26,7 +26,8 @@ describe('Decrypt message', () => {
     ['gAAAAABgSgtMN4aMA-GtRhtj46zCxw9wb5sVNRE6R_Y91fhiihLkzdq2ABsKO7xI0imuDeIt4u-HcEqGjzNrX4weRPLp1GwH3w==', 'true', 'NQCNtEul3sEuOwMSRExMeh_RQ0iYD0USEemo00G4pCg='],
     ['gAAAAABgSgti3x8MGXIL9HtTbpbLlXS6JfDBN7I7qJUlJH98spRVfXBsZxLdwGStehjSd_BvNrwlOMf6UTo1XPtv5oaeDmaY7g==', 'false', 'NQCNtEul3sEuOwMSRExMeh_RQ0iYD0USEemo00G4pCg='],
   ])('Decryptes %s to %s accordingly', (message, payload, secret, done) => {
-    fs.writeFileSync('C:/workspace_nodejs/uvclean2000-server/server/ssl/fernetSecret.txt', secret, { encoding: 'base64' });
+    global.config = { mqtt: { secret: 'C:/workspace_nodejs/uvclean2000-server/server/ssl/fernetSecret' } };
+    fs.writeFileSync('C:/workspace_nodejs/uvclean2000-server/server/ssl/fernetSecret', secret, { encoding: 'base64' });
     // eslint-disable-next-line prefer-const
     let msg = { message };
 

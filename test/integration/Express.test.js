@@ -1,3 +1,7 @@
+global.config = {
+  http: { secure: false },
+};
+
 /* eslint-disable no-await-in-loop */
 /* eslint-disable no-underscore-dangle */
 const supertest = require('supertest');

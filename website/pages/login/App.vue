@@ -3,8 +3,8 @@
     class="shadow-md text-color background-color h-screen w-screen overflow-hidden text-primary"
       style="">
     <!-- eslint-disable-next-line max-len -->
-    <header style="background-image: linear-gradient(125deg, #00666F 0%, #00666F 40%, #fff calc(40% + 1px), #fff 100%); height: 10%;"
-      class="p-5 w-screen flex-shrink flex flex-row items-center justify-between shadow-md">
+    <header style="background-image: linear-gradient(125deg, #00666F 0%, #00666F 40%, #fff calc(40% + 1px), #fff 100%); height: 80px;"
+      class="p-5 flex-shrink flex flex-row items-center justify-between shadow-md">
       <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 252.7 118.91" class="text-white h-full">
         <!-- eslint-disable max-len -->
         <g id="Ebene_2" data-name="Ebene 2">
@@ -27,8 +27,8 @@
       </svg>
     </header>
     <div class="h-4/5 flex flex-col justify-center items-center">
-      <h1 class="mb-10 font-bold text-3xl">Welcome!</h1>
-      <login class="">
+      <h1 class="font-bold text-3xl" style="margin-bottom: 2vh;">Welcome!</h1>
+      <login class="w-full md:w-2/3 lg:w-1/3 p-5">
       </login>
     </div>
   </div>

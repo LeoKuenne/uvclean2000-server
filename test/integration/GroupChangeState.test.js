@@ -5,7 +5,10 @@ const MongoDBAdapter = require('../../server/databaseAdapters/mongoDB/MongoDBAda
 let database;
 
 global.config = {
-  useEncryption: false,
+  mqtt: {
+    useEncryption: false,
+    secret: 'C:/workspace_nodejs/uvclean2000-server/server/ssl/fernetSecret',
+  },
 };
 
 beforeAll(async () => {

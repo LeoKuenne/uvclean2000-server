@@ -53,15 +53,15 @@
         type="text"
         placeholder="123456789"
         class="rounded p-2 border-2 border-gray-500 mb-4">
-      <div class="">
+      <div class="flex flex-col md:inline-block md:float-left">
         <button
           @click="deleteGroup(formGroup)"
-          class="float-left p-2 text-red-500 font-semibold
-            hover:transform hover:scale-105 transition-all"
+          class="float-left p-2 font-semibold hover:transform hover:scale-105 transition-all
+          text-red-500"
           v-show="isFormEdit">
           Delete
         </button>
-        <div class="float-right space-x-2">
+        <div class="flex flex-col md:inline-block md:float-right space-x-2">
           <button
             @click="(isFormEdit) ? updateGroup(formGroup) : addGroup(formGroup)"
             class="font-semibold p-2 hover:transform hover:scale-105 transition-all
@@ -102,34 +102,36 @@
           </label>
         </div>
       </div>
-      <div class="">
-        <div class="float-right space-x-2">
-          <button
-            class="font-semibold p-2 hover:transform hover:scale-105 transition-all
-            bg-primary text-white"
-            @click="setDevices">
-            Set
-          </button>
-          <button
-            @click="closeSetDeviceForm"
-            class="font-semibold p-2 hover:transform hover:scale-105 transition-all">
-            Close
-          </button>
-        </div>
+      <div class="flex flex-col md:flex-row md:inline-flex md:justify-end space-x-2">
+        <button
+          class="font-semibold p-2 hover:transform hover:scale-105 transition-all
+          bg-primary text-white"
+          @click="setDevices">
+          Set
+        </button>
+        <button
+          @click="closeSetDeviceForm"
+          class="font-semibold p-2 hover:transform hover:scale-105 transition-all">
+          Close
+        </button>
       </div>
-
     </UVCForm>
+    <ConfirmPrompt
+      ref="confirmPrompt">
+    </ConfirmPrompt>
   </div>
 </template>
 <script>
 import UVCGroup from './UVCGroup.vue';
 import UVCForm from '../UVCForm.vue';
+import ConfirmPrompt from '../ConfirmPrompt.vue';
 
 export default {
   name: 'UVCGroupList',
   components: {
     UVCGroup,
     UVCForm,
+    ConfirmPrompt,
   },
   props: ['group'],
   computed: {
@@ -259,10 +261,12 @@ export default {
         newValue: group.name,
       });
     },
-    deleteGroup(group) {
+    async deleteGroup(group) {
       this.showEditForm = false;
-      if (this.$root.$data.socket === null) return;
-      this.$root.$data.socket.emit('group_delete', { id: group.id });
+      await this.$refs.confirmPrompt.open(`Do you really want to delete group "${group.name}"?`).then(() => {
+        if (this.$root.$data.socket === null) return;
+        this.$root.$data.socket.emit('group_delete', { id: group.id });
+      }).catch(() => {});
     },
     /**
      * Called when any state in the devices should be changed

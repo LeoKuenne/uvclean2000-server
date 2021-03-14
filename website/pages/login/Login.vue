@@ -1,23 +1,22 @@
 <template>
   <div>
-    <form class="flex flex-col space-y-2">
-      <h1 class="font-bold text-lg text-center text-red-500" v-if="message">{{ message }}</h1>
+    <transition-group name="slide" mode="out-in">
+    <form class="flex flex-col space-y-2" key="form">
       <input
         class="p-2 border border-gray-600 rounded"
         placeholder="Username"
         id="username"
         type="text"
         v-model="username"
-        required
         autofocus>
       <input
         class="p-2 border border-gray-600 rounded"
         placeholder="Password"
         id="password"
         type="password"
-        v-model="password"
-        required>
-      <button class="p-2 bg-primary text-white font-bold transform duration-75 hover:scale-105"
+        v-model="password">
+      <button
+        class="p-2 bg-primary text-white font-bold transform duration-75 hover:scale-105"
         type="submit"
         @click="handleSubmit">
         Login
@@ -28,6 +27,11 @@
         Login as guest
       </button>
     </form>
+    <h1 class="p-2 font-bold text-lg text-center text-red-500" key="message"
+      :class="[message === '' ? 'hidden' : 'visible']">
+      {{ message }}
+    </h1>
+  </transition-group>
   </div>
 </template>
 <script>
@@ -98,3 +102,8 @@ export default {
   },
 };
 </script>
+<style>
+.slide-move {
+  /* transition: transform 1s; */
+}
+</style>
