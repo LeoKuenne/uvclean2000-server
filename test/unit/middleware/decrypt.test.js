@@ -1,4 +1,5 @@
 const fs = require('fs');
+const fernet = require('fernet');
 const decrypt = require('../../../server/controlModules/MQTTEvents/middleware/decrypt');
 
 describe('Decrypt message', () => {
@@ -25,15 +26,92 @@ describe('Decrypt message', () => {
     ['gAAAAABgSgtMHTXov1KqWIlvzkIb166xdrOoL8o7_BRF5Z9CUHz6iaNe9RgfOs3zlsJZ4iQT3eXp5OxR0jMDzgljb7GsZtSLiw==', 'true', 'NQCNtEul3sEuOwMSRExMeh_RQ0iYD0USEemo00G4pCg='],
     ['gAAAAABgSgtMN4aMA-GtRhtj46zCxw9wb5sVNRE6R_Y91fhiihLkzdq2ABsKO7xI0imuDeIt4u-HcEqGjzNrX4weRPLp1GwH3w==', 'true', 'NQCNtEul3sEuOwMSRExMeh_RQ0iYD0USEemo00G4pCg='],
     ['gAAAAABgSgti3x8MGXIL9HtTbpbLlXS6JfDBN7I7qJUlJH98spRVfXBsZxLdwGStehjSd_BvNrwlOMf6UTo1XPtv5oaeDmaY7g==', 'false', 'NQCNtEul3sEuOwMSRExMeh_RQ0iYD0USEemo00G4pCg='],
-  ])('Decryptes %s to %s accordingly', (message, payload, secret, done) => {
-    global.config = { mqtt: { secret: 'C:/workspace_nodejs/uvclean2000-server/server/ssl/fernetSecret' } };
+  ])('Decryptes %s to %s without ttl accordingly', async (message, payload, secret, done) => {
+    global.config = { mqtt: { secret: 'C:/workspace_nodejs/uvclean2000-server/server/ssl/fernetSecret', useTTL: false } };
     fs.writeFileSync('C:/workspace_nodejs/uvclean2000-server/server/ssl/fernetSecret', secret, { encoding: 'base64' });
     // eslint-disable-next-line prefer-const
     let msg = { message };
 
-    decrypt.decrypt(null, null, null, null, msg, () => {});
+    await decrypt.decrypt(null, null, null, null, msg, () => {});
 
     expect(msg.message).toMatch(payload);
     done();
+  });
+
+  it.each([
+    ['true', 'NQCNtEul3sEuOwMSRExMeh_RQ0iYD0USEemo00G4pCg='],
+    ['false', 'NQCNtEul3sEuOwMSRExMeh_RQ0iYD0USEemo00G4pCg='],
+    ['33', 'NQCNtEul3sEuOwMSRExMeh_RQ0iYD0USEemo00G4pCg='],
+    ['false', 'NQCNtEul3sEuOwMSRExMeh_RQ0iYD0USEemo00G4pCg='],
+    ['207.54529853716465', 'NQCNtEul3sEuOwMSRExMeh_RQ0iYD0USEemo00G4pCg='],
+    ['2', 'NQCNtEul3sEuOwMSRExMeh_RQ0iYD0USEemo00G4pCg='],
+    ['1', 'NQCNtEul3sEuOwMSRExMeh_RQ0iYD0USEemo00G4pCg='],
+    ['true', 'NQCNtEul3sEuOwMSRExMeh_RQ0iYD0USEemo00G4pCg='],
+    ['true', 'NQCNtEul3sEuOwMSRExMeh_RQ0iYD0USEemo00G4pCg='],
+    ['true', 'NQCNtEul3sEuOwMSRExMeh_RQ0iYD0USEemo00G4pCg='],
+    ['true', 'NQCNtEul3sEuOwMSRExMeh_RQ0iYD0USEemo00G4pCg='],
+    ['true', 'NQCNtEul3sEuOwMSRExMeh_RQ0iYD0USEemo00G4pCg='],
+    ['true', 'NQCNtEul3sEuOwMSRExMeh_RQ0iYD0USEemo00G4pCg='],
+    ['true', 'NQCNtEul3sEuOwMSRExMeh_RQ0iYD0USEemo00G4pCg='],
+    ['true', 'NQCNtEul3sEuOwMSRExMeh_RQ0iYD0USEemo00G4pCg='],
+    ['true', 'NQCNtEul3sEuOwMSRExMeh_RQ0iYD0USEemo00G4pCg='],
+    ['true', 'NQCNtEul3sEuOwMSRExMeh_RQ0iYD0USEemo00G4pCg='],
+    ['true', 'NQCNtEul3sEuOwMSRExMeh_RQ0iYD0USEemo00G4pCg='],
+    ['true', 'NQCNtEul3sEuOwMSRExMeh_RQ0iYD0USEemo00G4pCg='],
+    ['true', 'NQCNtEul3sEuOwMSRExMeh_RQ0iYD0USEemo00G4pCg='],
+    ['true', 'NQCNtEul3sEuOwMSRExMeh_RQ0iYD0USEemo00G4pCg='],
+    ['false', 'NQCNtEul3sEuOwMSRExMeh_RQ0iYD0USEemo00G4pCg='],
+  ])('Decryptes %s with ttl accordingly', async (message, secret, done) => {
+    global.config = { mqtt: { secret: 'C:/workspace_nodejs/uvclean2000-server/server/ssl/fernetSecret', useTTL: true } };
+    fs.writeFileSync('C:/workspace_nodejs/uvclean2000-server/server/ssl/fernetSecret', secret, { encoding: 'base64' });
+    // eslint-disable-next-line prefer-const
+
+    const fernetSecret = fernet.setSecret(secret);
+    const token = new fernet.Token({
+      fernetSecret,
+    });
+
+    const msg = { message: await token.encode(message) };
+
+    await decrypt.decrypt(null, null, null, null, msg, () => {});
+
+    expect(msg.message).toMatch(message);
+    done();
+  });
+
+  it.each([
+    ['true', 'NQCNtEul3sEuOwMSRExMeh_RQ0iYD0USEemo00G4pCg='],
+    ['false', 'NQCNtEul3sEuOwMSRExMeh_RQ0iYD0USEemo00G4pCg='],
+    ['33', 'NQCNtEul3sEuOwMSRExMeh_RQ0iYD0USEemo00G4pCg='],
+    ['false', 'NQCNtEul3sEuOwMSRExMeh_RQ0iYD0USEemo00G4pCg='],
+    ['207.54529853716465', 'NQCNtEul3sEuOwMSRExMeh_RQ0iYD0USEemo00G4pCg='],
+    ['2', 'NQCNtEul3sEuOwMSRExMeh_RQ0iYD0USEemo00G4pCg='],
+    ['1', 'NQCNtEul3sEuOwMSRExMeh_RQ0iYD0USEemo00G4pCg='],
+    ['true', 'NQCNtEul3sEuOwMSRExMeh_RQ0iYD0USEemo00G4pCg='],
+  ])('Decryptes %s with ttl and fails if ttl is expired by 100ms', async (message, secret, done) => {
+    global.config = { mqtt: { secret: 'C:/workspace_nodejs/uvclean2000-server/server/ssl/fernetSecret', useTTL: true } };
+    fs.writeFileSync('C:/workspace_nodejs/uvclean2000-server/server/ssl/fernetSecret', secret, { encoding: 'base64' });
+    // eslint-disable-next-line prefer-const
+
+    const fernetSecret = fernet.setSecret(secret);
+    const token = new fernet.Token({
+      fernetSecret,
+    });
+
+    const msg = { message: await token.encode(message) };
+
+    setTimeout(async () => {
+      try {
+        await decrypt.decrypt(null, null, null, null, msg, () => {});
+        done(new Error('Decrypt did not throw!'));
+      } catch (error) {
+        try {
+          expect(error.message).toMatch('Invalid Token: TTL');
+          done();
+        } catch (e) {
+          done(e);
+        }
+      }
+    }, 2000);
   });
 });

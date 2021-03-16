@@ -1,84 +1,79 @@
 const winston = require('winston');
-const { format } = require('winston');
 
-const levels = {
-  error: 0,
-  warn: 1,
-  info: 2,
-  http: 3,
-  verbose: 4,
-  debug: 5,
-  silly: 6,
-};
+const {
+  combine, colorize, timestamp, errors, splat, metadata, printf, json,
+} = winston.format;
 
-const myFormat = format.printf(({
-  level, message, metadata, timestamp,
-}) => `${timestamp} [${metadata.service}] ${level}: ${message}`);
+const errorFormat = printf((info) => {
+  const log = `${info.timestamp} [${info.metadata.service}] ${info.level}:`;
+  return (config.logging.consoleErrorStack && info.metadata.stack)
+    ? `${log} ${info.message}\n${info.metadata.stack}` : `${log} ${info.message}`;
+});
+
+const normalFormat = printf((info) => `${info.timestamp} [${info.metadata.service}] ${info.level}: ${info.message}`);
 
 const logger = winston.createLogger({
-  format: format.combine(
-    format.timestamp({
-      format: 'YYYY-MM-DD HH:mm:ss',
-    }),
-    format.errors({ stack: true }),
-    format.splat(),
-    format.metadata(),
-    format.json(),
-  ),
-  transports: [
-    // new winston.transports.File({ filename: `logs/error/${d}.log`, level: 'error' }),
-    // new winston.transports.File({ filename: `logs/combined/${d}.log`, level: 'debug' }),
-  ],
-  rejectionHandlers: [
-    new winston.transports.File({ filename: 'logs/rejections.log' }),
-    new winston.transports.Console({
-      format: format.combine(
-        format.colorize(),
-        format.timestamp({
-          format: 'YYYY-MM-DD HH:mm:ss',
-        }),
-        format.errors({ stack: true }),
-        format.splat(),
-        myFormat,
-      ),
-    }),
-  ],
-  exceptionHandlers: [
-    new winston.transports.File({ filename: 'logs/exceptions.log' }),
-    new winston.transports.Console({
-      format: format.combine(
-        format.colorize(),
-        format.timestamp({
-          format: 'YYYY-MM-DD HH:mm:ss',
-        }),
-        format.errors({ stack: true }),
-        format.splat(),
-        myFormat,
-      ),
-    }),
-  ],
+  transports: [new winston.transports.Console({
+    level: 'info',
+    format: combine(
+      colorize(),
+      timestamp({
+        format: 'YYYY-MM-DD HH:mm:ss',
+      }),
+      errors({ stack: false }),
+      splat(),
+      metadata(),
+      normalFormat,
+    ),
+  })],
 });
 
 function setTransports() {
+  logger.clear();
+
   const d = Date.now();
-  console.log(d);
-  if (config.logging.console) {
-    logger.add(new winston.transports.Console({
-      level: 'debug',
-      format: format.combine(
-        format.colorize(),
-        format.timestamp({
+  if (config.logging.file) {
+    logger.add(new winston.transports.File({
+      format: combine(
+        timestamp({
           format: 'YYYY-MM-DD HH:mm:ss',
         }),
-        format.errors({ stack: true }),
-        format.splat(),
-        myFormat,
+        errors({ stack: true }),
+        splat(),
+        metadata(),
+        json(),
       ),
+      filename: `logs/error/${d}.log`,
+      level: 'error',
+    }));
+    logger.add(new winston.transports.File({
+      format: combine(
+        timestamp({
+          format: 'YYYY-MM-DD HH:mm:ss',
+        }),
+        errors({ stack: true }),
+        splat(),
+        metadata(),
+        json(),
+      ),
+      filename: `logs/combined/${d}.log`,
+      level: 'debug',
     }));
   }
-  if (config.logging.file) {
-    logger.add(new winston.transports.File({ filename: `logs/error/${d}.log`, level: 'error' }));
-    logger.add(new winston.transports.File({ filename: `logs/combined/${d}.log`, level: 'debug' }));
+  if (config.logging.console) {
+    logger.add(new winston.transports.Console({
+      level: 'info',
+      format: combine(
+        metadata(),
+        colorize(),
+        timestamp({
+          format: 'YYYY-MM-DD HH:mm:ss',
+        }),
+        errors({ stack: true }),
+        splat(),
+        errorFormat,
+      ),
+    }));
   }
 }
 

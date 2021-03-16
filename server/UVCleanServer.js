@@ -62,7 +62,7 @@ class UVCleanServer extends EventEmitter {
       });
 
       this.on('error', (e) => {
-        logger.error('%o', e);
+        logger.error(e.error);
         this.io.emit('error', { message: `${e.service}: ${e.error.message}` });
       });
 

@@ -10,7 +10,7 @@ async function decrypt(server, db, io, mqtt, msg, next) {
   const token = new fernet.Token({
     secret,
     token: msg.message,
-    ttl: 0,
+    ttl: (config.mqtt.useTTL) ? 1 : 0,
   });
   const message = token.decode();
 

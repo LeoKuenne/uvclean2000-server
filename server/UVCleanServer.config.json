@@ -4,7 +4,9 @@
     "desc": "Production, frontend build completed and placed in dashboard/static, Backend is running on server. Cors is disabled",
     "logging": {
       "console": true,
-      "file": true
+      "file": true,
+      "consoleErrorStack": false,
+      "consoleLogLevel": "info"
     },
     "user": [
       {
@@ -25,6 +27,7 @@
     "mqtt": {
       "secret": "/home/pi/UVClean2000-Server/server/ssl/fernetSecret",
       "useEncryption": true,
+      "useTTL": true,
       "broker": "192.168.4.10",
       "port": 1883
     },
@@ -40,7 +43,9 @@
     "desc": "Development on 127.0.0.1. Database and MQTT Broker is running on 127.0.0.1",
     "logging": {
       "console": true,
-      "file": true
+      "file": true,
+      "consoleErrorStack": false,
+      "consoleLogLevel": "debug"
     },
     "user": [
       {
@@ -61,6 +66,7 @@
     "mqtt": {
       "secret": "C:/workspace_nodejs/uvclean2000-server/server/ssl/fernetSecret",
       "useEncryption": false,
+      "useTTL": true,
       "broker": "127.0.0.1",
       "port": 1883
     },
@@ -76,7 +82,9 @@
     "desc": "Testing on server. Frontend build is running on 127.0.0.1, Backend is running on server",
     "logging": {
       "console": true,
-      "file": true
+      "file": true,
+      "consoleErrorStack": false,
+      "consoleLogLevel": "info"
     },
     "user": [
       {
@@ -97,6 +105,7 @@
     "mqtt": {
       "secret": "C:/workspace_nodejs/uvclean2000-server/server/ssl/fernetSecret",
       "useEncryption": true,
+      "useTTL": true,
       "broker": "192.168.4.10",
       "port": 1883
     },
