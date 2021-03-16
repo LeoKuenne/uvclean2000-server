@@ -2,7 +2,7 @@
   <div class="flex flex-col md:flex-row text-color">
     <Sidebar
       class="flex mx-2 mt-2 p-5 border border-gray-500 rounded justify-around
-        md:space-y-2 md:flex-col md:w-2/6 md:justify-start md:max-h-full md:m-5"
+        md:space-y-2 md:flex-col md:w-min md:min-w-min md:justify-start md:max-h-full md:m-5"
       @showDevices="showDevices"
       @showGroups="showGroups">
     </Sidebar>

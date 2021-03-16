@@ -1,5 +1,5 @@
 {
-  "env": "development",
+  "env": "production",
   "production": {
     "desc": "Production, frontend build completed and placed in dashboard/static, Backend is running on server. Cors is disabled",
     "logging": {
