@@ -189,10 +189,10 @@
             </div>
             <transition name="slide">
               <div v-if="showLampValues" class="col-span-2  grid grid-cols-4">
-                <div class="w-16"
+                <div class=""
                   v-for="(lampValue, lamp) in device.currentLampValue"
                   :key="lamp">
-                  {{lampValue.lamp}}: {{lampValue.value}},
+                  {{lampValue.lamp}}: {{lampValue.value}}
                 </div>
               </div>
             </transition>
