@@ -98,13 +98,13 @@
     "http": {
       "cors": "",
       "port": 80,
-      "secure": true,
+      "secure": false,
       "key": "C:/workspace_nodejs/uvclean2000-server/server/ssl/localhost_key.pem",
       "cert": "C:/workspace_nodejs/uvclean2000-server/server/ssl/localhost_cert.pem"
     },
     "mqtt": {
       "secret": "C:/workspace_nodejs/uvclean2000-server/server/ssl/fernetSecret",
-      "useEncryption": true,
+      "useEncryption": false,
       "useTTL": true,
       "broker": "192.168.4.10",
       "port": 1883
