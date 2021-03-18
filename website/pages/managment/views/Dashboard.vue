@@ -8,7 +8,7 @@
     </Sidebar>
     <transition name="fade" mode="out-in">
       <router-view
-        class="w-full px-5 md:w-5/6 h-full"
+        class="w-full px-5 h-full"
         @groupAdd="groupAdd($event)"
         @groupUpdate="groupChangeState($event)"
         @groupDelete="groupDelete($event)">
