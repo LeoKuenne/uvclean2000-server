@@ -29,6 +29,9 @@ async function execute(db, io, mqtt, message) {
 
   await db.updateUser(user);
   const dbUser = await db.getUser(user.newUsername);
+
+  logger.debug('user %s updated in database, sending user_updated message', user.newUsername);
+
   io.emit('user_updated', {
     username: user.username,
     newUsername: dbUser.username,

@@ -18,7 +18,7 @@ async function getDevicesWithWrongState(group, prop, db) {
  * @param {Array} devicesWrongState Array of serialnumbers of the devices
  */
 async function updateGroupState(database, groupID, prop, devicesWrongState) {
-  logger.debug('updateGroup devices with other state');
+  logger.debug('updateGroup %s devices with other state for prop %s', groupID, prop);
   switch (prop) {
     case 'engineState':
       return database.updateGroupDevicesWithOtherState(groupID, 'engineState', devicesWrongState);
@@ -207,6 +207,8 @@ async function updateDatabase(db, newState) {
 function mapMQTTTopicToDatabase(topic) {
   const topicArray = topic.split('/');
 
+  logger.debug('Mapping topic %s to database schemas', topic);
+
   if (topicArray.length < 4 || topicArray.length > 5) {
     throw new Error('Topic can not be parsed because it has the wrong format');
   }
@@ -303,6 +305,7 @@ async function executeMiddleware(db, io, mqtt, topic, message) {
     const middleware = stack[index];
 
     if (middleware) {
+      logger.debug('Executing middleware at index %s', index);
       await middleware(db, io, mqtt, topic, message, () => runner(index + 1));
     }
   }

@@ -15,6 +15,7 @@ async function execute(db, io, mqtt, message) {
   }
 
   await db.addDeviceToGroup(device, group);
+  logger.info('added device %s to group %s, sending group_deviceAdded event', device, group);
   io.emit('group_deviceAdded');
   io.emit('info', { message: `Device  ${device} added to group ${group} added` });
 }

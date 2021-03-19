@@ -33,6 +33,7 @@ async function execute(db, io, mqtt, message) {
     await db.addDeviceToGroup(dev, dbGroup.id.toString());
   }));
 
+  logger.debug('set devices in group %s, sending group_deviceAdded message', group.id);
   io.emit('group_deviceAdded');
   io.emit('info', { message: `Setted devices to group ${dbGroup.name}` });
 }

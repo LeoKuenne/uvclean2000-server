@@ -32,6 +32,7 @@ async function execute(db, io, mqtt, message) {
         name: newState.newValue,
       });
       if (group.name === newState.newValue) {
+        logger.debug('name of group %s updated, sending group_stateChanged with prop name and new name as %s', newState.id, newState.newValue);
         io.emit('group_stateChanged', {
           id: newState.id,
           prop: newState.prop,
@@ -46,6 +47,7 @@ async function execute(db, io, mqtt, message) {
       });
       group = await db.getGroup(newState.id);
       group.devices.forEach((device) => {
+        logger.debug('sending mqtt message for device %s, changeState with propertie %s and value %s', device.serialnumber, newState.prop, newState.newValue);
         mqtt.publish(`UVClean/${device.serialnumber}/changeState/engineState`, (config.mqtt.useEncryption) ? encryptedValue : newState.newValue);
       });
       io.emit('group_stateChanged', {
@@ -61,6 +63,7 @@ async function execute(db, io, mqtt, message) {
       });
       group = await db.getGroup(newState.id);
       group.devices.forEach((device) => {
+        logger.debug('sending mqtt message for device %s, changeState with propertie %s and value %s', device.serialnumber, newState.prop, newState.newValue);
         mqtt.publish(`UVClean/${device.serialnumber}/changeState/engineLevel`, (config.mqtt.useEncryption) ? encryptedValue : newState.newValue);
       });
       io.emit('group_stateChanged', {
@@ -76,6 +79,7 @@ async function execute(db, io, mqtt, message) {
       });
       group = await db.getGroup(newState.id);
       group.devices.forEach((device) => {
+        logger.debug('sending mqtt message for device %s, changeState with propertie %s and value %s', device.serialnumber, newState.prop, newState.newValue);
         mqtt.publish(`UVClean/${device.serialnumber}/changeState/eventMode`, (config.mqtt.useEncryption) ? encryptedValue : newState.newValue);
       });
       io.emit('group_stateChanged', {

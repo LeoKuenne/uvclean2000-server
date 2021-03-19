@@ -15,6 +15,8 @@ async function execute(db, io, mqtt, message) {
   }
 
   await db.deleteDeviceFromGroup(device, group);
+
+  logger.debug('deleted device %s from group %s, sending group_deviceDeleted message', device, group);
   io.emit('group_deviceDeleted');
   io.emit('info', { message: `Removed device ${device} from group ${group} deleted` });
 }

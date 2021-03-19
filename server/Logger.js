@@ -57,19 +57,19 @@ function setTransports() {
         json(),
       ),
       filename: `logs/combined/${d}.log`,
-      level: 'debug',
+      level: config.logging.fileLogLevel,
     }));
   }
   if (config.logging.console) {
     logger.add(new winston.transports.Console({
-      level: 'info',
+      level: config.logging.consoleLogLevel,
       format: combine(
         metadata(),
         colorize(),
         timestamp({
           format: 'YYYY-MM-DD HH:mm:ss',
         }),
-        errors({ stack: true }),
+        errors({ stack: config.logging.consoleErrorStack }),
         splat(),
         errorFormat,
       ),

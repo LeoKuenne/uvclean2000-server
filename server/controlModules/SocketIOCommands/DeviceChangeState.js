@@ -42,6 +42,9 @@ async function execute(db, io, mqtt, message) {
     default:
       throw new Error(`Can not parse state ${newState.prop} for MQTT`);
   }
+
+  logger.debug('sending mqtt message for device %s, changeState with propertie %s and value %s', newState.serialnumber, propertie, newState.newValue);
+
   mqtt.publish(`UVClean/${newState.serialnumber}/changeState/${propertie}`, (config.mqtt.useEncryption) ? encryptedValue : newState.newValue);
   io.emit('info', { message: `Sended changeState (${propertie}) MQTT message to device ${newState.serialnumber}` });
 }

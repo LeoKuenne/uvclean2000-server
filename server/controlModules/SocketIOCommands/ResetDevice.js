@@ -15,7 +15,7 @@ async function execute(db, io, mqtt, message) {
     .catch((e) => {
       throw e;
     }).then((databaseDevice) => {
-      logger.info('Sending device reset mqtt message');
+      logger.debug('Sending device reset mqtt message to device %s', message.serialnumber);
 
       mqtt.publish(`UVClean/${databaseDevice.serialnumber}/reset`, (config.mqtt.useEncryption) ? encryptedValue : 'true');
       io.emit('info', { message: `Sended reset MQTT message to device ${databaseDevice.serialnumber}` });

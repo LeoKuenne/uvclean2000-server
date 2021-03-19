@@ -16,7 +16,7 @@ async function execute(db, io, mqtt, message) {
   const dbGroup = await db.deleteGroup(group);
   const docGroup = await db.getGroup(`${dbGroup.id}`).catch((e) => {
     if (e.message === 'Group does not exists') {
-      logger.info('deleted group from database, sending group_deleted event');
+      logger.debug('deleted group from database, sending group_deleted event');
 
       io.emit('group_deleted', { id: group.id });
       io.emit('info', { message: `Group  ${group.id} deleted` });

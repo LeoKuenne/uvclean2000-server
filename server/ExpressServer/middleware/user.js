@@ -25,12 +25,12 @@ module.exports = {
       !req.body.password_repeat
       || req.body.password !== req.body.password_repeat
     ) {
-      logger.info('Validating repeated password: %s failed', req.body.password_repeat);
+      logger.debug('Validating repeated password: %s failed', req.body.password_repeat);
       return res.status(400).send({
         msg: 'Both passwords must match',
       });
     }
-    logger.info('Validating sign up paramters succeded');
+    logger.debug('Validating sign up paramters succeded');
     next();
   },
   isLoggedIn: (req, res, next) => {
@@ -42,11 +42,11 @@ module.exports = {
         'SECRETKEY',
       );
       if (!req.query.user || req.query.user !== decoded.username) throw new Error('Query username does not match with cookie');
-      logger.info('User is logged in. %o', decoded);
+      logger.debug('User is logged in. %o', decoded);
       req.userData = decoded;
       next();
     } catch (err) {
-      logger.info('User is not logged in.');
+      logger.debug('User is not logged in.');
       logger.error(err);
       return res.status(401).send('<p>Your session is not valid</p>');
     }

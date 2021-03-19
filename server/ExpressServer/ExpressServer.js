@@ -41,41 +41,37 @@ module.exports = class ExpressServer {
     this.app.use('/ui/managment', userMiddleware.isLoggedIn, express.static(`${__dirname}/sites/managment.html`));
     this.app.use('/static/', express.static(`${__dirname}/sites/static/`));
 
-    this.app.post('/sign-up', userMiddleware.validateRegister, async (req, res, next) => {
-      logger.info('Got valid request on sign-up route. Request: %o', req.body);
-      try {
-        await this.database.addUser({
-          username: req.body.username,
-          password: req.body.password,
-          canEdit: false,
-        });
-        logger.info('Added User %s to database', req.body.username);
+    // this.app.post('/sign-up', userMiddleware.validateRegister, async (req, res, next) => {
+    //   logger.info('Got valid request on sign-up route. Request: %o', req.body);
 
-        return res.status(201).send({
-          msg: 'Registered!',
-        });
-      } catch (error) {
-        if (error.message === 'User already exists') {
-          logger.info('User %s already exists in database', req.body.username);
-          return res.status(401).send({
-            msg: error.message,
-          });
-        }
-        server.emit('error', { service: 'ExpressServer', error });
-        return res.status(500).send({
-          msg: error.message,
-        });
-      }
-    });
+    //   try {
+    //     await this.database.addUser({
+    //       username: req.body.username,
+    //       password: req.body.password,
+    //       canEdit: false,
+    //     });
+    //     logger.info('Added User %s to database', req.body.username);
 
-    this.app.get('/gateway', async (req, res, next) => {
-      logger.info('Got post request on gateway route. Request: %o %o', req.body, req.query);
-      const { propertie, value } = req.query;
-      res.status(200).send({ propertie, value });
-    });
+    //     return res.status(201).send({
+    //       msg: 'Registered!',
+    //     });
+    //   } catch (error) {
+    //     if (error.message === 'User already exists') {
+    //       logger.info('User %s already exists in database', req.body.username);
+    //       return res.status(401).send({
+    //         msg: error.message,
+    //       });
+    //     }
+    //     server.emit('error', { service: 'ExpressServer', error });
+    //     return res.status(500).send({
+    //       msg: error.message,
+    //     });
+    //   }
+    // });
 
     this.app.post('/login', async (req, res, next) => {
       logger.info('Got valid request on login route. Request: %o', req.body);
+
       try {
         const user = await this.database.getUser(req.body.username);
         logger.info('User exists in database');
@@ -98,7 +94,9 @@ module.exports = class ExpressServer {
             url: `/ui/managment?user=${user.username}`,
           });
         }
+
         logger.info('Password does not match with database entry');
+
         return res.status(401).send({
           msg: 'Username or password is incorrect!',
         });
@@ -114,7 +112,9 @@ module.exports = class ExpressServer {
 
     apiRouter.get('/user', async (req, res) => {
       const { username } = req.query;
+
       logger.info(`Got GET request on /user with username=${username}`);
+
       if (!username) return res.sendStatus(404).send({ msg: 'No username provided' });
       try {
         const db = await this.database.getUser(username);
@@ -127,6 +127,7 @@ module.exports = class ExpressServer {
 
     apiRouter.get('/users', async (req, res) => {
       logger.info('Got GET request on /users');
+
       try {
         const db = await this.database.getUsers();
         const users = [];
@@ -146,6 +147,7 @@ module.exports = class ExpressServer {
     });
 
     apiRouter.get('/devices', async (req, res) => {
+      logger.info('Got GET request on /devices');
       try {
         const db = await this.database.getDevices();
         res.json(db);
@@ -169,6 +171,8 @@ module.exports = class ExpressServer {
     });
 
     apiRouter.get('/groups', async (req, res) => {
+      logger.info('Got GET request on /groups');
+
       try {
         const db = await this.database.getGroups();
         res.json(db);
@@ -181,6 +185,7 @@ module.exports = class ExpressServer {
     apiRouter.get('/group', async (req, res) => {
       const { id } = req.query;
       logger.info(`Got GET request on /group with id=${id}`);
+
       try {
         const db = await this.database.getGroup(id);
         res.json(db);
@@ -191,6 +196,7 @@ module.exports = class ExpressServer {
     });
 
     apiRouter.get('/groupids', async (req, res) => {
+      logger.info('Got GET request on /groupids');
       try {
         const db = await this.database.getGroupIDs();
         res.json(db);

@@ -24,6 +24,9 @@ async function execute(db, io, mqtt, message) {
   };
 
   await db.changeUserPassword(user);
+
+  logger.debug('password of user %s updated in database', user.username);
+
   io.emit('info', { message: `Changed password for user ${user.username}` });
 }
 

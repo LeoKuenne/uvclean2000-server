@@ -19,7 +19,7 @@ async function execute(db, io, mqtt, message) {
 
   const docGroup = await db.addGroup(group);
   await db.getGroup(`${docGroup._id}`).then((databaseGroup) => {
-    logger.info('added Group to database, sending groupAdded event');
+    logger.info('added group %s to database, sending group_added event', docGroup._id);
 
     io.emit('group_added', databaseGroup);
     io.emit('info', { message: `Group  ${databaseGroup._id} with name ${databaseGroup.name} added` });

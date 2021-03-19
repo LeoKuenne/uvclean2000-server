@@ -28,7 +28,7 @@ async function execute(db, io, mqtt, message) {
 
   await db.addDevice(device);
   await db.getDevice(device.serialnumber).then((databaseDevice) => {
-    logger.info('added Device to database, sending deviceAdded event');
+    logger.debug('added Device to database, sending deviceAdded event');
 
     mqtt.subscribe(`UVClean/${databaseDevice.serialnumber}/#`);
 

@@ -5,7 +5,7 @@ const MainLogger = require('../../../Logger.js').logger;
 const logger = MainLogger.child({ service: 'EncryptMiddleware' });
 
 function encrypt(msg) {
-  logger.info(`Encrypting ${msg}`);
+  logger.debug(`Encrypting ${msg}`);
   const secret = fernet.setSecret(fs.readFileSync(config.mqtt.secret, { encoding: 'base64' }));
   const token = new fernet.Token({
     secret,

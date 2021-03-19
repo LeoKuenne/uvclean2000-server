@@ -155,6 +155,9 @@ module.exports = class MongoDBAdapter extends EventEmitter {
    */
   async getDevices() {
     if (this.db === undefined) throw new Error('Database is not connected');
+
+    logger.debug('Getting devices');
+
     const db = await UVCDeviceModel.find()
       .populate('currentLampState', 'date lamp state')
       .populate('currentAirVolume', 'date volume')
@@ -202,6 +205,9 @@ module.exports = class MongoDBAdapter extends EventEmitter {
    */
   async getSerialnumbers() {
     if (this.db === undefined) throw new Error('Database is not connected');
+
+    logger.debug('Getting serialnumbers');
+
     const db = await UVCDeviceModel.find().select('serialnumber').exec();
 
     // eslint-disable-next-line prefer-const
@@ -225,6 +231,8 @@ module.exports = class MongoDBAdapter extends EventEmitter {
     if (this.db === undefined) throw new Error('Database is not connected');
     if (device.serialnumber === undefined) throw new Error('Serialnumber has to be defined.');
 
+    logger.info('Updating device with %o', device);
+
     const d = await UVCDeviceModel.findOneAndUpdate(
       { serialnumber: device.serialnumber },
       device,
@@ -242,6 +250,8 @@ module.exports = class MongoDBAdapter extends EventEmitter {
   async deleteDevice(serialnumber) {
     if (this.db === undefined) throw new Error('Database is not connected');
     if (typeof serialnumber !== 'string') { throw new Error('DeviceID has to be a string'); }
+
+    logger.info('Deleting device %s', serialnumber);
 
     const device = await UVCDeviceModel.findOneAndDelete({ serialnumber }).exec();
     if (device === null) throw new Error('Device does not exists');
@@ -280,6 +290,9 @@ module.exports = class MongoDBAdapter extends EventEmitter {
    */
   async addAirVolume(airVolume) {
     if (this.db === undefined) throw new Error('Database is not connected');
+
+    logger.debug('Adding AirVolume %o', airVolume);
+
     const docAirVolume = new AirVolumeModel(airVolume);
     const err = docAirVolume.validateSync();
     if (err !== undefined) throw err;
@@ -310,6 +323,9 @@ module.exports = class MongoDBAdapter extends EventEmitter {
    */
   async getAirVolume(serialnumber, fromDate, toDate) {
     if (this.db === undefined) throw new Error('Database is not connected');
+
+    logger.debug('Getting AirVolumes from device %s, from %s, to %s', serialnumber, fromDate, toDate);
+
     const query = AirVolumeModel.find({ device: serialnumber }, 'device volume date');
     if (fromDate !== undefined && fromDate instanceof Date) {
       query.gte('date', fromDate);
@@ -321,27 +337,30 @@ module.exports = class MongoDBAdapter extends EventEmitter {
   }
 
   /**
-   * Adds an alarmState document which holds a current alarm, the device, the lamp and date
-   * @param {Object} alarmState The Object with the device serialnumber of that
+   * Adds an lampState document which holds a current alarm, the device, the lamp and date
+   * @param {Object} lampState The Object with the device serialnumber of that
    * device and the current alarm and lamp
-   * @param {String} alarmState.device The serialnumber of that device
-   * @param {String} alarmState.state The state of the alarm
-   * @param {String} alarmState.lamp The lamp of the alarmstate
-   * @returns Returns the alarmState document
+   * @param {String} lampState.device The serialnumber of that device
+   * @param {String} lampState.state The state of the alarm
+   * @param {String} lampState.lamp The lamp of the alarmstate
+   * @returns Returns the lampState document
    */
-  async setLampState(alarmState) {
+  async setLampState(lampState) {
     if (this.db === undefined) throw new Error('Database is not connected');
-    const docAlarmState = new AlarmStateModel(alarmState);
+
+    logger.debug('Setting lamp state %o', lampState);
+
+    const docAlarmState = new AlarmStateModel(lampState);
     const err = docAlarmState.validateSync();
     if (err !== undefined) throw err;
 
     await docAlarmState.save();
 
     const device = await UVCDeviceModel.updateOne({
-      serialnumber: alarmState.device,
+      serialnumber: lampState.device,
     }, {
       $set: {
-        [`currentLampState.${alarmState.lamp - 1}`]: docAlarmState._id,
+        [`currentLampState.${lampState.lamp - 1}`]: docAlarmState._id,
       },
     }, (e) => {
       if (e !== null) { throw e; }
@@ -359,6 +378,9 @@ module.exports = class MongoDBAdapter extends EventEmitter {
    */
   async getLampState(serialnumber) {
     if (this.db === undefined) throw new Error('Database is not connected');
+
+    logger.debug('Getting lamp state for device %s', serialnumber);
+
     return AlarmStateModel.find({ device: serialnumber }, 'device lamp state date').exec();
   }
 
@@ -373,6 +395,9 @@ module.exports = class MongoDBAdapter extends EventEmitter {
    */
   async addLampValue(lampValue) {
     if (this.db === undefined) throw new Error('Database is not connected');
+
+    logger.debug('Adding lamp value %o', lampValue);
+
     const docLampValue = new LampValueModel(lampValue);
     const err = docLampValue.validateSync();
     if (err !== undefined) throw err;
@@ -404,6 +429,9 @@ module.exports = class MongoDBAdapter extends EventEmitter {
    */
   async getLampValues(serialnumber, lampID, fromDate, toDate) {
     if (this.db === undefined) throw new Error('Database is not connected');
+
+    logger.debug('Getting lamp value for device %s, lamp %i, from %s, to %s', serialnumber, lampID, fromDate, toDate);
+
     const query = LampValueModel.find({ device: serialnumber }, 'device lamp value date');
     if (lampID !== undefined && typeof lampID === 'string') {
       query.where('lamp', lampID);
@@ -428,6 +456,9 @@ module.exports = class MongoDBAdapter extends EventEmitter {
    */
   async addTacho(tacho) {
     if (this.db === undefined) throw new Error('Database is not connected');
+
+    logger.debug('Adding tacho value %o', tacho);
+
     const docTacho = new TachoModel(tacho);
     const err = docTacho.validateSync();
     if (err !== undefined) throw err;
@@ -457,6 +488,9 @@ module.exports = class MongoDBAdapter extends EventEmitter {
    */
   async getTachos(serialnumber, fromDate, toDate) {
     if (this.db === undefined) throw new Error('Database is not connected');
+
+    logger.debug('Getting lamp value for device %s, from %s, to %s', serialnumber, fromDate, toDate);
+
     const query = TachoModel.find({ device: serialnumber }, 'device tacho date');
     if (fromDate !== undefined && fromDate instanceof Date) {
       query.gte('date', fromDate);
@@ -479,6 +513,9 @@ module.exports = class MongoDBAdapter extends EventEmitter {
    */
   async addFanState(fanState) {
     if (this.db === undefined) throw new Error('Database is not connected');
+
+    logger.debug('Adding fan state %o', fanState);
+
     const docFanState = new FanStateModel(fanState);
     const err = docFanState.validateSync();
     if (err !== undefined) throw err;
@@ -510,6 +547,9 @@ module.exports = class MongoDBAdapter extends EventEmitter {
    */
   async getFanStates(serialnumber, fromDate, toDate) {
     if (this.db === undefined) throw new Error('Database is not connected');
+
+    logger.debug('Getting fan states for device %s, from %s, to %s', serialnumber, fromDate, toDate);
+
     const query = FanStateModel.find({ device: serialnumber }, 'device state date');
     if (fromDate !== undefined && fromDate instanceof Date) {
       query.gte('date', fromDate);
@@ -531,6 +571,8 @@ module.exports = class MongoDBAdapter extends EventEmitter {
    */
   async addBodyState(bodyState) {
     if (this.db === undefined) throw new Error('Database is not connected');
+
+    logger.debug('Adding body state %o', bodyState);
 
     const docBodyState = new BodyStateModel(bodyState);
     const err = docBodyState.validateSync();
@@ -563,6 +605,9 @@ module.exports = class MongoDBAdapter extends EventEmitter {
    */
   async getBodyStates(serialnumber, fromDate, toDate) {
     if (this.db === undefined) throw new Error('Database is not connected');
+
+    logger.debug('Getting body state for device %s, from %s, to %s', serialnumber, fromDate, toDate);
+
     const query = BodyStateModel.find({ device: serialnumber }, 'device state date');
     if (fromDate !== undefined && fromDate instanceof Date) {
       query.gte('date', fromDate);
@@ -584,6 +629,9 @@ module.exports = class MongoDBAdapter extends EventEmitter {
    */
   async addFanVoltage(fanVoltage) {
     if (this.db === undefined) throw new Error('Database is not connected');
+
+    logger.debug('Adding fan voltage %o', fanVoltage);
+
     const docFanVoltage = new FanVoltageModel(fanVoltage);
     const err = docFanVoltage.validateSync();
     if (err !== undefined) throw err;
@@ -615,6 +663,9 @@ module.exports = class MongoDBAdapter extends EventEmitter {
    */
   async getFanVoltages(serialnumber, fromDate, toDate) {
     if (this.db === undefined) throw new Error('Database is not connected');
+
+    logger.debug('Getting fan voltage for device %s, from %s, to %s', serialnumber, fromDate, toDate);
+
     const query = FanVoltageModel.find({ device: serialnumber }, 'device voltage date');
     if (fromDate !== undefined && fromDate instanceof Date) {
       query.gte('date', fromDate);
@@ -636,6 +687,9 @@ module.exports = class MongoDBAdapter extends EventEmitter {
    */
   async addCO2(co2) {
     if (this.db === undefined) throw new Error('Database is not connected');
+
+    logger.debug('Adding co2 %o', co2);
+
     const docCO2 = new CO2Model(co2);
     const err = docCO2.validateSync();
     if (err !== undefined) throw err;
@@ -667,6 +721,9 @@ module.exports = class MongoDBAdapter extends EventEmitter {
    */
   async getCO2s(serialnumber, fromDate, toDate) {
     if (this.db === undefined) throw new Error('Database is not connected');
+
+    logger.debug('Getting co2 for device %s, from %s, to %s', serialnumber, fromDate, toDate);
+
     const query = CO2Model.find({ device: serialnumber }, 'device co2 date');
     if (fromDate !== undefined && fromDate instanceof Date) {
       query.gte('date', fromDate);
@@ -688,6 +745,9 @@ module.exports = class MongoDBAdapter extends EventEmitter {
    */
   async addTVOC(tvoc) {
     if (this.db === undefined) throw new Error('Database is not connected');
+
+    logger.debug('Adding tvoc %o', co2);
+
     const docTVOC = new TVOCModel(tvoc);
     const err = docTVOC.validateSync();
     if (err !== undefined) throw err;
@@ -719,6 +779,9 @@ module.exports = class MongoDBAdapter extends EventEmitter {
    */
   async getTVOCs(serialnumber, fromDate, toDate) {
     if (this.db === undefined) throw new Error('Database is not connected');
+
+    logger.debug('Getting tvocs for device %s, from %s, to %s', serialnumber, fromDate, toDate);
+
     const query = TVOCModel.find({ device: serialnumber }, 'device tvoc date');
     if (fromDate !== undefined && fromDate instanceof Date) {
       query.gte('date', fromDate);
@@ -739,6 +802,8 @@ module.exports = class MongoDBAdapter extends EventEmitter {
     if (this.db === undefined) throw new Error('Database is not connected');
     let dataLatest = '';
     let dataOldest = '';
+
+    logger.debug('Getting duration of available data of device %s for propertie %s', serialnumber, propertie);
 
     switch (propertie) {
       case 'currentAirVolume':
@@ -831,6 +896,8 @@ module.exports = class MongoDBAdapter extends EventEmitter {
     if (this.db === undefined) throw new Error('Database is not connected');
     if (group.name === undefined) throw new Error('Name has to be defined.');
 
+    logger.debug('Adding group with name %s', group.name);
+
     const docGroup = new UVCGroupModel(group);
     const err = docGroup.validateSync();
     if (err !== undefined) throw err;
@@ -847,7 +914,7 @@ module.exports = class MongoDBAdapter extends EventEmitter {
       throw new Error('GroupID has to be a string');
     }
 
-    logger.debug(`Getting group ${groupID}`);
+    logger.debug('Getting group %s', groupID);
 
     const groupData = await UVCGroupModel.findOne({ _id: groupID })
       .populate('devices')
@@ -889,7 +956,7 @@ module.exports = class MongoDBAdapter extends EventEmitter {
       throw new Error('GroupID has to be a string');
     }
 
-    logger.debug(`Getting devices in group ${groupID}`);
+    logger.debug('Getting devices in group', groupID);
 
     const groupData = await UVCGroupModel.findOne({ _id: groupID })
       .populate('devices')
@@ -909,6 +976,9 @@ module.exports = class MongoDBAdapter extends EventEmitter {
    */
   async getGroups() {
     if (this.db === undefined) throw new Error('Database is not connected');
+
+    logger.debug('Getting all groups');
+
     const groupData = await UVCGroupModel.find()
       .populate('devices')
       .populate('engineStateDevicesWithOtherState', 'serialnumber name')
@@ -939,6 +1009,9 @@ module.exports = class MongoDBAdapter extends EventEmitter {
 
   async getGroupIDs() {
     if (this.db === undefined) throw new Error('Database is not connected');
+
+    logger.debug('Getting all group ids');
+
     const groupData = await UVCGroupModel.find()
       .exec();
 
@@ -964,7 +1037,7 @@ module.exports = class MongoDBAdapter extends EventEmitter {
     if (this.db === undefined) throw new Error('Database is not connected');
     if (group.id === undefined || typeof group.id !== 'string') throw new Error('id has to be defined.');
 
-    logger.info(`Updating group ${group.id} with %o`, group);
+    logger.info('Updating group %s with %o', group.id, group);
 
     const docGroup = await UVCGroupModel.findOneAndUpdate(
       { _id: new ObjectId(group.id) },
@@ -1025,6 +1098,7 @@ module.exports = class MongoDBAdapter extends EventEmitter {
     if (this.db === undefined) throw new Error('Database is not connected');
     if (typeof deviceSerialnumber !== 'string') { throw new Error('deviceSerialnumber has to be defined and typeof string'); }
     if (typeof groupID !== 'string') { throw new Error('groupID has to be defined and typeof string'); }
+
     logger.info(`Adding device ${deviceSerialnumber} to group ${groupID}`);
 
     const docDevice = await UVCDeviceModel.findOne(
@@ -1041,6 +1115,7 @@ module.exports = class MongoDBAdapter extends EventEmitter {
       await this.deleteDeviceFromGroup(`${docDevice.serialnumber}`, `${docDevice.group}`);
     }
 
+    logger.debug(`Setting group of device ${deviceSerialnumber} to group ${groupID}`);
     await UVCDeviceModel.findOneAndUpdate(
       {
         serialnumber: deviceSerialnumber,
@@ -1050,6 +1125,7 @@ module.exports = class MongoDBAdapter extends EventEmitter {
       throw e;
     });
 
+    logger.debug(`Adding device ${deviceSerialnumber} to group ${groupID} device array`);
     const docGroup = await UVCGroupModel.findOneAndUpdate({
       _id: new ObjectId(groupID),
     }, {
@@ -1078,6 +1154,7 @@ module.exports = class MongoDBAdapter extends EventEmitter {
     if (typeof groupID !== 'string') { throw new Error('groupID has to be defined and typeof string'); }
     logger.info(`Deleting device ${deviceSerialnumber} from group ${groupID}`);
 
+    logger.debug('Unsetting group of device %s', deviceSerialnumber);
     const docDevice = await UVCDeviceModel.findOneAndUpdate({
       serialnumber: deviceSerialnumber,
     }, {
@@ -1088,6 +1165,7 @@ module.exports = class MongoDBAdapter extends EventEmitter {
       throw e;
     });
 
+    logger.debug('Removing device %s from group %s devices array', deviceSerialnumber, groupID);
     const docGroup = await UVCGroupModel.findOneAndUpdate({
       _id: new ObjectId(groupID),
     }, {
@@ -1100,17 +1178,19 @@ module.exports = class MongoDBAdapter extends EventEmitter {
 
     return docGroup;
   }
+
   /**
    * Updates the list of the given propertie to the array of device serialnumbers
    * @param {String} groupID The group id where the list should be updated
    * @param {String} propertie The propertie of which the list should be updated
    * @param {Array} serialnumbers An array of serialnumbers that should be set as the list
    */
-
   async updateGroupDevicesWithOtherState(groupID, propertie, serialnumbers) {
     if (this.db === undefined) throw new Error('Database is not connected');
     if (typeof propertie !== 'string') { throw new Error('Propertie has to be defined and typeof string'); }
     if (typeof groupID !== 'string') { throw new Error('groupID has to be defined and typeof string'); }
+
+    logger.debug('Updating devices that have not the state of the group %s, device %s on propertie %s', groupID, serialnumbers, propertie);
 
     const objectIDs = [];
     const prop = {};
@@ -1148,6 +1228,13 @@ module.exports = class MongoDBAdapter extends EventEmitter {
     }
   }
 
+  /**
+   * @deprecated
+   * Pushed the given device to the list of devices with other state for the propertie engingeState
+   * @param {string} groupID The group id of which the device should be pushed to the list
+   * @param {string} serialnumber The device that should be pushed
+   * @returns New database object
+   */
   async pushDeviceToEngineStateList(groupID, serialnumber) {
     if (this.db === undefined) throw new Error('Database is not connected');
     if (typeof serialnumber !== 'string') { throw new Error('serialnumber has to be defined and typeof string'); }
@@ -1168,6 +1255,13 @@ module.exports = class MongoDBAdapter extends EventEmitter {
     });
   }
 
+  /**
+   * @deprecated
+   * Pull the given device of the list of devices with other state for the propertie engingeState
+   * @param {string} groupID The group id of which the device should be pulled from the list
+   * @param {string} serialnumber The device that should be pulled
+   * @returns New database object
+   */
   async pullDeviceFromEngineStateList(groupID, serialnumber) {
     if (this.db === undefined) throw new Error('Database is not connected');
     if (typeof serialnumber !== 'string') { throw new Error('serialnumber has to be defined and typeof string'); }
@@ -1197,6 +1291,7 @@ module.exports = class MongoDBAdapter extends EventEmitter {
     if (this.db === undefined) throw new Error('Database is not connected');
     if (typeof deviceSerialnumber !== 'string') { throw new Error('deviceSerialnumber has to be defined and of type string'); }
     if (typeof alarmState !== 'boolean') { throw new Error('alarmState has to be defined and of type boolean'); }
+
     logger.info(`Setting alarm state of device ${deviceSerialnumber} to ${alarmState}`);
 
     const d = await UVCDeviceModel.findOneAndUpdate({
@@ -1230,6 +1325,8 @@ module.exports = class MongoDBAdapter extends EventEmitter {
     if (this.db === undefined) throw new Error('Database is not connected');
     if (typeof deviceSerialnumber !== 'string') { throw new Error('deviceSerialnumber has to be defined and of type string'); }
 
+    logger.info(`Getting alarm state of device ${deviceSerialnumber}`);
+
     const d = await UVCDeviceModel.findOne({
       serialnumber: deviceSerialnumber,
     }, 'alarmState');
@@ -1250,7 +1347,9 @@ module.exports = class MongoDBAdapter extends EventEmitter {
     if (this.db === undefined) throw new Error('Database is not connected');
     if (typeof groupID !== 'string') { throw new Error('groupID has to be defined and of type string'); }
     if (typeof alarmState !== 'boolean') { throw new Error('alarmState has to be defined and of type boolean'); }
+
     logger.info(`Setting alarm state of group ${groupID} to ${alarmState}`);
+
     const d = await UVCGroupModel.findOneAndUpdate({
       _id: new ObjectId(groupID),
     }, {
@@ -1273,6 +1372,8 @@ module.exports = class MongoDBAdapter extends EventEmitter {
   async getGroupAlarm(groupID) {
     if (this.db === undefined) throw new Error('Database is not connected');
     if (typeof groupID !== 'string') { throw new Error('groupID has to be defined and of type string'); }
+
+    logger.info(`Getting alarm state of group ${groupID}`);
 
     const d = await UVCGroupModel.findOne({
       _id: new ObjectId(groupID),
@@ -1297,6 +1398,8 @@ module.exports = class MongoDBAdapter extends EventEmitter {
     if (typeof user.username !== 'string') { throw new Error('Username has to be defined and of type string'); }
     if (typeof user.password !== 'string') { throw new Error('Password has to be defined and of type string'); }
     if (typeof user.canEdit !== 'boolean') { throw new Error('canEdit has to be defined and of type boolean'); }
+
+    logger.info('Adding user %o', user);
 
     try {
       await this.getUser(user.username);
@@ -1325,6 +1428,8 @@ module.exports = class MongoDBAdapter extends EventEmitter {
     if (this.db === undefined) throw new Error('Database is not connected');
     if (typeof username !== 'string') { throw new Error('Username has to be defined and of type string'); }
 
+    logger.info('Deleting user %o', username);
+
     return UserModel.findOneAndRemove({ username });
   }
 
@@ -1340,6 +1445,8 @@ module.exports = class MongoDBAdapter extends EventEmitter {
     if (typeof user.username !== 'string') { throw new Error('Username has to be defined and of type string'); }
     if (user.newUsername && typeof user.newUsername !== 'string') { throw new Error('New username has to be of type string'); }
     if (typeof user.canEdit !== 'boolean') { throw new Error('Can edit has to be defined and of type boolean'); }
+
+    logger.info('Updating user with %o', user);
 
     await UserModel.findOneAndUpdate(
       { username: user.username },
@@ -1374,6 +1481,8 @@ module.exports = class MongoDBAdapter extends EventEmitter {
 
     if (!bcrypt.compareSync(user.oldPassword, dbUser.password)) throw new Error('The old password does not match!');
 
+    logger.info('Updating users password with %o', user);
+
     const newPassword = await bcrypt.hash(user.newPassword, 10);
 
     return UserModel.findOneAndUpdate(
@@ -1391,6 +1500,8 @@ module.exports = class MongoDBAdapter extends EventEmitter {
   async getUser(username) {
     if (this.db === undefined) throw new Error('Database is not connected');
     if (typeof username !== 'string') { throw new Error('userid has to be defined and of type string'); }
+
+    logger.debug('Getting user %s', username);
 
     const docUser = await UserModel.findOne({
       username,
@@ -1415,6 +1526,7 @@ module.exports = class MongoDBAdapter extends EventEmitter {
     if (this.db === undefined) throw new Error('Database is not connected');
 
     const docUsers = await UserModel.find().exec();
+    logger.debug('Getting all users');
 
     const users = [];
     docUsers.forEach((user) => {

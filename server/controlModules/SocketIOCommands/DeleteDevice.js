@@ -14,7 +14,8 @@ async function execute(db, io, mqtt, message) {
   };
 
   await db.deleteDevice(device.serialnumber);
-  logger.info('deleted device from database, sending device_deleted');
+
+  logger.debug('deleted device from database, sending device_deleted');
 
   mqtt.unsubscribe(`UVClean/${device.serialnumber}/#`);
 

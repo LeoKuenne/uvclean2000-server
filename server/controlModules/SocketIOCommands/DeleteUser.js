@@ -14,6 +14,7 @@ async function execute(db, io, mqtt, message) {
   };
 
   await db.deleteUser(user.username);
+  logger.debug('deleted user from database, sending user_deleted event');
   io.emit('user_deleted', { username: user.username });
   io.emit('info', { message: `User  ${user.username} deleted` });
 }

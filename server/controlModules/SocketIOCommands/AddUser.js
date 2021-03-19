@@ -29,6 +29,9 @@ async function execute(db, io, mqtt, message) {
 
   await db.addUser(user);
   const dbUser = await db.getUser(user.username);
+
+  logger.info('added User %s to database, sending user_added event', dbUser.username);
+
   io.emit('user_added', {
     username: dbUser.username,
     canEdit: dbUser.canEdit,
