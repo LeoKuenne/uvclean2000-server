@@ -135,9 +135,9 @@
               }
             }"
             class="col-span-2 flex justify-between cursor-pointer">
-            <span class="font-semibold">Current Volume</span>
+            <span class="font-semibold">Air Volume</span>
             <span class="text-right" v-if="device.currentAirVolume">
-              {{device.currentAirVolume.volume}} L/M^3
+              {{device.currentAirVolume.volume}} m&sup3;/h
             </span>
           </router-link>
 
