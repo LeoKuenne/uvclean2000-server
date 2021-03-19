@@ -6,7 +6,9 @@
           {{ toggleCharts }}
         </button>
       </div>
-      <button class="bg-primary p-2 text-white shadow" @click="showSettingPanel = true">
+      <button
+        class="bg-primary p-2 text-white shadow"
+        @click="showSettingPanelAndFetchData(); loaded = true">
         <svg
           xmlns="http://www.w3.org/2000/svg"
           fill="currentColor"
@@ -88,30 +90,43 @@
             <option value="co2">CO2</option>
           </select>
         </div>
-        <div :class="[showDatepicker ? 'visible' : 'invisible']">
-          <label for="dateFrom">Choose the start date:</label>
-          <div class="text-black w-full pb-5">
-            <datetime
-              id="dateFrom"
-              v-model="selectedDateFrom"
-              :min-datetime="disabledDates.from"
-              :max-datetime="selectedDateTo"
-              :type="'datetime'"
-              class="border border-primary"
-            >
-            </datetime>
-          </div>
-          <label for="dateTo">Choose the end date:</label>
-          <div class="text-black w-full">
-            <datetime
-              id="dateTo"
-              v-model="selectedDateTo"
-              :min-datetime="selectedDateFrom"
-              :max-datetime="disabledDates.to"
-              :type="'datetime'"
-              class="border border-primary"
-            >
-            </datetime>
+        <div>
+          <div class="relative">
+            <div class="absolute w-full h-full flex items-center justify-center">
+              <div v-if="datepickerLoad" class="lds-ring">
+                <div></div>
+                <div></div>
+                <div></div>
+                <div></div>
+              </div>
+            </div>
+            <div :class="[showDatepicker ? 'visible' : 'invisible']"
+              class="relative">
+              <label for="dateFrom">Choose the start date:</label>
+              <div class="text-black w-full pb-5">
+                <datetime
+                  id="dateFrom"
+                  v-model="selectedDateFrom"
+                  :min-datetime="disabledDates.from"
+                  :max-datetime="selectedDateTo"
+                  :type="'datetime'"
+                  class="border border-primary"
+                >
+                </datetime>
+              </div>
+              <label for="dateTo">Choose the end date:</label>
+              <div class="text-black w-full">
+                <datetime
+                  id="dateTo"
+                  v-model="selectedDateTo"
+                  :min-datetime="selectedDateFrom"
+                  :max-datetime="disabledDates.to"
+                  :type="'datetime'"
+                  class="border border-primary"
+                >
+                </datetime>
+              </div>
+            </div>
           </div>
           <button
             :class="[canRefresh ? 'visible' : 'invisible']"
@@ -161,6 +176,7 @@ export default {
       loaded: true,
       showPropertie: false,
       showDatepicker: false,
+      datepickerLoad: false,
       showToggleAllCharts: false,
       showSettingPanel: true,
       showAllCharts: true,
@@ -270,9 +286,14 @@ export default {
     outsideSettingPanelClicked() {
       this.showSettingPanel = false;
     },
+    async showSettingPanelAndFetchData() {
+      this.showSettingPanel = true;
+      await this.getDevices();
+      await this.getDateDuration();
+    },
     async fetchData() {
       if (this.device === undefined) {
-        this.showSettingPanel = true;
+        this.showSettingPanelAndFetchData();
         return;
       }
       let response = await fetch(`/api/device?device=${this.device}`);
@@ -287,14 +308,14 @@ export default {
       console.log(this.selectedDevice);
 
       if (this.propertie === undefined) {
-        this.showSettingPanel = true;
+        this.showSettingPanelAndFetchData();
         return;
       }
       this.selectedPropertie = this.propertie;
       this.showDatepicker = true;
 
       if (this.from === undefined) {
-        this.showSettingPanel = true;
+        this.showSettingPanelAndFetchData();
         return;
       }
       this.selectedDateFrom = this.from;
@@ -303,7 +324,7 @@ export default {
       };
 
       if (this.to === undefined) {
-        this.showSettingPanel = true;
+        this.showSettingPanelAndFetchData();
         return;
       }
       this.selectedDateTo = this.to;
@@ -468,6 +489,8 @@ export default {
     },
     async getDateDuration() {
       this.showDatepicker = false;
+      if (!this.selectedPropertie) return;
+      this.datepickerLoad = true;
       await fetch(
         `/api/timestamps?device=${this.selectedDevice.serialnumber}&propertie=${this.selectedPropertie}`,
       )
@@ -492,6 +515,8 @@ export default {
           this.errorMessage = err;
           this.showDatepicker = false;
         });
+
+      this.datepickerLoad = false;
     },
   },
 };
