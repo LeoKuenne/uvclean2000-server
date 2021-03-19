@@ -43,7 +43,7 @@
     "desc": "Development on 127.0.0.1. Database and MQTT Broker is running on 127.0.0.1",
     "logging": {
       "console": true,
-      "file": true,
+      "file": false,
       "consoleErrorStack": false,
       "consoleLogLevel": "debug"
     },
@@ -65,8 +65,8 @@
     },
     "mqtt": {
       "secret": "C:/workspace_nodejs/uvclean2000-server/server/ssl/fernetSecret",
-      "useEncryption": false,
-      "useTTL": true,
+      "useEncryption": true,
+      "useTTL": false,
       "broker": "127.0.0.1",
       "port": 1883
     },

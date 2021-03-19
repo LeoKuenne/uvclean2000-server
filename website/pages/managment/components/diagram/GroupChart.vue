@@ -47,7 +47,7 @@
             v-model="selectedGroup"
             @change="showPropertie = true">
             <option v-for="group in groups"
-              :key="group.serialnumber"
+              :key="group.id"
               :value="group">
               {{ group.name }}
             </option>
@@ -148,6 +148,13 @@ export default {
         datasets: [],
       },
       options: {
+        title: {
+          display: true,
+          position: 'top',
+          text: ['Group Chart'],
+          fontSize: 18,
+          // fontFamily: 'Inter',
+        },
         responsive: true,
         maintainAspectRatio: false,
         scales: {
@@ -225,11 +232,23 @@ export default {
     },
   },
   async created() {
-    await this.fetchData();
+    await this.getGroups();
+
+    try {
+      await this.fetchData();
+    } catch (error) {
+      console.error(error);
+      this.errorMessage = error;
+    }
   },
   watch: {
-    $route() {
-      this.fetchData();
+    async $route() {
+      try {
+        await this.fetchData();
+      } catch (error) {
+        console.error(error);
+        this.errorMessage = error;
+      }
     },
     selectedDateFrom(newDate) {
       this.canRefresh = (newDate !== this.from);
@@ -248,42 +267,60 @@ export default {
       this.showSettingPanel = false;
     },
     async fetchData() {
-      await this.getGroups();
+      if (this.group === undefined) {
+        this.showSettingPanel = true;
+        return;
+      }
+      let response = await fetch(`/api/group?id=${this.group}`);
+      if (response.status !== 200) {
+        throw new Error('No data available');
+      }
+      let data = await response.json();
+      this.selectedGroup = {
+        name: data.name,
+        id: data.id,
+      };
+      console.log(this.selectedGroup);
 
-      if (this.group === undefined) return;
-      if (this.propertie === undefined) return;
-      if (this.from === undefined) return;
-      if (this.to === undefined) return;
+      if (this.propertie === undefined) {
+        this.showSettingPanel = true;
+        return;
+      }
+      this.selectedPropertie = this.propertie;
+      this.showDatepicker = true;
+
+      if (this.from === undefined) {
+        this.showSettingPanel = true;
+        return;
+      }
+      this.selectedDateFrom = this.from;
+      this.disabledDates = {
+        from: this.selectedDateFrom,
+      };
+
+      if (this.to === undefined) {
+        this.showSettingPanel = true;
+        return;
+      }
+      this.selectedDateTo = this.to;
+      this.disabledDates = {
+        from: this.selectedDateFrom,
+        to: this.selectedDateTo,
+      };
 
       this.loaded = false;
       this.showSettingPanel = false;
-
-      let data = null;
-      // eslint-disable-next-line prefer-destructuring
-      this.selectedGroup = this.groups[0];
 
       this.selectedPropertie = this.propertie;
       await this.getDateDuration();
 
       this.selectedDateFrom = this.from;
       this.selectedDateTo = this.to;
-      await fetch(`/api/group?group=${this.selectedGroup.id}&propertie=${this.propertie}&from=${this.from}&to=${this.to}`)
-        .then((response) => {
-          if (response.status === 404) {
-            throw new Error('No data avalaible');
-          }
-          return response.json();
-        }).then((response) => {
-          data = response;
-        }).catch((err) => {
-          this.errorMessage = err;
-        });
-
-      if (data === undefined) {
-        this.showSettingPanel = true;
-        this.loaded = true;
-        return;
+      response = await fetch(`/api/groupData?group=${this.selectedGroup.id}&propertie=${this.propertie}&from=${this.from}&to=${this.to}`);
+      if (response.status === 404) {
+        throw new Error('No data available');
       }
+      data = await response.json();
 
       this.datacollection.datasets.length = 0;
 
@@ -335,6 +372,13 @@ export default {
           break;
       }
 
+      this.options.title.text = [
+        `Group: ${this.selectedGroup.name}, ${this.selectedPropertie} | `
+        + `from: ${new Date(this.selectedDateFrom).toLocaleString()} to: ${new Date(
+          this.selectedDateTo,
+        ).toLocaleString()}`,
+      ];
+
       this.showToggleAllCharts = true;
       this.loaded = true;
     },
@@ -352,7 +396,14 @@ export default {
     async getGroups() {
       await fetch('/api/groups').then((response) => response.json())
         .then((data) => {
-          this.groups = data;
+          this.groups = [];
+          data.forEach((group) => {
+            this.groups.push({
+              id: group.id,
+              name: group.name,
+            });
+          });
+          console.log(this.groups);
         });
     },
     async getDateDuration() {

@@ -2,63 +2,85 @@
   <div class="relativ">
     <div class="absolute right-0 space-x-2 flex m-2">
       <div>
-        <button
-          class="p-2 bg-white shadow"
-          v-show="showToggleAllCharts"
-          @click="toggleAllCharts">{{toggleCharts}}
+        <button class="p-2 bg-white shadow" v-show="showToggleAllCharts" @click="toggleAllCharts">
+          {{ toggleCharts }}
         </button>
       </div>
-      <button
-        class="bg-primary p-2 text-white shadow"
-        @click="showSettingPanel = true">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" class="h-5 w-5" viewBox="0 0 16 16">
-          <path fill-rule="evenodd"
-          d="M11.5 2a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3zM9.05 3a2.5 2.5 0 0 1 4.9 0H16v1h-2.05a2.5
-          2.5 0 0 1-4.9 0H0V3h9.05zM4.5 7a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3zM2.05 8a2.5 2.5 0 0 1
-          4.9 0H16v1H6.95a2.5 2.5 0 0 1-4.9 0H0V8h2.05zm9.45 4a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0
-          0-3zm-2.45 1a2.5 2.5 0 0 1 4.9 0H16v1h-2.05a2.5 2.5 0 0 1-4.9 0H0v-1h9.05z"/>
+      <button class="bg-primary p-2 text-white shadow" @click="showSettingPanel = true">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          fill="currentColor"
+          class="h-5 w-5"
+          viewBox="0 0 16 16"
+        >
+          <path
+            fill-rule="evenodd"
+            d="M11.5 2a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3zM9.05 3a2.5 2.5 0 0 1 4.9
+            0H16v1h-2.05a2.5 2.5 0 0 1-4.9 0H0V3h9.05zM4.5 7a1.5 1.5 0 1 0 0 3 1.5 1.5
+            0 0 0 0-3zM2.05 8a2.5 2.5 0 0 1 4.9 0H16v1H6.95a2.5 2.5 0 0 1-4.9
+            0H0V8h2.05zm9.45 4a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3zm-2.45 1a2.5 2.5 0 0
+            1 4.9 0H16v1h-2.05a2.5 2.5 0 0 1-4.9 0H0v-1h9.05z"
+          />
         </svg>
       </button>
     </div>
-    <div v-if="showSettingPanel"
+    <div
+      v-if="showSettingPanel"
       class="fixed top-0 left-0 h-screen w-screen
-      bg-black bg-opacity-50 flex justify-center items-center">
+      bg-black bg-opacity-50 flex justify-center items-center"
+    >
       <div class="absolute flex flex-col p-5 bg-secondary space-y-5">
         <div class="flex justify-between items-center">
           <h1 class="font-bold text-xl">Datavisualization</h1>
-          <button class="bg-transparent hover:bg-transparent p-0 m-0"
-            @click="showSettingPanel = false">
+          <button
+            class="bg-transparent hover:bg-transparent p-0 m-0"
+            @click="showSettingPanel = false"
+          >
             <svg
-              xmlns="http://www.w3.org/2000/svg" fill="currentColor" class="w-6 h-6 text-black" viewBox="0 0 16 16">
-              <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1
+              xmlns="http://www.w3.org/2000/svg"
+              fill="currentColor"
+              class="w-6 h-6 text-black"
+              viewBox="0 0 16 16"
+            >
+              <path
+                d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1
                 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646
-                2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z"/>
+                2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z"
+              />
             </svg>
           </button>
         </div>
-        <span class="text-red-500 font-bold"
-          :class="[(errorMessage !== '') ? 'visible' : 'hidden']">{{errorMessage}}</span>
+        <span
+          class="text-red-500 font-bold"
+          :class="[errorMessage !== '' ? 'visible' : 'hidden']"
+          >{{ errorMessage }}</span
+        >
         <div class="w-full">
           <label for="device">Choose the device:</label>
-          <select name="device"
+          <select
+            name="device"
             id="device"
             class="text-black w-full p-2 rounded border border-primary"
             v-model="selectedDevice"
-            @change="showPropertie = true">
-            <option v-for="device in devices"
-              :key="device"
-              v-bind:value="device">
-              {{ device }}
+            @change="showPropertie = true"
+          >
+            <option
+              v-for="device in devices"
+              :key="device.serialnumber"
+              :value="device">
+              {{ device.name }}
             </option>
           </select>
         </div>
-        <div :class="[showPropertie || (selectedDevice !== undefined) ? 'visible' : 'invisible' ] ">
+        <div :class="[showPropertie || selectedDevice !== undefined ? 'visible' : 'invisible']">
           <label for="propertie">Choose the propertie:</label>
-          <select name="propertie"
+          <select
+            name="propertie"
             id="propertie"
             class="text-black w-full p-2 rounded border border-primary"
             v-model="selectedPropertie"
-            @change="getDateDuration">
+            @change="getDateDuration"
+          >
             <option value="airVolume">Air Volume</option>
             <option value="lampValues">Lamp Values</option>
             <option value="tacho">Tachos</option>
@@ -66,51 +88,57 @@
             <option value="co2">CO2</option>
           </select>
         </div>
-        <div :class="[showDatepicker ? 'visible' : 'invisible' ] ">
+        <div :class="[showDatepicker ? 'visible' : 'invisible']">
           <label for="dateFrom">Choose the start date:</label>
           <div class="text-black w-full pb-5">
-            <datetime id="dateFrom"
+            <datetime
+              id="dateFrom"
               v-model="selectedDateFrom"
               :min-datetime="disabledDates.from"
               :max-datetime="selectedDateTo"
               :type="'datetime'"
-              class="border border-primary">
+              class="border border-primary"
+            >
             </datetime>
           </div>
           <label for="dateTo">Choose the end date:</label>
           <div class="text-black w-full">
-            <datetime id="dateTo"
+            <datetime
+              id="dateTo"
               v-model="selectedDateTo"
               :min-datetime="selectedDateFrom"
               :max-datetime="disabledDates.to"
               :type="'datetime'"
-              class="border border-primary">
+              class="border border-primary"
+            >
             </datetime>
           </div>
           <button
-            :class="[canRefresh ? 'visible' : 'invisible' ] "
+            :class="[canRefresh ? 'visible' : 'invisible']"
             class="text-primary w-full text-center font-bold pt-5 hover:transform hover:scale-105
               transition-all"
-            @click="refreshChart">
+            @click="refreshChart"
+          >
             Refresh
           </button>
         </div>
       </div>
     </div>
     <div class="h-full w-full">
-      <div v-if="!loaded"
-        class="absolute top-1/2 left-1/2 origin-center lds-ring">
+      <div v-if="!loaded" class="absolute top-1/2 left-1/2 origin-center lds-ring">
         <div></div>
         <div></div>
         <div></div>
         <div></div>
       </div>
-      <chart v-if="loaded"
-      :showAllCharts="showAllCharts"
-      :chartData="datacollection"
-      :options="options"
-      :style="chartStyles"
-      class="p-16"></chart>
+      <chart
+        v-if="loaded"
+        :showAllCharts="showAllCharts"
+        :chartData="datacollection"
+        :options="options"
+        :style="chartStyles"
+        class="p-16"
+      ></chart>
     </div>
   </div>
 </template>
@@ -143,52 +171,61 @@ export default {
       errorMessage: '',
       devices: [],
       canRefresh: false,
-      disabledDates: {
-
-      },
+      disabledDates: {},
       datacollection: {},
       options: {
+        title: {
+          display: true,
+          position: 'top',
+          text: ['Device Chart'],
+          fontSize: 18,
+          // fontFamily: 'Inter',
+        },
         responsive: true,
         maintainAspectRatio: false,
         scales: {
-          xAxes: [{
-            // stacked: true,
-            type: 'time',
-            distribution: 'linear',
-            time: {
-              tooltipFormat: 'dd.MM.yyyy H:mm:ss',
-              minUnit: 'second',
-              unit: 'minute',
-              displayFormats: {
-                millisecond: 'dd.MM.yyyy H:mm:ss',
-                second: 'dd.MM.yyyy H:mm:ss',
-                minute: 'dd.MM.yyyy H:mm:ss',
+          xAxes: [
+            {
+              // stacked: true,
+              type: 'time',
+              distribution: 'linear',
+              time: {
+                tooltipFormat: 'dd.MM.yyyy H:mm:ss',
+                minUnit: 'second',
+                unit: 'minute',
+                displayFormats: {
+                  millisecond: 'dd.MM.yyyy H:mm:ss',
+                  second: 'dd.MM.yyyy H:mm:ss',
+                  minute: 'dd.MM.yyyy H:mm:ss',
+                },
+              },
+              // adapters: {
+              //   date: {
+              //   },
+              // },
+              ticks: {
+                autoSkip: true,
+                maxRotation: 90,
+                minRotation: 90,
               },
             },
-            // adapters: {
-            //   date: {
-            //   },
-            // },
-            ticks: {
-              autoSkip: true,
-              maxRotation: 90,
-              minRotation: 90,
-            },
-          }],
-          yAxes: [{
-            ticks: {
-              callback(value) {
-                return `${value}`;
+          ],
+          yAxes: [
+            {
+              ticks: {
+                callback(value) {
+                  return `${value}`;
+                },
               },
             },
-          }],
+          ],
         },
       },
     };
   },
   computed: {
     toggleCharts() {
-      return (this.showAllCharts) ? 'Show all charts' : 'Hide all charts';
+      return this.showAllCharts ? 'Show all charts' : 'Hide all charts';
     },
     chartStyles() {
       return {
@@ -199,26 +236,30 @@ export default {
     },
   },
   async created() {
-    await this.fetchData();
+    await this.getDevices();
 
-    this.selectedDevice = this.device;
-    this.selectedPropertie = this.propertie;
-    if (this.selectedPropertie) {
-      this.showDatepicker = true;
-      await this.getDateDuration();
+    try {
+      await this.fetchData();
+    } catch (error) {
+      console.error(error);
+      this.errorMessage = error;
     }
   },
   watch: {
-    async $route(to, from) {
-      console.log(to, from);
-      await this.fetchData();
+    async $route() {
+      try {
+        await this.fetchData();
+      } catch (error) {
+        console.error(error);
+        this.errorMessage = error;
+      }
     },
     selectedDateFrom(newDate) {
-      this.canRefresh = (newDate !== this.from);
+      this.canRefresh = newDate !== this.from;
       this.selectedDateFrom = newDate;
     },
     selectedDateTo(newDate) {
-      this.canRefresh = (newDate !== this.to);
+      this.canRefresh = newDate !== this.to;
       this.selectedDateTo = newDate;
     },
   },
@@ -230,32 +271,57 @@ export default {
       this.showSettingPanel = false;
     },
     async fetchData() {
-      await this.getDevices();
+      if (this.device === undefined) {
+        this.showSettingPanel = true;
+        return;
+      }
+      let response = await fetch(`/api/device?device=${this.device}`);
+      if (response.status === 404) {
+        throw new Error('No data available');
+      }
+      let data = await response.json();
+      this.selectedDevice = {
+        name: data.name,
+        serialnumber: data.serialnumber,
+      };
+      console.log(this.selectedDevice);
 
-      if (this.device === undefined) return;
-      if (this.propertie === undefined) return;
-      if (this.from === undefined) return;
-      if (this.to === undefined) return;
+      if (this.propertie === undefined) {
+        this.showSettingPanel = true;
+        return;
+      }
+      this.selectedPropertie = this.propertie;
+      this.showDatepicker = true;
+
+      if (this.from === undefined) {
+        this.showSettingPanel = true;
+        return;
+      }
+      this.selectedDateFrom = this.from;
+      this.disabledDates = {
+        from: this.selectedDateFrom,
+      };
+
+      if (this.to === undefined) {
+        this.showSettingPanel = true;
+        return;
+      }
+      this.selectedDateTo = this.to;
+      this.disabledDates = {
+        from: this.selectedDateFrom,
+        to: this.selectedDateTo,
+      };
 
       this.loaded = false;
       this.showSettingPanel = false;
 
-      let data = null;
-      await this.getDateDuration();
-
-      this.selectedDateFrom = this.from;
-      this.selectedDateTo = this.to;
-      await fetch(`/api/device?device=${this.selectedDevice}&propertie=${this.propertie}&from=${this.from}&to=${this.to}`)
-        .then((response) => {
-          if (response.status === 404) {
-            throw new Error('No data avalaible');
-          }
-          return response.json();
-        }).then((response) => {
-          data = response;
-        }).catch((err) => {
-          this.errorMessage = err;
-        });
+      response = await fetch(
+        `/api/deviceData?device=${this.selectedDevice.serialnumber}&propertie=${this.propertie}&from=${this.from}&to=${this.to}`,
+      );
+      if (response.status === 404) {
+        throw new Error('No data avalaible');
+      }
+      data = await response.json();
 
       const lamps = [];
 
@@ -263,7 +329,7 @@ export default {
         case 'airVolume':
           this.datacollection.datasets = [
             {
-              label: this.device,
+              label: this.selectedDevice.name,
               backgroundColor: '#00666F',
               borderColor: '#00666F',
               borderWidth: 1,
@@ -281,11 +347,10 @@ export default {
           });
           break;
         case 'lampValues':
-
           for (let i = 0; i < 16; i += 1) {
-            const color = `rgba(0,${50 + (((255 - 50) / 16) * i)},${80 + (((255 - 80) / 16) * i)})`;
+            const color = `rgba(0,${50 + ((255 - 50) / 16) * i},${80 + ((255 - 80) / 16) * i})`;
             lamps.push({
-              label: `${this.device} | Lamp ${i + 1}`,
+              label: `${this.selectedDevice.name} | Lamp ${i + 1}`,
               backgroundColor: color,
               borderColor: color,
               borderWidth: 1,
@@ -308,7 +373,7 @@ export default {
         case 'tacho':
           this.datacollection.datasets = [
             {
-              label: this.device,
+              label: this.selectedDevice.name,
               backgroundColor: '#00666F',
               borderColor: '#00666F',
               borderWidth: 1,
@@ -327,7 +392,7 @@ export default {
         case 'fanVoltage':
           this.datacollection.datasets = [
             {
-              label: this.device,
+              label: this.selectedDevice.name,
               backgroundColor: '#00666F',
               borderColor: '#00666F',
               borderWidth: 1,
@@ -346,7 +411,7 @@ export default {
         case 'co2':
           this.datacollection.datasets = [
             {
-              label: this.device,
+              label: this.selectedDevice.name,
               backgroundColor: '#00666F',
               borderColor: '#00666F',
               borderWidth: 1,
@@ -367,6 +432,13 @@ export default {
           break;
       }
 
+      this.options.title.text = [
+        `Device: ${this.selectedDevice.name}, ${this.selectedPropertie} | `
+        + `from: ${new Date(this.selectedDateFrom).toLocaleString()} to: ${new Date(
+          this.selectedDateTo,
+        ).toLocaleString()}`,
+      ];
+
       this.showToggleAllCharts = true;
       this.loaded = true;
     },
@@ -374,7 +446,7 @@ export default {
       await this.$router.push({
         name: 'DeviceChart',
         query: {
-          device: this.selectedDevice,
+          device: this.selectedDevice.serialnumber,
           propertie: this.selectedPropertie,
           from: this.selectedDateFrom,
           to: this.selectedDateTo,
@@ -382,21 +454,31 @@ export default {
       });
     },
     async getDevices() {
-      await fetch('/api/serialnumbers')
+      await fetch('/api/devices')
         .then((response) => response.json())
         .then((data) => {
-          this.devices = data;
+          this.devices = [];
+          data.forEach((device) => {
+            this.devices.push({
+              serialnumber: device.serialnumber,
+              name: device.name,
+            });
+          });
         });
     },
     async getDateDuration() {
-      await fetch(`/api/timestamps?device=${this.selectedDevice}&propertie=${this.selectedPropertie}`)
+      this.showDatepicker = false;
+      await fetch(
+        `/api/timestamps?device=${this.selectedDevice.serialnumber}&propertie=${this.selectedPropertie}`,
+      )
         .then((response) => {
           if (response.status === 404) {
             throw new Error('No data avalaible');
           }
           this.errorMessage = '';
           return response.json();
-        }).then((data) => {
+        })
+        .then((data) => {
           this.disabledDates = {
             from: data.from,
             to: data.to,
@@ -405,14 +487,14 @@ export default {
           this.selectedDateFrom = data.from;
           this.selectedDateTo = data.to;
           this.showDatepicker = true;
-        }).catch((err) => {
+        })
+        .catch((err) => {
           this.errorMessage = err;
           this.showDatepicker = false;
         });
     },
   },
 };
-
 </script>
 
 <style>
@@ -429,10 +511,10 @@ export default {
   width: 64px;
   height: 64px;
   margin: 8px;
-  border: 8px solid #00666F;
+  border: 8px solid #00666f;
   border-radius: 50%;
   animation: lds-ring 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
-  border-color: #00666F transparent transparent transparent;
+  border-color: #00666f transparent transparent transparent;
 }
 .lds-ring div:nth-child(1) {
   animation-delay: -0.45s;
@@ -451,5 +533,4 @@ export default {
     transform: rotate(360deg);
   }
 }
-
 </style>

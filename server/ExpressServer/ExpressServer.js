@@ -68,6 +68,12 @@ module.exports = class ExpressServer {
       }
     });
 
+    this.app.get('/gateway', async (req, res, next) => {
+      logger.info('Got post request on gateway route. Request: %o %o', req.body, req.query);
+      const { propertie, value } = req.query;
+      res.status(200).send({ propertie, value });
+    });
+
     this.app.post('/login', async (req, res, next) => {
       logger.info('Got valid request on login route. Request: %o', req.body);
       try {
@@ -149,9 +155,34 @@ module.exports = class ExpressServer {
       }
     });
 
+    apiRouter.get('/device', async (req, res) => {
+      const serialnumber = req.query.device;
+      logger.info(`Got GET request on /device with serialnumber=${serialnumber}`);
+
+      try {
+        const db = await this.database.getDevice(serialnumber);
+        res.json(db);
+      } catch (error) {
+        server.emit('error', { service: 'ExpressServer', error });
+        res.sendStatus(500);
+      }
+    });
+
     apiRouter.get('/groups', async (req, res) => {
       try {
         const db = await this.database.getGroups();
+        res.json(db);
+      } catch (error) {
+        server.emit('error', { service: 'ExpressServer', error });
+        res.sendStatus(500);
+      }
+    });
+
+    apiRouter.get('/group', async (req, res) => {
+      const { id } = req.query;
+      logger.info(`Got GET request on /group with id=${id}`);
+      try {
+        const db = await this.database.getGroup(id);
         res.json(db);
       } catch (error) {
         server.emit('error', { service: 'ExpressServer', error });
@@ -179,11 +210,11 @@ module.exports = class ExpressServer {
       }
     });
 
-    apiRouter.get('/device', async (req, res) => {
+    apiRouter.get('/deviceData', async (req, res) => {
       const serialnumber = req.query.device;
       const { propertie, from, to } = req.query;
 
-      logger.info(`Got GET request on /device with propertie=${propertie}, from=${from}, to=${to}`);
+      logger.info(`Got GET request on /deviceData with serialnumber=${serialnumber} propertie=${propertie}, from=${from}, to=${to}`);
 
       let db = '';
 
@@ -227,11 +258,11 @@ module.exports = class ExpressServer {
       res.json(db);
     });
 
-    apiRouter.get('/group', async (req, res) => {
+    apiRouter.get('/groupData', async (req, res) => {
       const groupID = req.query.group;
       const { propertie, from, to } = req.query;
 
-      logger.info(`Got GET request on /group with propertie=${propertie}, from=${from}, to=${to}`);
+      logger.info(`Got GET request on /groupData with id=${groupID} propertie=${propertie}, from=${from}, to=${to}`);
 
       const db = [];
       try {
