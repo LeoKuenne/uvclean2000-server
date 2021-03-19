@@ -206,9 +206,22 @@ export default {
           }],
           yAxes: [{
             stacked: true,
+            propertie: this.propertie,
             ticks: {
               callback(value) {
-                return `${value}`;
+                switch (this.options.propertie) {
+                  case 'airVolume':
+                    return `${value} m³/h`;
+                  case 'tacho':
+                    return `${value} R/min`;
+                  case 'lampValues':
+                  case 'fanVoltage':
+                    return `${value} V`;
+                  case 'co2':
+                    return `${value} ppm`;
+                  default:
+                    return `${value}`;
+                }
               },
             },
           }],
@@ -399,8 +412,11 @@ export default {
         ).toLocaleString()}`,
       ];
 
+      this.options.scales.yAxes[0].propertie = this.selectedPropertie;
+
       this.showToggleAllCharts = true;
       this.loaded = true;
+      this.showAllCharts = true;
     },
     async refreshChart() {
       await this.$router.push({

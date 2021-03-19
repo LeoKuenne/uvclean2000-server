@@ -179,7 +179,7 @@ export default {
       datepickerLoad: false,
       showToggleAllCharts: false,
       showSettingPanel: true,
-      showAllCharts: true,
+      showAllCharts: false,
       selectedDevice: this.device,
       selectedPropertie: '',
       selectedDateFrom: '',
@@ -228,9 +228,22 @@ export default {
           ],
           yAxes: [
             {
+              propertie: this.propertie,
               ticks: {
                 callback(value) {
-                  return `${value}`;
+                  switch (this.options.propertie) {
+                    case 'airVolume':
+                      return `${value} m³/h`;
+                    case 'tacho':
+                      return `${value} R/min`;
+                    case 'lampValues':
+                    case 'fanVoltage':
+                      return `${value} V`;
+                    case 'co2':
+                      return `${value} ppm`;
+                    default:
+                      return `${value}`;
+                  }
                 },
               },
             },
@@ -305,7 +318,6 @@ export default {
         name: data.name,
         serialnumber: data.serialnumber,
       };
-      console.log(this.selectedDevice);
 
       if (this.propertie === undefined) {
         this.showSettingPanelAndFetchData();
@@ -366,6 +378,7 @@ export default {
               y: event.volume,
             });
           });
+          this.showAllCharts = false;
           break;
         case 'lampValues':
           for (let i = 0; i < 16; i += 1) {
@@ -378,7 +391,6 @@ export default {
               data: [],
               fill: false,
               hidden: true,
-              spanGaps: true,
             });
           }
           data.forEach((event) => {
@@ -387,6 +399,7 @@ export default {
               y: event.value,
             });
           });
+          this.showAllCharts = true;
 
           this.datacollection.datasets = lamps;
 
@@ -409,6 +422,7 @@ export default {
               y: event.tacho,
             });
           });
+          this.showAllCharts = false;
           break;
         case 'fanVoltage':
           this.datacollection.datasets = [
@@ -428,6 +442,7 @@ export default {
               y: event.voltage,
             });
           });
+          this.showAllCharts = false;
           break;
         case 'co2':
           this.datacollection.datasets = [
@@ -447,6 +462,7 @@ export default {
               y: event.co2,
             });
           });
+          this.showAllCharts = false;
           break;
 
         default:
@@ -459,6 +475,8 @@ export default {
           this.selectedDateTo,
         ).toLocaleString()}`,
       ];
+
+      this.options.scales.yAxes[0].propertie = this.selectedPropertie;
 
       this.showToggleAllCharts = true;
       this.loaded = true;
