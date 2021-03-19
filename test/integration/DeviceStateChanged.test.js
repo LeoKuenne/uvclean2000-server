@@ -78,9 +78,6 @@ describe('DeviceStateChanged MQTT Module', () => {
     ['lamp/1', 100, {
       lamp: 1, newValue: 100, prop: 'currentLampValue', serialnumber: '0002145702154',
     }],
-    ['identify', true, {
-      newValue: true, prop: 'identifyMode', serialnumber: '0002145702154',
-    }],
     ['eventMode', true, {
       newValue: true, prop: 'eventMode', serialnumber: '0002145702154',
     }],

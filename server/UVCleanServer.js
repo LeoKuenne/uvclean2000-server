@@ -23,6 +23,7 @@ const AddUser = require('./controlModules/SocketIOCommands/AddUser');
 const DeleteUser = require('./controlModules/SocketIOCommands/DeleteUser');
 const UpdateUser = require('./controlModules/SocketIOCommands/UpdateUser');
 const UpdateUserPassword = require('./controlModules/SocketIOCommands/UpdateUserPassword');
+const IdentifyDevice = require('./controlModules/SocketIOCommands/IdentifyDevice');
 
 const logger = MainLogger.child({ service: 'UVCleanServer' });
 
@@ -86,6 +87,7 @@ class UVCleanServer extends EventEmitter {
         DeleteUser(this, this.database, this.io, this.client, socket);
         UpdateUser(this, this.database, this.io, this.client, socket);
         UpdateUserPassword(this, this.database, this.io, this.client, socket);
+        IdentifyDevice(this, this.database, this.io, this.client, socket);
 
         // Debug any messages that are coming from the frontend
         socket.onAny((event, ...args) => {

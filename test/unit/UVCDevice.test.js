@@ -13,12 +13,6 @@ describe('parseStates function', () => {
     expect(UVCDevice.parseStates('eventMode', undefined, 'Test')).toEqual({ value: false });
   });
 
-  it('Parses identifyMode correctly', () => {
-    expect(UVCDevice.parseStates('identifyMode', undefined, false)).toEqual({ value: false });
-    expect(UVCDevice.parseStates('identifyMode', undefined, true)).toEqual({ value: true });
-    expect(UVCDevice.parseStates('identifyMode', undefined, 'Test')).toEqual({ value: false });
-  });
-
   it('Parses currentBodyState correctly', () => {
     expect(UVCDevice.parseStates('currentBodyState', undefined, '1')).toEqual({ value: '1' });
     expect(UVCDevice.parseStates('currentBodyState', undefined, 10)).toEqual({ value: '10' });

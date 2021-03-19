@@ -201,7 +201,6 @@ new Vue({
               break;
             case 'engineState':
             case 'eventMode':
-            case 'identifyMode':
               dev[props.prop] = (`${props.newValue}` === 'true');
               break;
             case 'tacho':
@@ -275,12 +274,6 @@ new Vue({
               break;
             case 'engineLevelDevicesWithOtherState':
               grp.engineLevelDevicesWithOtherState = props.newValue;
-              break;
-            case 'identifyMode':
-              grp[props.prop] = (`${props.newValue}` === 'true');
-              break;
-            case 'identifyModeDevicesWithOtherState':
-              grp.identifyModeDevicesWithOtherState = props.newValue;
               break;
             default:
               console.log(`Can not parse stateChanged message with prop ${props.prop}`);

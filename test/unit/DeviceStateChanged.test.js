@@ -60,8 +60,6 @@ describe('function mapMQTTTopicToDatabase', () => {
     ['UVClean/123/stateChanged/tvoc', { serialnumber: '123', prop: 'currentTVOC' }],
     ['UVClean/123/stateChanged/co2', { serialnumber: '123', prop: 'currentCO2' }],
     ['UVClean/123/stateChanged/engineLevel', { serialnumber: '123', prop: 'engineLevel' }],
-    ['UVClean/123/stateChanged/identify', { serialnumber: '123', prop: 'identifyMode' }],
-    ['UVClean/123/stateChanged/identify', { serialnumber: '123', prop: 'identifyMode' }],
     ['UVClean/123/stateChanged/airVolume', { serialnumber: '123', prop: 'currentAirVolume' }],
     ['UVClean/123/stateChanged/tacho', { serialnumber: '123', prop: 'tacho' }],
     ['UVClean/123/stateChanged/alarm/1', { serialnumber: '123', prop: 'currentLampState', subprop: 1 }],
@@ -133,9 +131,6 @@ describe('function updateDatabase', () => {
     [{
       serialnumber: '1', prop: 'engineLevel', newValue: 1,
     }, 'updateDevice', { serialnumber: '1', engineLevel: 1 }],
-    [{
-      serialnumber: '1', prop: 'identifyMode', newValue: true,
-    }, 'updateDevice', { serialnumber: '1', identifyMode: true }],
     [{
       serialnumber: '1', prop: 'currentFanVoltage', newValue: 1,
     }, 'addFanVoltage', { device: '1', voltage: 1 }],

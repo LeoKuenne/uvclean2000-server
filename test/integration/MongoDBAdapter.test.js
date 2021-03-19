@@ -141,7 +141,6 @@ describe('MongoDBAdapter Functions', () => {
       expect(returnedDevice.currentBodyState).toBeDefined();
       expect(returnedDevice.currentLampState).toBeDefined();
       expect(returnedDevice.currentLampValue).toBeDefined();
-      expect(returnedDevice.identifyMode).toBe(false);
       expect(returnedDevice.eventMode).toBe(false);
       expect(returnedDevice.tacho).toStrictEqual({ tacho: 0 });
       expect(returnedDevice.currentAirVolume).toStrictEqual({ volume: 0 });
@@ -197,7 +196,6 @@ describe('MongoDBAdapter Functions', () => {
         expect(dbData[i].currentBodyState).toBeDefined();
         expect(dbData[i].currentLampState).toBeDefined();
         expect(dbData[i].currentLampValue).toBeDefined();
-        expect(dbData[i].identifyMode).toBe(false);
         expect(dbData[i].eventMode).toBe(false);
         expect(dbData[i].tacho).toStrictEqual({ tacho: 0 });
         expect(dbData[i].currentAirVolume).toStrictEqual({ volume: 0 });
@@ -2347,7 +2345,6 @@ describe('MongoDBAdapter Functions', () => {
         expect(device.currentBodyState).toBeUndefined();
         expect(device.currentLampState.toString()).toMatch([].toString());
         expect(device.currentLampValue.toString()).toMatch([].toString());
-        expect(device.identifyMode).toBe(false);
         expect(device.eventMode).toBe(false);
         expect(device.tacho).toBeUndefined();
         expect(device.currentAirVolume).toBeUndefined();

@@ -21,8 +21,9 @@
               {text: 'Edit', disabled: this.$root.$dataStore.user.canEdit === false},
               {text: 'View chart', disabled: false},
               {text: 'Add to Group', disabled: this.$root.$dataStore.user.canEdit === false},
-              {text: 'Reset',  disabled: this.$root.$dataStore.user.canEdit === false},
-              {text: 'Acknowledge', disabled: this.$root.$dataStore.user.canEdit === false}
+              {text: 'Acknowledge', disabled: this.$root.$dataStore.user.canEdit === false},
+              {text: 'Identify', disabled: this.$root.$dataStore.user.canEdit === false},
+              {text: 'Reset',  disabled: this.$root.$dataStore.user.canEdit === false}
             ]"
             @itemClicked="menuItemClicked($event)">
           </dropdownMenu>
@@ -96,7 +97,7 @@
             {{eventMode}}
           </button>
 
-          <label for="b_identify">Identify</label>
+          <!-- <label for="b_identify">Identify</label>
           <button id="b_identify"
             class="p-2 text-white hover:transform hover:scale-105 transition-all"
             :class="{ 'bg-green-500': device.identifyMode, 'bg-red-500': !device.identifyMode }"
@@ -107,7 +108,7 @@
             })"
             :disabled="$dataStore.user.canEdit === false">
             {{identifyMode}}
-          </button>
+          </button> -->
           <label for="s_engine_level">Engine Level</label>
           <select name="engine_level"
             id="s_engine_level"
@@ -285,6 +286,11 @@ export default {
           break;
         case 'Reset':
           this.$emit('reset', {
+            serialnumber: this.device.serialnumber,
+          });
+          break;
+        case 'Identify':
+          this.$emit('identify', {
             serialnumber: this.device.serialnumber,
           });
           break;

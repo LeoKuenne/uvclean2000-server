@@ -36,9 +36,6 @@ async function execute(db, io, mqtt, message) {
     case 'eventMode':
       propertie = 'eventMode';
       break;
-    case 'identifyMode':
-      propertie = 'identify';
-      break;
     case 'engineLevel':
       propertie = 'engineLevel';
       break;

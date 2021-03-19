@@ -26,7 +26,6 @@ const uvcDeviceSchema = new mongoose.Schema({
   currentFanVoltage: { type: Schema.Types.ObjectId, ref: 'FanVoltage' },
   currentCO2: { type: Schema.Types.ObjectId, ref: 'CO2' },
   currentTVOC: { type: Schema.Types.ObjectId, ref: 'TVOC' },
-  identifyMode: { type: Boolean, default: false },
   eventMode: { type: Boolean, default: false },
   tacho: { type: Schema.Types.ObjectId, ref: 'Tacho' },
   currentAirVolume: { type: Schema.Types.ObjectId, ref: 'AirVolume' },
@@ -52,7 +51,6 @@ function parseStates(propertie, subpropertie, value) {
       return { value: `${value}` };
     case 'engineState':
     case 'eventMode':
-    case 'identifyMode':
       return { value: (`${value}` === 'true') };
     case 'currentFanVoltage':
       return { value: parseFloat(value) };

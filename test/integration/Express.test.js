@@ -61,7 +61,6 @@ describe.skip('Express Route testing', () => {
         currentFanState: { state: '' },
         currentLampState: [],
         currentLampValue: [],
-        identifyMode: false,
         eventMode: false,
         tacho: { tacho: 0 },
         currentAirVolume: { volume: 0 },

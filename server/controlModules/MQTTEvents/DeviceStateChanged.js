@@ -232,8 +232,6 @@ function mapMQTTTopicToDatabase(topic) {
       } else {
         throw new Error(`Can not parse state with propertie ${prop}`);
       }
-    case 'identify':
-      return { serialnumber, prop: 'identifyMode' };
     case 'eventMode':
       return { serialnumber, prop: 'eventMode' };
     case 'fan':

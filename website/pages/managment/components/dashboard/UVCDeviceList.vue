@@ -27,6 +27,7 @@
         @assignGroup="showGroupForm($event)"
         @changeState="changeDeviceState($event)"
         @acknowledgeAlarm="acknowledgeAlarm($event)"
+        @identify="identifyDevice($event)"
         @reset="resetDevice($event)"
         v-for="dev in $dataStore.devices"
         :key="dev.serialnumber"
@@ -319,6 +320,15 @@ export default {
     acknowledgeAlarm(device) {
       if (this.$root.$data.socket === null) return;
       this.$root.$data.socket.emit('device_acknowledgeAlarm', {
+        serialnumber: device.serialnumber,
+      });
+    },
+    /**
+     * Called when the identify button in the menu is pressed
+     */
+    identifyDevice(device) {
+      if (this.$root.$data.socket === null) return;
+      this.$root.$data.socket.emit('device_identify', {
         serialnumber: device.serialnumber,
       });
     },
