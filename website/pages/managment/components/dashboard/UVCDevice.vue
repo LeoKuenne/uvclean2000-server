@@ -72,8 +72,8 @@
           </div> Version 2 -->
         </div>
         <div class="p-2 grid grid-cols-2 space-y-2 items-center">
-          <label for="b_device_state">Device State</label>
-          <button id="b_device_state"
+          <label :for="'b_device_state' + device.serialnumber">Device State</label>
+          <button :id="'b_device_state' + device.serialnumber"
             class="p-2 m-2 text-white hover:transform hover:scale-105 transition-all"
             :class="{ 'bg-green-500': device.engineState, 'bg-red-500': !device.engineState }"
             @click="$emit('changeState', {
@@ -84,8 +84,8 @@
             :disabled="$dataStore.user.canEdit === false">
             {{state}}
           </button>
-          <label for="b_eventmode">Eventmode</label>
-          <button id="b_eventmode"
+          <label :for="'b_eventmode' + device.serialnumber">Eventmode</label>
+          <button :id="'b_eventmode' + device.serialnumber"
             class="p-2 m-2 text-white hover:transform hover:scale-105 transition-all"
             v-bind:class="{ 'bg-green-500': device.eventMode, 'bg-red-500': !device.eventMode }"
             @click="$emit('changeState', {
@@ -109,9 +109,9 @@
             :disabled="$dataStore.user.canEdit === false">
             {{identifyMode}}
           </button> -->
-          <label for="s_engine_level">Engine Level</label>
-          <select name="engine_level"
-            id="s_engine_level"
+          <label :for="'s_engine_level' + device.serialnumber">Engine Level</label>
+          <select
+            :id="'s_engine_level' + device.serialnumber"
             class="p-2 m-2 border border-gray-300 rounded"
             :value="device.engineLevel"
             @change="$emit('changeState', {
