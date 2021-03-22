@@ -260,17 +260,34 @@ new Vue({
             case 'engineState':
               grp[props.prop] = (`${props.newValue}` === 'true');
               break;
-            case 'engineStateDevicesWithOtherState':
-              grp.engineStateDevicesWithOtherState = props.newValue;
-              break;
             case 'eventMode':
               grp[props.prop] = (`${props.newValue}` === 'true');
               break;
-            case 'eventModeDevicesWithOtherState':
-              grp.eventModeDevicesWithOtherState = props.newValue;
-              break;
             case 'engineLevel':
               grp[props.prop] = parseInt(props.newValue, 10);
+              break;
+            default:
+              console.log(`Can not parse stateChanged message with prop ${props.prop}`);
+              break;
+          }
+          return grp;
+        }
+        return false;
+      });
+    });
+
+    socket.on('group_devicesWithOtherStateChanged', (props) => {
+      console.log('Event: group_devicesWithOtherStateChanged', props);
+
+      this.$dataStore.groups.filter((group) => {
+        if (group.id === props.id) {
+          const grp = group;
+          switch (props.prop) {
+            case 'engineStateDevicesWithOtherState':
+              grp.engineStateDevicesWithOtherState = props.newValue;
+              break;
+            case 'eventModeDevicesWithOtherState':
+              grp.eventModeDevicesWithOtherState = props.newValue;
               break;
             case 'engineLevelDevicesWithOtherState':
               grp.engineLevelDevicesWithOtherState = props.newValue;

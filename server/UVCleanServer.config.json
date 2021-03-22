@@ -44,9 +44,9 @@
     "desc": "Development on 127.0.0.1. Database and MQTT Broker is running on 127.0.0.1",
     "logging": {
       "console": true,
-      "file": true,
+      "file": false,
       "fileLogLevel": "info",
-      "consoleErrorStack": false,
+      "consoleErrorStack": true,
       "consoleLogLevel": "debug"
     },
     "user": [

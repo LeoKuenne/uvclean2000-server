@@ -74,7 +74,7 @@
         <div class="p-2 grid grid-cols-2 space-y-2 items-center">
           <label for="b_device_state">Device State</label>
           <button id="b_device_state"
-            class="p-2 text-white hover:transform hover:scale-105 transition-all"
+            class="p-2 m-2 text-white hover:transform hover:scale-105 transition-all"
             :class="{ 'bg-green-500': device.engineState, 'bg-red-500': !device.engineState }"
             @click="$emit('changeState', {
               serialnumber: device.serialnumber,
@@ -86,7 +86,7 @@
           </button>
           <label for="b_eventmode">Eventmode</label>
           <button id="b_eventmode"
-            class="p-2 text-white hover:transform hover:scale-105 transition-all"
+            class="p-2 m-2 text-white hover:transform hover:scale-105 transition-all"
             v-bind:class="{ 'bg-green-500': device.eventMode, 'bg-red-500': !device.eventMode }"
             @click="$emit('changeState', {
               serialnumber: device.serialnumber,
@@ -99,7 +99,7 @@
 
           <!-- <label for="b_identify">Identify</label>
           <button id="b_identify"
-            class="p-2 text-white hover:transform hover:scale-105 transition-all"
+            class="p-2 m-2 text-white hover:transform hover:scale-105 transition-all"
             :class="{ 'bg-green-500': device.identifyMode, 'bg-red-500': !device.identifyMode }"
             @click="$emit('changeState', {
               serialnumber: device.serialnumber,
@@ -112,6 +112,7 @@
           <label for="s_engine_level">Engine Level</label>
           <select name="engine_level"
             id="s_engine_level"
+            class="p-2 m-2 border border-gray-300 rounded"
             :value="device.engineLevel"
             @change="$emit('changeState', {
               serialnumber: device.serialnumber,

@@ -125,6 +125,7 @@ module.exports = class MongoDBAdapter extends EventEmitter {
       .populate('currentTVOC', 'date tvoc')
       .populate('currentLampValue', 'date lamp value')
       .populate('group', 'name')
+      .lean()
       .exec();
 
     if (device === null || device === undefined) throw new Error('Device does not exists');
@@ -169,6 +170,7 @@ module.exports = class MongoDBAdapter extends EventEmitter {
       .populate('currentCO2', 'date co2')
       .populate('currentTVOC', 'date tvoc')
       .populate('currentLampValue', 'date lamp value')
+      .lean()
       .exec();
 
     // eslint-disable-next-line prefer-const
@@ -208,7 +210,7 @@ module.exports = class MongoDBAdapter extends EventEmitter {
 
     logger.debug('Getting serialnumbers');
 
-    const db = await UVCDeviceModel.find().select('serialnumber').exec();
+    const db = await UVCDeviceModel.find().lean().select('serialnumber').exec();
 
     // eslint-disable-next-line prefer-const
     let devices = [];
@@ -237,7 +239,7 @@ module.exports = class MongoDBAdapter extends EventEmitter {
       { serialnumber: device.serialnumber },
       device,
       { new: true },
-    ).exec();
+    ).lean().exec();
     if (d === null) throw new Error('Device does not exists');
     return d;
   }
@@ -253,7 +255,7 @@ module.exports = class MongoDBAdapter extends EventEmitter {
 
     logger.info('Deleting device %s', serialnumber);
 
-    const device = await UVCDeviceModel.findOneAndDelete({ serialnumber }).exec();
+    const device = await UVCDeviceModel.findOneAndDelete({ serialnumber }).lean().exec();
     if (device === null) throw new Error('Device does not exists');
     if (device.group !== undefined) {
       await UVCGroupModel.updateOne({
@@ -263,7 +265,7 @@ module.exports = class MongoDBAdapter extends EventEmitter {
           devices: device._id,
         },
       }, { new: true })
-        .exec();
+        .lean().exec();
     }
     const d = {
       serialnumber: device.serialnumber,
@@ -333,7 +335,7 @@ module.exports = class MongoDBAdapter extends EventEmitter {
     if (toDate !== undefined && toDate instanceof Date) {
       query.lte('date', toDate);
     }
-    return query.exec();
+    return query.lean().exec();
   }
 
   /**
@@ -381,7 +383,7 @@ module.exports = class MongoDBAdapter extends EventEmitter {
 
     logger.debug('Getting lamp state for device %s', serialnumber);
 
-    return AlarmStateModel.find({ device: serialnumber }, 'device lamp state date').exec();
+    return AlarmStateModel.find({ device: serialnumber }, 'device lamp state date').lean().exec();
   }
 
   /**
@@ -443,7 +445,7 @@ module.exports = class MongoDBAdapter extends EventEmitter {
       query.lte('date', toDate);
     }
     query.sort({ lamp: 'asc', date: 'asc' });
-    return query.exec();
+    return query.lean().exec();
   }
 
   /**
@@ -499,7 +501,7 @@ module.exports = class MongoDBAdapter extends EventEmitter {
       query.lte('date', toDate);
     }
     query.sort({ lamp: 'asc', date: 'asc' });
-    return query.exec();
+    return query.lean().exec();
   }
 
   /**
@@ -558,7 +560,7 @@ module.exports = class MongoDBAdapter extends EventEmitter {
       query.lte('date', toDate);
     }
     query.sort({ lamp: 'asc', date: 'asc' });
-    return query.exec();
+    return query.lean().exec();
   }
 
   /**
@@ -616,7 +618,7 @@ module.exports = class MongoDBAdapter extends EventEmitter {
       query.lte('date', toDate);
     }
     query.sort({ lamp: 'asc', date: 'asc' });
-    return query.exec();
+    return query.lean().exec();
   }
 
   /**
@@ -674,7 +676,7 @@ module.exports = class MongoDBAdapter extends EventEmitter {
       query.lte('date', toDate);
     }
     query.sort({ lamp: 'asc', date: 'asc' });
-    return query.exec();
+    return query.lean().exec();
   }
 
   /**
@@ -732,7 +734,7 @@ module.exports = class MongoDBAdapter extends EventEmitter {
       query.lte('date', toDate);
     }
     query.sort({ lamp: 'asc', date: 'asc' });
-    return query.exec();
+    return query.lean().exec();
   }
 
   /**
@@ -746,7 +748,7 @@ module.exports = class MongoDBAdapter extends EventEmitter {
   async addTVOC(tvoc) {
     if (this.db === undefined) throw new Error('Database is not connected');
 
-    logger.debug('Adding tvoc %o', co2);
+    logger.debug('Adding tvoc %o', tvoc);
 
     const docTVOC = new TVOCModel(tvoc);
     const err = docTVOC.validateSync();
@@ -790,7 +792,7 @@ module.exports = class MongoDBAdapter extends EventEmitter {
       query.lte('date', toDate);
     }
     query.sort({ lamp: 'asc', date: 'asc' });
-    return query.exec();
+    return query.lean().exec();
   }
 
   /**
@@ -921,6 +923,7 @@ module.exports = class MongoDBAdapter extends EventEmitter {
       .populate('engineStateDevicesWithOtherState', 'serialnumber name')
       .populate('eventModeDevicesWithOtherState', 'serialnumber name')
       .populate('engineLevelDevicesWithOtherState', 'serialnumber name')
+      .lean()
       .exec()
       .catch((e) => {
         throw e;
@@ -931,7 +934,7 @@ module.exports = class MongoDBAdapter extends EventEmitter {
     }
 
     const group = {
-      id: groupData.id,
+      id: groupData._id,
       name: groupData.name,
       devices: groupData.devices,
       alarmState: groupData.alarmState,
@@ -984,12 +987,13 @@ module.exports = class MongoDBAdapter extends EventEmitter {
       .populate('engineStateDevicesWithOtherState', 'serialnumber name')
       .populate('eventModeDevicesWithOtherState', 'serialnumber name')
       .populate('engineLevelDevicesWithOtherState', 'serialnumber name')
+      .lean()
       .exec();
 
     const groups = [];
     groupData.map((group) => {
       const d = {
-        id: group.id,
+        id: group._id,
         name: group.name,
         devices: group.devices,
         alarmState: group.alarmState,
@@ -1012,7 +1016,7 @@ module.exports = class MongoDBAdapter extends EventEmitter {
 
     logger.debug('Getting all group ids');
 
-    const groupData = await UVCGroupModel.find()
+    const groupData = await UVCGroupModel.find().lean()
       .exec();
 
     const groupIDs = [];
@@ -1043,7 +1047,7 @@ module.exports = class MongoDBAdapter extends EventEmitter {
       { _id: new ObjectId(group.id) },
       group,
       { new: true },
-    ).exec();
+    ).lean().exec();
 
     if (docGroup === null) {
       throw new Error('Group does not exists');
@@ -1074,12 +1078,12 @@ module.exports = class MongoDBAdapter extends EventEmitter {
         },
       }, { new: true }, (e) => {
         if (e !== null) { throw e; }
-      }).exec();
+      }).lean().exec();
     }
 
     const docGroup = await UVCGroupModel.findOneAndDelete(
       { _id: new ObjectId(group.id) },
-    ).exec();
+    ).lean().exec();
 
     if (docGroup === null) {
       throw new Error('Group does not exists');
@@ -1105,7 +1109,7 @@ module.exports = class MongoDBAdapter extends EventEmitter {
       {
         serialnumber: deviceSerialnumber,
       },
-    ).exec();
+    ).lean().exec();
 
     if (docDevice === null) {
       throw new Error(`Device ${deviceSerialnumber} does not exists`);
@@ -1525,7 +1529,7 @@ module.exports = class MongoDBAdapter extends EventEmitter {
   async getUsers() {
     if (this.db === undefined) throw new Error('Database is not connected');
 
-    const docUsers = await UserModel.find().exec();
+    const docUsers = await UserModel.find().lean().exec();
     logger.debug('Getting all users');
 
     const users = [];

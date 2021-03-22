@@ -1,4 +1,5 @@
 const EventEmitter = require('events');
+const UVCGroup = require('../../server/dataModels/UVCGroup');
 const register = require('../../server/controlModules/SocketIOCommands/GroupChangeState');
 const MongoDBAdapter = require('../../server/databaseAdapters/mongoDB/MongoDBAdapter.js');
 
@@ -75,60 +76,24 @@ describe('GroupChangeState Module', () => {
     ioSocket.emit('group_changeState', prop);
   });
 
-  it('changeState with prop engineState emits changeState to all devices in the group', async (done) => {
+  it.each([
+    ['engineState', true],
+    ['engineLevel', 1],
+  ])('changeState with prop %s and value %s emits changeState to all devices in the group', async (prop, value, done) => {
     const io = new EventEmitter();
     const ioSocket = new EventEmitter();
     const server = new EventEmitter();
     let i = 1;
 
-    const group = await database.addGroup({ name: 'Test Group 1' });
-    const device1 = await database.addDevice({ name: 'Device 1', serialnumber: '1' });
-    const device2 = await database.addDevice({ name: 'Device 2', serialnumber: '2' });
-
     const mqtt = {
       publish: async (topic, message) => {
         try {
-          expect(topic).toMatch(`UVClean/${i}/changeState/engineState`);
-          expect(message).toMatch('true');
+          expect(topic).toMatch(`UVClean/${i}/changeState/${prop}`);
+          expect(message).toMatch(value.toString());
           if (i === 2) {
             const g = await database.getGroup(group._id.toString());
-            expect(g.engineState).toBe(true);
-            done();
-          }
-          i += 1;
-        } catch (e) {
-          done(e);
-        }
-      },
-    };
-    await database.addDeviceToGroup('1', `${group._id}`);
-    await database.addDeviceToGroup('2', `${group._id}`);
-
-    register(server, database, io, mqtt, ioSocket);
-
-    const prop = {
-      id: group._id.toString(),
-      prop: 'engineState',
-      newValue: 'true',
-    };
-
-    ioSocket.emit('group_changeState', prop);
-  });
-
-  it('changeState with prop engineLevel emits changeState to all devices in the group', async (done) => {
-    const io = new EventEmitter();
-    const ioSocket = new EventEmitter();
-    const server = new EventEmitter();
-    let i = 1;
-    const mqtt = {
-      publish: async (topic, message) => {
-        try {
-          expect(topic).toMatch(`UVClean/${i}/changeState/engineLevel`);
-          expect(message).toMatch('1');
-          if (i === 2) {
-            const g = await database.getGroup(group._id.toString());
-            expect(g.engineLevel).toBe(1);
-            done();
+            expect(g[prop]).toBe(value);
+            // done();
           }
           i += 1;
         } catch (e) {
@@ -145,13 +110,15 @@ describe('GroupChangeState Module', () => {
 
     register(server, database, io, mqtt, ioSocket);
 
-    const prop = {
+    const newState = {
       id: group._id.toString(),
-      prop: 'engineLevel',
-      newValue: '1',
+      prop,
+      newValue: value.toString(),
     };
 
-    ioSocket.emit('group_changeState', prop);
+    io.on('info', () => { done(); });
+
+    ioSocket.emit('group_changeState', newState);
   });
 
   it.each([
@@ -171,7 +138,6 @@ describe('GroupChangeState Module', () => {
           if (i === 2) {
             const g = await database.getGroup(group._id.toString());
             expect(g[propertie]).toBe(value);
-            done();
           }
           i += 1;
         } catch (e) {
@@ -193,6 +159,8 @@ describe('GroupChangeState Module', () => {
       prop: propertie,
       newValue: value.toString(),
     };
+
+    io.on('info', () => { done(); });
 
     ioSocket.emit('group_changeState', prop);
   });

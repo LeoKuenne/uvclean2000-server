@@ -4,13 +4,13 @@ const MainLogger = require('../../../Logger.js').logger;
 
 const logger = MainLogger.child({ service: 'EncryptMiddleware' });
 
-function encrypt(msg) {
+async function encrypt(msg) {
   logger.debug(`Encrypting ${msg}`);
   const secret = fernet.setSecret(fs.readFileSync(config.mqtt.secret, { encoding: 'base64' }));
   const token = new fernet.Token({
     secret,
   });
-  const message = token.encode(msg);
+  const message = await token.encode(msg);
 
   if (message === msg) throw new Error(`Could not encode ${message}`);
 

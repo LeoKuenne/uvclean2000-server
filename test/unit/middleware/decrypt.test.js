@@ -96,22 +96,21 @@ describe('Decrypt message', () => {
     const fernetSecret = fernet.setSecret(secret);
     const token = new fernet.Token({
       fernetSecret,
+      time: new Date(Date.now() - 1100),
     });
 
     const msg = { message: await token.encode(message) };
 
-    setTimeout(async () => {
+    try {
+      await decrypt.decrypt(null, null, null, null, msg, () => {});
+      done(new Error('Decrypt did not throw!'));
+    } catch (error) {
       try {
-        await decrypt.decrypt(null, null, null, null, msg, () => {});
-        done(new Error('Decrypt did not throw!'));
-      } catch (error) {
-        try {
-          expect(error.message).toMatch('Invalid Token: TTL');
-          done();
-        } catch (e) {
-          done(e);
-        }
+        expect(error.message).toMatch('Invalid Token: TTL');
+        done();
+      } catch (e) {
+        done(e);
       }
-    }, 2000);
+    }
   });
 });

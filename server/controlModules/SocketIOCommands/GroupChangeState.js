@@ -1,5 +1,6 @@
 const MainLogger = require('../../Logger.js').logger;
 const { encrypt } = require('./middleware/encrypt');
+const UVCGroup = require('../../dataModels/UVCGroup');
 
 const logger = MainLogger.child({ service: 'GroupChangeStateCommand' });
 
@@ -23,7 +24,7 @@ async function execute(db, io, mqtt, message) {
   };
 
   let group = null;
-  const encryptedValue = encrypt(newState.newValue);
+  const encryptedValue = await encrypt(newState.newValue);
 
   switch (newState.prop) {
     case 'name':
@@ -50,6 +51,9 @@ async function execute(db, io, mqtt, message) {
         logger.debug('sending mqtt message for device %s, changeState with propertie %s and value %s', device.serialnumber, newState.prop, newState.newValue);
         mqtt.publish(`UVClean/${device.serialnumber}/changeState/engineState`, (config.mqtt.useEncryption) ? encryptedValue : newState.newValue);
       });
+
+      await UVCGroup.updateGroupStates(newState.id, newState.prop, db, io);
+
       io.emit('group_stateChanged', {
         id: newState.id,
         prop: newState.prop,
@@ -66,6 +70,9 @@ async function execute(db, io, mqtt, message) {
         logger.debug('sending mqtt message for device %s, changeState with propertie %s and value %s', device.serialnumber, newState.prop, newState.newValue);
         mqtt.publish(`UVClean/${device.serialnumber}/changeState/engineLevel`, (config.mqtt.useEncryption) ? encryptedValue : newState.newValue);
       });
+
+      await UVCGroup.updateGroupStates(newState.id, newState.prop, db, io);
+
       io.emit('group_stateChanged', {
         id: newState.id,
         prop: newState.prop,
@@ -82,6 +89,8 @@ async function execute(db, io, mqtt, message) {
         logger.debug('sending mqtt message for device %s, changeState with propertie %s and value %s', device.serialnumber, newState.prop, newState.newValue);
         mqtt.publish(`UVClean/${device.serialnumber}/changeState/eventMode`, (config.mqtt.useEncryption) ? encryptedValue : newState.newValue);
       });
+      await UVCGroup.updateGroupStates(newState.id, newState.prop, db, io);
+
       io.emit('group_stateChanged', {
         id: newState.id,
         prop: newState.prop,

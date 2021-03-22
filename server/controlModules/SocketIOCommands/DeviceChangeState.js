@@ -23,7 +23,7 @@ async function execute(db, io, mqtt, message) {
     prop: message.prop,
     newValue: message.newValue,
   };
-  const encryptedValue = encrypt(newState.newValue);
+  const encryptedValue = await encrypt(newState.newValue);
 
   let propertie = '';
   switch (newState.prop) {

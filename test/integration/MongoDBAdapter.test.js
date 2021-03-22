@@ -2291,12 +2291,11 @@ describe('MongoDBAdapter Functions', () => {
         );
       }
 
-      const dbData = await database.getGroups().catch((err) => {
-        console.error(err);
-      });
+      const dbData = await database.getGroups();
 
       for (let i = 0; i < dbData.length; i += 1) {
         expect(dbData[i].name).toBe(`Test Group ${i + 1}`);
+        expect(dbData[i].id).toBeDefined();
         expect(dbData[i].devices.length).toBe(0);
         expect(dbData[i].alarmState).toBe(false);
         expect(dbData[i].engineStateDevicesWithOtherState).toBeDefined();
@@ -2555,7 +2554,7 @@ describe('MongoDBAdapter Functions', () => {
       const docGroup = await database.getGroup(`${group._id}`);
       expect(docGroup.devices.length).toBe(10);
       for (let i = 0; i < 10; i += 1) {
-        expect(docGroup.devices[i].toString()).toMatch(devices[i].serialnumber);
+        expect(docGroup.devices[i].serialnumber.toString()).toMatch(devices[i].serialnumber);
         const docDevice = await database.getDevice(`${docGroup.devices[i].serialnumber}`);
         expect(docDevice.group.name).toStrictEqual(group.name);
         expect(docDevice.group._id.toString()).toMatch(group.id);
@@ -2589,7 +2588,7 @@ describe('MongoDBAdapter Functions', () => {
       const docGroup = await database.getGroup(`${group._id}`);
       expect(docGroup.devices.length).toBe(10);
       for (let i = 0; i < 10; i += 1) {
-        expect(docGroup.devices[i].toString()).toMatch(devices[i].serialnumber);
+        expect(docGroup.devices[i].serialnumber.toString()).toMatch(devices[i].serialnumber);
         const docDevice = await database.getDevice(`${docGroup.devices[i].serialnumber}`);
         expect(docDevice.group.name).toStrictEqual(group.name);
         expect(docDevice.group._id.toString()).toMatch(group.id);
