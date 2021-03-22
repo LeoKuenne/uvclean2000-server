@@ -24,6 +24,7 @@ const DeleteUser = require('./controlModules/SocketIOCommands/DeleteUser');
 const UpdateUser = require('./controlModules/SocketIOCommands/UpdateUser');
 const UpdateUserPassword = require('./controlModules/SocketIOCommands/UpdateUserPassword');
 const IdentifyDevice = require('./controlModules/SocketIOCommands/IdentifyDevice');
+const Settings = require('./dataModels/Settings');
 
 const logger = MainLogger.child({ service: 'UVCleanServer' });
 
@@ -67,6 +68,11 @@ class UVCleanServer extends EventEmitter {
         this.io.emit('error', { message: `${e.service}: ${e.error.message}` });
       });
 
+      this.on('info', (options) => {
+        logger.info(options.message);
+        this.io.emit('info', { message: `${options.service}: ${options.message}` });
+      });
+
       // New Webbrowser connected to server
       this.io.on('connection', (socket) => {
         logger.info('A dashboard connected');
@@ -101,7 +107,9 @@ class UVCleanServer extends EventEmitter {
 
       this.database.on('open', async () => {
         logger.info('Emitting info event on socket io for database connected');
+
         this.io.emit('databaseConnected');
+
         await Promise.all(config.user.map(async (user) => {
           logger.info(`Checking User ${user.username} to exists in database.`);
           try {
@@ -130,6 +138,22 @@ class UVCleanServer extends EventEmitter {
           }
         } catch (error) {
           this.emit('error', { service: 'UVCleanServer', error });
+        }
+
+        // Checking for settings to exists
+        try {
+          await this.database.getSetting('UVCServerSetting');
+          logger.info('Setting exists in database');
+        } catch (error) {
+          if (error.message === 'Setting does not exists') {
+            logger.info('Setting does not exists in database. Creating setting with %o', config.settings);
+
+            const setting = new Settings('UVCServerSetting');
+            if (config.settings.defaultEngineLevel) setting.defaultEngineLevel = config.settings.defaultEngineLevel;
+            await this.database.addSettings(setting);
+            return;
+          }
+          throw error;
         }
       });
 

@@ -7,6 +7,7 @@ const jwt = require('jsonwebtoken');
 const cookieParser = require('cookie-parser');
 const MainLogger = require('../Logger.js').logger;
 const userMiddleware = require('./middleware/user');
+const Settings = require('../dataModels/Settings.js');
 
 const logger = MainLogger.child({ service: 'ExpressServer' });
 
@@ -109,6 +110,38 @@ module.exports = class ExpressServer {
     });
 
     this.app.get('/logout', (req, res) => res.clearCookie('UVCleanSID').send({ url: '/ui/login' }));
+
+    apiRouter.get('/settings', async (req, res) => {
+      logger.info('Got GET request on /settings');
+
+      try {
+        const db = await this.database.getSetting('UVCServerSetting');
+        return res.json(db);
+      } catch (error) {
+        server.emit('error', { service: 'ExpressServer', error });
+        return res.sendStatus(500);
+      }
+    });
+
+    apiRouter.post('/settings', userMiddleware.isLoggedIn, async (req, res) => {
+      logger.info('Got POST request on /settings');
+
+      const setting = new Settings('UVCServerSetting');
+
+      if (req.body.engineLevel) {
+        setting.defaultEngineLevel = req.body.engineLevel;
+      } else {
+        return res.sendStatus(404);
+      }
+
+      try {
+        const db = await this.database.updateSetting(setting);
+        return res.json(db);
+      } catch (error) {
+        server.emit('error', { service: 'ExpressServer', error });
+        return res.sendStatus(500);
+      }
+    });
 
     apiRouter.get('/user', async (req, res) => {
       const { username } = req.query;

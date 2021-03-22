@@ -1,6 +1,6 @@
 const MainLogger = require('../../Logger.js').logger;
-const { encrypt } = require('./middleware/encrypt');
 const UVCGroup = require('../../dataModels/UVCGroup');
+const ChangeState = require('../MQTTCommands/ChangeState');
 
 const logger = MainLogger.child({ service: 'GroupChangeStateCommand' });
 
@@ -24,7 +24,6 @@ async function execute(db, io, mqtt, message) {
   };
 
   let group = null;
-  const encryptedValue = await encrypt(newState.newValue);
 
   switch (newState.prop) {
     case 'name':
@@ -39,25 +38,13 @@ async function execute(db, io, mqtt, message) {
           prop: newState.prop,
           newValue: newState.newValue,
         });
+        return {};
       }
-      break;
+      throw new Error('The name of group %s has not been updated', newState.id);
     case 'engineState':
       await db.updateGroup({
         id: `${newState.id}`,
         engineState: newState.newValue,
-      });
-      group = await db.getGroup(newState.id);
-      group.devices.forEach((device) => {
-        logger.debug('sending mqtt message for device %s, changeState with propertie %s and value %s', device.serialnumber, newState.prop, newState.newValue);
-        mqtt.publish(`UVClean/${device.serialnumber}/changeState/engineState`, (config.mqtt.useEncryption) ? encryptedValue : newState.newValue);
-      });
-
-      await UVCGroup.updateGroupStates(newState.id, newState.prop, db, io);
-
-      io.emit('group_stateChanged', {
-        id: newState.id,
-        prop: newState.prop,
-        newValue: newState.newValue,
       });
       break;
     case 'engineLevel':
@@ -65,42 +52,39 @@ async function execute(db, io, mqtt, message) {
         id: `${newState.id}`,
         engineLevel: newState.newValue,
       });
-      group = await db.getGroup(newState.id);
-      group.devices.forEach((device) => {
-        logger.debug('sending mqtt message for device %s, changeState with propertie %s and value %s', device.serialnumber, newState.prop, newState.newValue);
-        mqtt.publish(`UVClean/${device.serialnumber}/changeState/engineLevel`, (config.mqtt.useEncryption) ? encryptedValue : newState.newValue);
-      });
-
-      await UVCGroup.updateGroupStates(newState.id, newState.prop, db, io);
-
-      io.emit('group_stateChanged', {
-        id: newState.id,
-        prop: newState.prop,
-        newValue: newState.newValue,
-      });
       break;
     case 'eventMode':
       await db.updateGroup({
         id: `${newState.id}`,
         eventMode: newState.newValue,
       });
-      group = await db.getGroup(newState.id);
-      group.devices.forEach((device) => {
-        logger.debug('sending mqtt message for device %s, changeState with propertie %s and value %s', device.serialnumber, newState.prop, newState.newValue);
-        mqtt.publish(`UVClean/${device.serialnumber}/changeState/eventMode`, (config.mqtt.useEncryption) ? encryptedValue : newState.newValue);
-      });
-      await UVCGroup.updateGroupStates(newState.id, newState.prop, db, io);
-
-      io.emit('group_stateChanged', {
-        id: newState.id,
-        prop: newState.prop,
-        newValue: newState.newValue,
-      });
       break;
-
     default:
       throw new Error(`GroupChangeState is not implementet for propertie ${newState.prop}`);
   }
+  const setting = await db.getSetting('UVCServerSetting');
+
+  await UVCGroup.updateGroupStates(newState.id.toString(), newState.prop, db, io);
+
+  group = await db.getGroup(newState.id.toString());
+
+  await Promise.all(group.devices.map(async (device) => {
+    logger.debug('sending mqtt message for device %s, changeState with propertie %s and value %s', device.serialnumber, newState.prop, newState.newValue);
+    await ChangeState.execute(setting, mqtt, device.serialnumber, newState.prop, newState.newValue);
+  }));
+
+  if (newState.prop === 'engineState' && newState.newValue === 'true') {
+    await Promise.all(group.devices.map(async (device) => {
+      logger.debug('Device is turning on, sending change engineLevel state to with value %s', device.serialnumber, device.engineLevel);
+      await ChangeState.execute(setting, mqtt, device.serialnumber, 'engineLevel', device.engineLevel.toString());
+    }));
+  }
+
+  io.emit('group_stateChanged', {
+    id: newState.id,
+    prop: newState.prop,
+    newValue: newState.newValue,
+  });
 
   io.emit('info', { message: `Sended changeState (${newState.prop}) MQTT message to device in group ${newState.id}` });
 }

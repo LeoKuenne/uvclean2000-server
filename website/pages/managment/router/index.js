@@ -8,7 +8,8 @@ import DeviceChart from '../components/diagram/DeviceChart.vue';
 import GroupChart from '../components/diagram/GroupChart.vue';
 import UVCDeviceList from '../components/dashboard/UVCDeviceList.vue';
 import UVCGroupList from '../components/dashboard/UVCGroupList.vue';
-import UserList from '../components/user/UserList.vue';
+import UserList from '../components/settings/user/UserList.vue';
+import GeneralSettings from '../components/settings/GeneralSettings.vue';
 
 Vue.use(VueRouter);
 
@@ -74,6 +75,14 @@ const routes = [
         path: 'user',
         name: 'settingsUserList',
         component: UserList,
+        props(route) {
+          return route.query || {};
+        },
+      },
+      {
+        path: 'general',
+        name: 'settingsGeneral',
+        component: GeneralSettings,
         props(route) {
           return route.query || {};
         },

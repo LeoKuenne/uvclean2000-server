@@ -122,7 +122,7 @@
 </template>
 <script>
 import User from './User.vue';
-import UVCForm from '../UVCForm.vue';
+import UVCForm from '../../UVCForm.vue';
 
 export default {
   name: 'UserList',

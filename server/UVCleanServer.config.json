@@ -38,6 +38,9 @@
         "port": 27017,
         "database": "uvclean-server"
       }
+    },
+    "settings": {
+      "defaultEngineLevel": 1
     }
   },
   "development": {
@@ -78,6 +81,9 @@
         "port": 27017,
         "database": "uvclean-server"
       }
+    },
+    "settings": {
+      "defaultEngineLevel": 1
     }
   },
   "staging": {
@@ -118,6 +124,9 @@
         "port": 27017,
         "database": "uvclean-server"
       }
+    },
+    "settings": {
+      "defaultEngineLevel": 1
     }
   }
 }
