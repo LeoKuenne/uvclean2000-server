@@ -1,5 +1,5 @@
 const MainLogger = require('../../Logger.js').logger;
-const { encrypt } = require('./middleware/encrypt');
+const { encrypt } = require('../MQTTCommands/middleware/encrypt');
 
 const logger = MainLogger.child({ service: 'AddDeviceCommand' });
 

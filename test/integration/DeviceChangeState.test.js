@@ -1,0 +1,170 @@
+const EventEmitter = require('events');
+const register = require('../../server/controlModules/SocketIOCommands/DeviceChangeState');
+const MongoDBAdapter = require('../../server/databaseAdapters/mongoDB/MongoDBAdapter.js');
+const Settings = require('../../server/dataModels/Settings');
+
+let database;
+
+global.config = {
+  mqtt: {
+    useEncryption: false,
+    secret: 'C:/workspace_nodejs/uvclean2000-server/server/ssl/fernetSecret',
+  },
+};
+
+beforeAll(async () => {
+  database = new MongoDBAdapter(global.__MONGO_URI__.replace('mongodb://', ''), '');
+  await database.connect();
+  const setting = new Settings('UVCServerSetting');
+  await database.addSettings(setting);
+});
+
+afterAll(async () => {
+  await database.close();
+});
+
+describe('DeviceChangeState Module', () => {
+  beforeEach(async () => {
+    await database.clearCollection('uvcdevices');
+    await database.clearCollection('uvcgroups');
+  });
+
+  it.each([
+    [{ prop: 'prop', newValue: 'newValue' }, 'Serialnumber must be defined and of type string'],
+    [{ serialnumber: 'serialnumber', newValue: 'newValue' }, 'Prop must be defined and of type string'],
+    [{ prop: 'prop', serialnumber: 'serialnumber' }, 'New value must be defined and of type string'],
+  ])('If prop object %o is passed, changeState throws error %s', async (prop, error, done) => {
+    const io = new EventEmitter();
+    const ioSocket = new EventEmitter();
+    const mqtt = new EventEmitter();
+    const server = new EventEmitter();
+
+    register(server, database, io, mqtt, ioSocket);
+    server.on('error', (e) => {
+      try {
+        expect(e.error.message).toMatch(error);
+        done();
+      } catch (err) {
+        done(err);
+      }
+    });
+    ioSocket.emit('device_changeState', prop);
+  });
+
+  it('changeState with prop name changes name', async (done) => {
+    const io = new EventEmitter();
+    const ioSocket = new EventEmitter();
+    const mqtt = {
+      publish: jest.fn(),
+    };
+    const server = new EventEmitter();
+
+    const device1 = await database.addDevice({ name: 'Device 1', serialnumber: '1' });
+    register(server, database, io, mqtt, ioSocket);
+
+    const prop = {
+      serialnumber: device1.serialnumber,
+      prop: 'name',
+      newValue: 'Test Device 2',
+    };
+
+    io.on('info', () => {
+      try {
+        expect(mqtt.publish).toHaveBeenCalledWith('UVClean/1/changeState/name', prop.newValue);
+        done();
+      } catch (error) {
+        done(error);
+      }
+    });
+
+    server.on('error', (e) => {
+      done(e.error);
+    });
+
+    ioSocket.emit('device_changeState', prop);
+  });
+
+  it.each([
+    ['eventMode', true],
+    ['engineState', false],
+    ['engineLevel', 1],
+  ])('changeState with prop %s and value %s emits changeState to device', async (propertie, value, done) => {
+    const io = new EventEmitter();
+    const ioSocket = new EventEmitter();
+    const mqtt = {
+      publish: jest.fn(),
+    };
+    const server = new EventEmitter();
+
+    const device1 = await database.addDevice({ name: 'Device 1', serialnumber: '1' });
+    register(server, database, io, mqtt, ioSocket);
+
+    const prop = {
+      serialnumber: device1.serialnumber,
+      prop: propertie,
+      newValue: value.toString(),
+    };
+
+    io.on('info', () => {
+      try {
+        expect(mqtt.publish).toHaveBeenCalledWith(`UVClean/1/changeState/${propertie}`, prop.newValue);
+        done();
+      } catch (error) {
+        done(error);
+      }
+    });
+
+    server.on('error', (e) => {
+      done(e.error);
+    });
+
+    ioSocket.emit('device_changeState', prop);
+  });
+
+  it.each([
+    [true],
+    [false],
+  ])('changeState with prop engineState and value %s, true emits a second mqtt message for setting the current engineLevel, false does not', async (value, done) => {
+    const io = new EventEmitter();
+    const ioSocket = new EventEmitter();
+    const mqtt = {
+      publish: jest.fn(),
+    };
+    const server = new EventEmitter();
+
+    const device1 = await database.addDevice({ name: 'Device 1', serialnumber: '1' });
+
+    await database.updateDevice({
+      serialnumber: '1',
+      engineLevel: 1,
+    });
+
+    register(server, database, io, mqtt, ioSocket);
+
+    const prop = {
+      serialnumber: device1.serialnumber,
+      prop: 'engineState',
+      newValue: value.toString(),
+    };
+
+    io.on('info', () => {
+      try {
+        expect(mqtt.publish.mock.calls).toEqual((value) ? [
+          ['UVClean/1/changeState/engineState', prop.newValue],
+          ['UVClean/1/changeState/engineLevel', '1'],
+        ] : [
+          ['UVClean/1/changeState/engineState', prop.newValue],
+        ]);
+        done();
+      } catch (error) {
+        done(error);
+      }
+    });
+
+    server.on('error', (e) => {
+      done(e.error);
+    });
+
+    ioSocket.emit('device_changeState', prop);
+  });
+});

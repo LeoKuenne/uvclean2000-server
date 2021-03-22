@@ -12,6 +12,7 @@ const store = Vue.observable({
   devices: [],
   groups: [],
   user: '',
+  settings: {},
   users: [],
 });
 

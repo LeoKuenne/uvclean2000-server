@@ -5,6 +5,8 @@ const logger = MainLogger.child({ service: 'UVCGroup' });
 
 const { Schema } = mongoose;
 
+let ioEvent = null;
+
 const uvcGroupSchema = new mongoose.Schema({
   name: { type: String, required: true },
   devices: [{ type: Schema.Types.ObjectId, ref: 'UVCDevice' }],
@@ -17,10 +19,6 @@ const uvcGroupSchema = new mongoose.Schema({
   engineLevelDevicesWithOtherState: [{ type: Schema.Types.ObjectId, ref: 'UVCDevice' }],
 });
 const uvcGroupModel = mongoose.model('UVCGroup', uvcGroupSchema);
-
-async function getDevicesWithWrongState(group, prop, db) {
-  return group.devices.filter((dev) => dev[prop] !== group[prop]);
-}
 
 /**
  * Updates the list of devices that do not have the same state of the given
@@ -46,8 +44,11 @@ async function updateGroupDevicesWithOtherState(database, groupID, prop, devices
 
 async function updateGroupStates(groupID, prop, db, io) {
   logger.debug('updateGroup states');
+
   let group = await db.getGroup(groupID);
-  const devicesWrongState = await getDevicesWithWrongState(group, prop, db);
+
+  const devicesWrongState = group.devices.filter((dev) => dev[prop] !== group[prop]);
+
   const serialnumbers = [];
   devicesWrongState.forEach((device) => {
     serialnumbers.push(device.serialnumber);
@@ -55,39 +56,31 @@ async function updateGroupStates(groupID, prop, db, io) {
 
   switch (prop) {
     case 'engineState':
-      await updateGroupDevicesWithOtherState(db, groupID, prop, serialnumbers);
-      group = await db.getGroup(groupID);
-
-      io.emit('group_devicesWithOtherStateChanged', {
-        id: groupID,
-        prop: `${prop}DevicesWithOtherState`,
-        newValue: group[`${prop}DevicesWithOtherState`],
-      });
       break;
     case 'engineLevel':
-      await updateGroupDevicesWithOtherState(db, groupID, prop, serialnumbers);
-      group = await db.getGroup(groupID);
-
-      io.emit('group_devicesWithOtherStateChanged', {
-        id: groupID,
-        prop: `${prop}DevicesWithOtherState`,
-        newValue: group[`${prop}DevicesWithOtherState`],
-      });
       break;
     case 'eventMode':
-      await updateGroupDevicesWithOtherState(db, groupID, prop, serialnumbers);
-      group = await db.getGroup(groupID);
-
-      io.emit('group_devicesWithOtherStateChanged', {
-        id: groupID,
-        prop: `${prop}DevicesWithOtherState`,
-        newValue: group[`${prop}DevicesWithOtherState`],
-      });
       break;
     default:
       logger.debug('Can not update group state with propertie %s', prop);
-      break;
+      return;
   }
+
+  if (ioEvent) {
+    clearTimeout(ioEvent);
+    ioEvent = null;
+  }
+
+  await updateGroupDevicesWithOtherState(db, groupID, prop, serialnumbers);
+  group = await db.getGroup(groupID);
+
+  ioEvent = setTimeout(() => {
+    io.emit('group_devicesWithOtherStateChanged', {
+      id: groupID,
+      prop: `${prop}DevicesWithOtherState`,
+      newValue: group[`${prop}DevicesWithOtherState`],
+    });
+  }, 500);
 }
 
 function checkAlarmState(group) {
@@ -101,7 +94,6 @@ function checkAlarmState(group) {
 module.exports = {
   updateGroupStates,
   checkAlarmState,
-  getDevicesWithWrongState,
   updateGroupDevicesWithOtherState,
   uvcGroupModel,
 };

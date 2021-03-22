@@ -15,6 +15,8 @@ const UVCDeviceModel = require('../../dataModels/UVCDevice').uvcDeviceModel;
 const UVCGroup = require('../../dataModels/UVCGroup');
 const MainLogger = require('../../Logger.js').logger;
 const UserModel = require('./models/user');
+const Settings = require('../../dataModels/Settings');
+const SettingsModel = require('./models/settings');
 
 const UVCGroupModel = UVCGroup.uvcGroupModel;
 
@@ -924,10 +926,7 @@ module.exports = class MongoDBAdapter extends EventEmitter {
       .populate('eventModeDevicesWithOtherState', 'serialnumber name')
       .populate('engineLevelDevicesWithOtherState', 'serialnumber name')
       .lean()
-      .exec()
-      .catch((e) => {
-        throw e;
-      });
+      .exec();
 
     if (groupData === null) {
       throw new Error('Group does not exists');
@@ -1543,5 +1542,67 @@ module.exports = class MongoDBAdapter extends EventEmitter {
     });
 
     return users;
+  }
+
+  /**
+   * Adds a settings document to the database
+   * @param {Settings} settings Settings object
+   */
+  async addSettings(settings) {
+    if (this.db === undefined) throw new Error('Database is not connected');
+
+    if (!(settings instanceof Settings)) throw new Error('settings param must be instance of Settings');
+
+    logger.info('Adding settings %o', settings);
+
+    const docSettings = new SettingsModel(settings);
+    const err = docSettings.validateSync();
+    if (err !== undefined) throw err;
+    return docSettings.save();
+  }
+
+  /**
+   * Gets a settings document from the database
+   * @param {string} name settings name
+   */
+  async getSetting(name) {
+    if (this.db === undefined) throw new Error('Database is not connected');
+
+    logger.info('Getting settings %s', name);
+
+    const docSetting = await SettingsModel.findOne({ name }).lean().exec();
+
+    if (docSetting === null) {
+      throw new Error('Setting does not exists');
+    }
+    return {
+      name: docSetting.name,
+      defaultEngineLevel: docSetting.defaultEngineLevel,
+    };
+  }
+
+  /**
+   * Updates the settings in database
+   * @param {Settings} settings Settings object with new settings
+   */
+  async updateSetting(settings) {
+    if (this.db === undefined) throw new Error('Database is not connected');
+
+    if (!(settings instanceof Settings)) throw new Error('settings param must be instance of Settings');
+
+    logger.info('Updating settings with %o', settings);
+
+    const docSettings = await SettingsModel.findOneAndUpdate({
+      name: settings.name,
+    }, settings, { new: true }).lean().exec();
+
+    if (docSettings === null) {
+      throw new Error('Setting does not exists');
+    }
+
+    return {
+      name: docSettings.name,
+      defaultEngineLevel: docSettings.defaultEngineLevel,
+    };
   }
 };
