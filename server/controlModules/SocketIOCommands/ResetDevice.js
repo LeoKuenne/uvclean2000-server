@@ -9,7 +9,7 @@ async function execute(db, io, mqtt, message) {
   if (message.serialnumber !== undefined && typeof message.serialnumber !== 'string') {
     throw new Error('Serialnumber must be defined and of type string');
   }
-  const encryptedValue = encrypt('true');
+  const encryptedValue = await encrypt('true');
 
   await db.getDevice(message.serialnumber)
     .catch((e) => {
