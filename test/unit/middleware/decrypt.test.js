@@ -1,6 +1,6 @@
 const fs = require('fs');
 const fernet = require('fernet');
-const decrypt = require('../../../server/controlModules/MQTTEvents/middleware/decrypt');
+const decrypt = require('../../../server/events/MQTTEvents/middleware/decrypt');
 
 describe('Decrypt message', () => {
   it.each([
@@ -27,7 +27,7 @@ describe('Decrypt message', () => {
     ['gAAAAABgSgtMN4aMA-GtRhtj46zCxw9wb5sVNRE6R_Y91fhiihLkzdq2ABsKO7xI0imuDeIt4u-HcEqGjzNrX4weRPLp1GwH3w==', 'true', 'NQCNtEul3sEuOwMSRExMeh_RQ0iYD0USEemo00G4pCg='],
     ['gAAAAABgSgti3x8MGXIL9HtTbpbLlXS6JfDBN7I7qJUlJH98spRVfXBsZxLdwGStehjSd_BvNrwlOMf6UTo1XPtv5oaeDmaY7g==', 'false', 'NQCNtEul3sEuOwMSRExMeh_RQ0iYD0USEemo00G4pCg='],
   ])('Decryptes %s to %s without ttl accordingly', async (message, payload, secret, done) => {
-    global.config = { mqtt: { secret: 'C:/workspace_nodejs/uvclean2000-server/server/ssl/fernetSecret', useTTL: false } };
+    global.config = { mqtt: { secret: 'C:/workspace_nodejs/uvclean2000-server/server/ssl/fernetSecret', useTTL: false, ttl: 1 } };
     fs.writeFileSync('C:/workspace_nodejs/uvclean2000-server/server/ssl/fernetSecret', secret, { encoding: 'base64' });
     // eslint-disable-next-line prefer-const
     let msg = { message };
@@ -62,7 +62,7 @@ describe('Decrypt message', () => {
     ['true', 'NQCNtEul3sEuOwMSRExMeh_RQ0iYD0USEemo00G4pCg='],
     ['false', 'NQCNtEul3sEuOwMSRExMeh_RQ0iYD0USEemo00G4pCg='],
   ])('Decryptes %s with ttl accordingly', async (message, secret, done) => {
-    global.config = { mqtt: { secret: 'C:/workspace_nodejs/uvclean2000-server/server/ssl/fernetSecret', useTTL: true } };
+    global.config = { mqtt: { secret: 'C:/workspace_nodejs/uvclean2000-server/server/ssl/fernetSecret', useTTL: true, ttl: 1 } };
     fs.writeFileSync('C:/workspace_nodejs/uvclean2000-server/server/ssl/fernetSecret', secret, { encoding: 'base64' });
     // eslint-disable-next-line prefer-const
 
@@ -89,7 +89,7 @@ describe('Decrypt message', () => {
     ['1', 'NQCNtEul3sEuOwMSRExMeh_RQ0iYD0USEemo00G4pCg='],
     ['true', 'NQCNtEul3sEuOwMSRExMeh_RQ0iYD0USEemo00G4pCg='],
   ])('Decryptes %s with ttl and fails if ttl is expired by 100ms', async (message, secret, done) => {
-    global.config = { mqtt: { secret: 'C:/workspace_nodejs/uvclean2000-server/server/ssl/fernetSecret', useTTL: true } };
+    global.config = { mqtt: { secret: 'C:/workspace_nodejs/uvclean2000-server/server/ssl/fernetSecret', useTTL: true, ttl: 1 } };
     fs.writeFileSync('C:/workspace_nodejs/uvclean2000-server/server/ssl/fernetSecret', secret, { encoding: 'base64' });
     // eslint-disable-next-line prefer-const
 

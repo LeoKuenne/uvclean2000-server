@@ -1,13 +1,13 @@
 /* eslint-disable no-await-in-loop */
 const EventEmitter = require('events');
-const DeviceStateChanged = require('../../server/controlModules/MQTTEvents/DeviceStateChanged');
+const DeviceStateChanged = require('../../server/events/MQTTEvents/DeviceStateChanged');
 
 const {
   mapMQTTTopicToDatabase,
   hasDeviceAlarm,
   updateDatabase,
   checkAlarm,
-} = require('../../server/controlModules/MQTTEvents/DeviceStateChanged');
+} = require('../../server/events/MQTTEvents/DeviceStateChanged');
 const MongoDBAdapter = require('../../server/databaseAdapters/mongoDB/MongoDBAdapter.js');
 
 describe('Middleware functionality', () => {
