@@ -8,9 +8,9 @@ const logger = MainLogger.child({ service: 'Startup' });
 
 let path = '.';
 
-if (process.argv.length === 3 && typeof process.argv[2] === 'string') {
+if (process.argv.length === 4 && typeof process.argv[process.argv[process.argv.length - 1]] === 'string') {
   // eslint-disable-next-line prefer-destructuring
-  path = process.argv[2];
+  path = process.argv[process.argv.length - 1];
 }
 
 const file = fs.readFileSync(`${path}/server/UVCleanServer.config.json`);
