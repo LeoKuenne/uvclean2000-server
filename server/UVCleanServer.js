@@ -33,8 +33,8 @@ class UVCleanServer extends EventEmitter {
   constructor() {
     super();
 
-    this.database = new MongoDBAdapter(`${config.database.mongoDB.uri}:${config.database.mongoDB.port}`,
-      config.database.mongoDB.database);
+    this.database = new MongoDBAdapter(`${config.database.uri}:${config.database.port}`,
+      config.database.database);
 
     this.express = new ExpressServer(this, this.database);
     fs.writeFileSync(config.mqtt.secret, 'NQCNtEul3sEuOwMSRExMeh_RQ0iYD0USEemo00G4pCg=', { encoding: 'base64' });
