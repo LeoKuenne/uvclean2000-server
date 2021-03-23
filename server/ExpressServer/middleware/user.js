@@ -25,6 +25,13 @@ module.exports = {
         msg: 'Please enter the repeated password',
       });
     }
+
+    if (!req.body.userrole) {
+      logger.debug('Validating userrole: %s failed', req.body.userrole);
+      return res.status(400).send({
+        msg: 'Please enter the userrole',
+      });
+    }
     logger.debug('Validating sign up paramters succeded');
     next();
   },
