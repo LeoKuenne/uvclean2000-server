@@ -1,7 +1,6 @@
 const fs = require('fs');
 const fernet = require('fernet');
 const MainLogger = require('../../../Logger.js').logger;
-const { config } = require('winston');
 
 const logger = MainLogger.child({ service: 'DecryptMiddleware' });
 

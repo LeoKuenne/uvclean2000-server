@@ -10,9 +10,9 @@ let path = '.';
 
 console.log(process.argv);
 
-if (process.argv.length === 3 && typeof process.argv[process.argv.length - 1] === 'string') {
+if (process.argv.indexOf('-p') > -1) {
   // eslint-disable-next-line prefer-destructuring
-  path = process.argv[process.argv.length - 1];
+  path = process.argv[process.argv.indexOf('-p') + 1];
 }
 
 const file = fs.readFileSync(`${path}/server/UVCleanServer.config.json`);
