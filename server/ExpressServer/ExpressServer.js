@@ -44,18 +44,36 @@ module.exports = class ExpressServer {
     this.app.use('/static/', express.static(`${__dirname}/sites/static/`));
 
     this.app.post('/sign-up', userMiddleware.validateRegister, async (req, res, next) => {
+<<<<<<< HEAD
       logger.info('Got request on sign-up route. Request: %o', req.body);
 
       try {
         await AddUserCommand.execute(req.body.username, req.body.password, req.body.userrole);
         logger.info('Added User %s to database', req.body.username);
+=======
+      logger.info('Got valid request on sign-up route. Request: %o', req.body);
+
+      try {
+        // TODO: Adding AddUserCommand.execute
+>>>>>>> 912126b (Saving some changes...)
 
         return res.status(201).send({
           msg: 'Registered!',
         });
       } catch (error) {
+<<<<<<< HEAD
         server.emit('error', { service: 'ExpressServer', error });
         return res.status(401).send({
+=======
+        if (error.message === 'User already exists') {
+          logger.info('User %s already exists in database', req.body.username);
+          return res.status(401).send({
+            msg: error.message,
+          });
+        }
+        server.emit('error', { service: 'ExpressServer', error });
+        return res.status(500).send({
+>>>>>>> 912126b (Saving some changes...)
           msg: error.message,
         });
       }

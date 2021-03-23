@@ -2870,7 +2870,7 @@ describe('MongoDBAdapter Functions', () => {
     });
   });
 
-  describe.only('Userrole functions', () => {
+  describe('Userrole functions', () => {
     beforeEach(async () => {
       await database.clearCollection('users');
       await database.clearCollection('userroles');

@@ -1402,13 +1402,6 @@ module.exports = class MongoDBAdapter extends EventEmitter {
 
     logger.info('Adding userrole %o', userrole);
 
-    // try {
-    //   await this.getUser(userrole.name);
-    //   throw new Error('User already exists');
-    // } catch (error) {
-    //   if (error.message !== 'User does not exists') throw error;
-    // }
-
     const docUserrole = new UserroleModel(userrole);
     const err = docUserrole.validateSync();
     if (err !== undefined) throw err;
