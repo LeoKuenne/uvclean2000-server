@@ -10,7 +10,7 @@ let path = '.';
 
 console.log(process.argv);
 
-if (process.argv.length === 4 && typeof process.argv[process.argv.length - 1] === 'string') {
+if (process.argv.length === 3 && typeof process.argv[process.argv.length - 1] === 'string') {
   // eslint-disable-next-line prefer-destructuring
   path = process.argv[process.argv.length - 1];
 }
