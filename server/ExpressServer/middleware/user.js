@@ -6,28 +6,23 @@ const logger = MainLogger.child({ service: 'UserMiddleware' });
 module.exports = {
   validateRegister: (req, res, next) => {
     logger.info('Validate sign up parameters, username: %s, password %s', req.body.username, req.body.username);
-    // username min length 3
-    if (!req.body.username || req.body.username.length < 3) {
+    if (!req.body.username) {
       logger.info('Validating username: %s failed', req.body.username);
       return res.status(400).send({
-        msg: 'Please enter a username with min. 3 chars',
+        msg: 'Please enter a username',
       });
     }
-    // password min 6 chars
-    if (!req.body.password || req.body.password.length < 6) {
+    if (!req.body.password) {
       logger.info('Validating password: %s failed', req.body.password);
       return res.status(400).send({
-        msg: 'Please enter a password with min. 6 chars',
+        msg: 'Please enter a password',
       });
     }
-    // password (repeat) does not match
-    if (
-      !req.body.password_repeat
-      || req.body.password !== req.body.password_repeat
-    ) {
+
+    if (!req.body.password_repeat) {
       logger.debug('Validating repeated password: %s failed', req.body.password_repeat);
       return res.status(400).send({
-        msg: 'Both passwords must match',
+        msg: 'Please enter the repeated password',
       });
     }
     logger.debug('Validating sign up paramters succeded');

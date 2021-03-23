@@ -6,25 +6,26 @@ const MongooseError = require('mongoose').Error;
 const ExpressServer = require('./ExpressServer/ExpressServer');
 const MongoDBAdapter = require('./databaseAdapters/mongoDB/MongoDBAdapter');
 const MainLogger = require('./Logger.js').logger;
-const AddDevice = require('./controlModules/SocketIOCommands/AddDevice');
-const DeleteDevice = require('./controlModules/SocketIOCommands/DeleteDevice');
-const DeviceChangeState = require('./controlModules/SocketIOCommands/DeviceChangeState');
-const DeviceStateChanged = require('./controlModules/MQTTEvents/DeviceStateChanged');
-const AddGroup = require('./controlModules/SocketIOCommands/AddGroup');
-const DeleteGroup = require('./controlModules/SocketIOCommands/DeleteGroup');
-const GroupChangeState = require('./controlModules/SocketIOCommands/GroupChangeState');
-const AddDeviceToGroup = require('./controlModules/SocketIOCommands/AddDeviceToGroup');
-const RemoveDeviceFromGroup = require('./controlModules/SocketIOCommands/RemoveDeviceFromGroup');
-const ResetDevice = require('./controlModules/SocketIOCommands/ResetDevice');
-const AcknowledgeDeviceAlarm = require('./controlModules/SocketIOCommands/AcknowledgeDeviceAlarm');
-const SetDevicesInGroup = require('./controlModules/SocketIOCommands/SetDevicesInGroup');
-const { decrypt } = require('./controlModules/MQTTEvents/middleware/decrypt');
-const AddUser = require('./controlModules/SocketIOCommands/AddUser');
-const DeleteUser = require('./controlModules/SocketIOCommands/DeleteUser');
-const UpdateUser = require('./controlModules/SocketIOCommands/UpdateUser');
-const UpdateUserPassword = require('./controlModules/SocketIOCommands/UpdateUserPassword');
-const IdentifyDevice = require('./controlModules/SocketIOCommands/IdentifyDevice');
+const AddDevice = require('./commands/SocketIOCommands/AddDevice');
+const DeleteDevice = require('./commands/SocketIOCommands/DeleteDevice');
+const DeviceChangeState = require('./commands/SocketIOCommands/DeviceChangeState');
+const DeviceStateChanged = require('./events/MQTTEvents/DeviceStateChanged');
+const AddGroup = require('./commands/SocketIOCommands/AddGroup');
+const DeleteGroup = require('./commands/SocketIOCommands/DeleteGroup');
+const GroupChangeState = require('./commands/SocketIOCommands/GroupChangeState');
+const AddDeviceToGroup = require('./commands/SocketIOCommands/AddDeviceToGroup');
+const RemoveDeviceFromGroup = require('./commands/SocketIOCommands/RemoveDeviceFromGroup');
+const ResetDevice = require('./commands/SocketIOCommands/ResetDevice');
+const AcknowledgeDeviceAlarm = require('./commands/SocketIOCommands/AcknowledgeDeviceAlarm');
+const SetDevicesInGroup = require('./commands/SocketIOCommands/SetDevicesInGroup');
+const { decrypt } = require('./events/MQTTEvents/middleware/decrypt');
+const AddUser = require('./commands/SocketIOCommands/AddUser');
+const DeleteUser = require('./commands/SocketIOCommands/DeleteUser');
+const UpdateUser = require('./commands/SocketIOCommands/UpdateUser');
+const UpdateUserPassword = require('./commands/SocketIOCommands/UpdateUserPassword');
+const IdentifyDevice = require('./commands/SocketIOCommands/IdentifyDevice');
 const Settings = require('./dataModels/Settings');
+const AddUserCommand = require('./commands/UserCommand/AddUserCommand');
 
 const logger = MainLogger.child({ service: 'UVCleanServer' });
 
@@ -37,6 +38,8 @@ class UVCleanServer extends EventEmitter {
 
     this.express = new ExpressServer(this, this.database);
     fs.writeFileSync(config.mqtt.secret, 'NQCNtEul3sEuOwMSRExMeh_RQ0iYD0USEemo00G4pCg=', { encoding: 'base64' });
+
+    AddUserCommand.register(this.database);
   }
 
   async stopServer() {

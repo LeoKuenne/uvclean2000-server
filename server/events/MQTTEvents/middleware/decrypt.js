@@ -1,6 +1,7 @@
 const fs = require('fs');
 const fernet = require('fernet');
 const MainLogger = require('../../../Logger.js').logger;
+const { config } = require('winston');
 
 const logger = MainLogger.child({ service: 'DecryptMiddleware' });
 
@@ -10,7 +11,7 @@ async function decrypt(server, db, io, mqtt, msg, next) {
   const token = new fernet.Token({
     secret,
     token: msg.message,
-    ttl: (config.mqtt.useTTL) ? 1 : 0,
+    ttl: (config.mqtt.useTTL) ? config.mqtt.ttl : 0,
   });
   const message = token.decode();
 

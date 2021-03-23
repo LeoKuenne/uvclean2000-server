@@ -8,6 +8,7 @@ const cookieParser = require('cookie-parser');
 const MainLogger = require('../Logger.js').logger;
 const userMiddleware = require('./middleware/user');
 const Settings = require('../dataModels/Settings.js');
+const AddUserCommand = require('../commands/UserCommand/AddUserCommand.js');
 
 const logger = MainLogger.child({ service: 'ExpressServer' });
 
@@ -42,33 +43,23 @@ module.exports = class ExpressServer {
     this.app.use('/ui/managment', userMiddleware.isLoggedIn, express.static(`${__dirname}/sites/managment.html`));
     this.app.use('/static/', express.static(`${__dirname}/sites/static/`));
 
-    // this.app.post('/sign-up', userMiddleware.validateRegister, async (req, res, next) => {
-    //   logger.info('Got valid request on sign-up route. Request: %o', req.body);
+    this.app.post('/sign-up', userMiddleware.validateRegister, async (req, res, next) => {
+      logger.info('Got request on sign-up route. Request: %o', req.body);
 
-    //   try {
-    //     await this.database.addUser({
-    //       username: req.body.username,
-    //       password: req.body.password,
-    //       canEdit: false,
-    //     });
-    //     logger.info('Added User %s to database', req.body.username);
+      try {
+        await AddUserCommand.execute(req.body.username, req.body.password, req.body.userrole);
+        logger.info('Added User %s to database', req.body.username);
 
-    //     return res.status(201).send({
-    //       msg: 'Registered!',
-    //     });
-    //   } catch (error) {
-    //     if (error.message === 'User already exists') {
-    //       logger.info('User %s already exists in database', req.body.username);
-    //       return res.status(401).send({
-    //         msg: error.message,
-    //       });
-    //     }
-    //     server.emit('error', { service: 'ExpressServer', error });
-    //     return res.status(500).send({
-    //       msg: error.message,
-    //     });
-    //   }
-    // });
+        return res.status(201).send({
+          msg: 'Registered!',
+        });
+      } catch (error) {
+        server.emit('error', { service: 'ExpressServer', error });
+        return res.status(401).send({
+          msg: error.message,
+        });
+      }
+    });
 
     this.app.post('/login', async (req, res, next) => {
       logger.info('Got valid request on login route. Request: %o', req.body);
