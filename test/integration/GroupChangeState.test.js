@@ -1,6 +1,6 @@
 const EventEmitter = require('events');
 const UVCGroup = require('../../server/dataModels/UVCGroup');
-const register = require('../../server/controlModules/SocketIOCommands/GroupChangeState');
+const register = require('../../server/commands/SocketIOCommands/GroupChangeState');
 const MongoDBAdapter = require('../../server/databaseAdapters/mongoDB/MongoDBAdapter.js');
 const Settings = require('../../server/dataModels/Settings');
 

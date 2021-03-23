@@ -31,7 +31,7 @@ const logger = winston.createLogger({
 function setTransports() {
   logger.clear();
 
-  const d = Date.now();
+  const d = new Date();
   if (config.logging.file) {
     logger.add(new winston.transports.File({
       format: combine(
@@ -43,7 +43,7 @@ function setTransports() {
         metadata(),
         json(),
       ),
-      filename: `logs/error/${d}.log`,
+      filename: `logs/error/${d.toLocaleString().replace(/[,:.]/gm, '-').replace(/ /gm, '')}.log`,
       level: 'error',
     }));
     logger.add(new winston.transports.File({
@@ -56,7 +56,7 @@ function setTransports() {
         metadata(),
         json(),
       ),
-      filename: `logs/combined/${d}.log`,
+      filename: `logs/combined/${d.toLocaleString().replace(/[,:.]/gm, '-').replace(/ /gm, '')}.log`,
       level: config.logging.fileLogLevel,
     }));
   }

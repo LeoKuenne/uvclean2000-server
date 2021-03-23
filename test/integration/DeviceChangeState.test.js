@@ -1,5 +1,5 @@
 const EventEmitter = require('events');
-const register = require('../../server/controlModules/SocketIOCommands/DeviceChangeState');
+const register = require('../../server/commands/SocketIOCommands/DeviceChangeState');
 const MongoDBAdapter = require('../../server/databaseAdapters/mongoDB/MongoDBAdapter.js');
 const Settings = require('../../server/dataModels/Settings');
 

@@ -1,5 +1,5 @@
 const EventEmitter = require('events');
-const Module = require('../../server/controlModules/SocketIOCommands/SetDevicesInGroup');
+const Module = require('../../server/commands/SocketIOCommands/SetDevicesInGroup');
 const MongoDBAdapter = require('../../server/databaseAdapters/mongoDB/MongoDBAdapter.js');
 
 let database;
@@ -33,7 +33,7 @@ afterAll(async () => {
   await database.close();
 });
 
-describe('SetDevicesInGroup MQTT Module', () => {
+describe('SetDevicesInGroup SocketIO Module', () => {
   afterEach(async () => {
     await database.clearCollection('uvcdevices');
     await database.clearCollection('uvcgroups');
@@ -117,9 +117,9 @@ describe('SetDevicesInGroup MQTT Module', () => {
           );
         });
 
-        done();
         spyAddDeviceToGroup.mockRestore();
         spyDeleteDeviceFromGroup.mockRestore();
+        done();
       } catch (e) {
         spyAddDeviceToGroup.mockRestore();
         spyDeleteDeviceFromGroup.mockRestore();
