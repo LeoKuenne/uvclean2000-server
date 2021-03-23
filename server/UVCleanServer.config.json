@@ -1,5 +1,9 @@
 {
+<<<<<<< Updated upstream
   "env": "development",
+=======
+  "env": "staging",
+>>>>>>> Stashed changes
   "version": "1.1.1",
   "production": {
     "desc": "Production, frontend build completed and placed in dashboard/static, Backend is running on server. Cors is disabled",
@@ -90,13 +94,13 @@
     }
   },
   "staging": {
-    "desc": "Testing on server. Frontend build is running on 127.0.0.1, Backend is running on server",
+    "desc": "Testing on ubuntu server",
     "logging": {
       "console": true,
       "file": true,
-      "fileLogLevel": "info",
-      "consoleErrorStack": false,
-      "consoleLogLevel": "info"
+      "fileLogLevel": "debug",
+      "consoleErrorStack": true,
+      "consoleLogLevel": "debug"
     },
     "user": [
       {
@@ -111,20 +115,24 @@
       "cors": "",
       "port": 80,
       "secure": false,
-      "key": "C:/workspace_nodejs/uvclean2000-server/server/ssl/localhost_key.pem",
-      "cert": "C:/workspace_nodejs/uvclean2000-server/server/ssl/localhost_cert.pem"
+      "key": "/home/pi/UVClean2000-Server/server/ssl/localhost_key.pem",
+      "cert": "/home/pi/UVClean2000-Server/server/ssl/localhost_cert.pem"
     },
     "mqtt": {
-      "secret": "C:/workspace_nodejs/uvclean2000-server/server/ssl/fernetSecret",
-      "useEncryption": false,
+      "secret": "/home/pi/UVClean2000-Server/server/ssl/fernetSecret",
+      "useEncryption": true,
       "useTTL": true,
+<<<<<<< Updated upstream
       "ttl": 60,
       "broker": "192.168.4.10",
+=======
+      "broker": "192.168.178.66",
+>>>>>>> Stashed changes
       "port": 1883
     },
     "database": {
       "mongoDB": {
-        "uri": "192.168.4.10",
+        "uri": "192.168.178.66",
         "port": 27017,
         "database": "uvclean-server"
       }
