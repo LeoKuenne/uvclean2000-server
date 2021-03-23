@@ -122,12 +122,7 @@
       "secret": "/home/pi/UVClean2000-Server/server/ssl/fernetSecret",
       "useEncryption": true,
       "useTTL": true,
-<<<<<<< Updated upstream
-      "ttl": 60,
-      "broker": "192.168.4.10",
-=======
       "broker": "192.168.178.66",
->>>>>>> Stashed changes
       "port": 1883
     },
     "database": {
