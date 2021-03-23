@@ -3,8 +3,11 @@
 const bcrypt = require('bcrypt');
 const SettingsModel = require('../../server/databaseAdapters/mongoDB/models/settings.js');
 const UserModel = require('../../server/databaseAdapters/mongoDB/models/user.js');
+const UserroleModel = require('../../server/databaseAdapters/mongoDB/models/userrole.js');
 const MongoDBAdapter = require('../../server/databaseAdapters/mongoDB/MongoDBAdapter.js');
 const Settings = require('../../server/dataModels/Settings.js');
+const User = require('../../server/dataModels/User.js');
+const Userrole = require('../../server/dataModels/Userrole.js');
 
 let database;
 
@@ -2867,94 +2870,150 @@ describe('MongoDBAdapter Functions', () => {
     });
   });
 
+  describe.only('Userrole functions', () => {
+    beforeEach(async () => {
+      await database.clearCollection('users');
+      await database.clearCollection('userroles');
+    });
+
+    it('AddUserrole adds an userrole to the database', async () => {
+      const userrole = new Userrole('Admin', true, true);
+      const newUserrole = await database.addUserrole(userrole);
+      const docUserrole = await UserroleModel.findOne({ name: userrole.name }).lean();
+      expect(docUserrole._id).toEqual(newUserrole._id);
+      expect(docUserrole.userrolename).toEqual(newUserrole.userrolename);
+      expect(docUserrole.canChangeProperties).toEqual(newUserrole.canChangeProperties);
+      expect(docUserrole.canViewAdvancedData).toEqual(newUserrole.canViewAdvancedData);
+      expect(docUserrole.canEditUserrole).toStrictEqual([]);
+    });
+
+    it('DeleteUserrole deletes userrole from database', async (done) => {
+      const userrole = new Userrole('Admin', true, true);
+      const newUserrole = await database.addUserrole(userrole);
+
+      const docUserrole = await database.deleteUserrole(newUserrole.name);
+      expect(docUserrole._id).toEqual(newUserrole._id);
+      expect(docUserrole.name).toEqual(newUserrole.name);
+      expect(docUserrole.canChangeProperties).toEqual(newUserrole.canChangeProperties);
+      expect(docUserrole.canViewAdvancedData).toEqual(newUserrole.canViewAdvancedData);
+      expect(docUserrole.canEditUserrole).toStrictEqual([]);
+
+      try {
+        await database.getUserrole(newUserrole.name);
+      } catch (err) {
+        try {
+          expect(err.toString()).toMatch('Userrole does not exists');
+          done();
+        } catch (e) {
+          done(e);
+        }
+      }
+    });
+
+    it('GetUserrole gets userrole from database', async () => {
+      const userrole = new Userrole('Admin', true, true);
+      const dbUserrole = await database.addUserrole(userrole);
+
+      const newUserrole = await database.getUserrole('Admin');
+
+      expect(dbUserrole._id.toString()).toMatch(newUserrole.id.toString());
+      expect(userrole.name).toEqual(newUserrole.name);
+      expect(userrole.canChangeProperties).toEqual(newUserrole.canChangeProperties);
+      expect(userrole.canViewAdvancedData).toEqual(newUserrole.canViewAdvancedData);
+      expect(userrole.canEditUserrole).toEqual(newUserrole.canEditUserrole);
+    });
+
+    it('GetUserrole throws error if userrolename is not defined', async (done) => {
+      try {
+        await database.getUserrole();
+      } catch (e) {
+        try {
+          expect(e.toString()).toMatch('Userrolename has to be defined and of type string');
+          done();
+        } catch (err) {
+          done(err);
+        }
+      }
+    });
+
+    it('GetUserrole throws error if username is not a string', async (done) => {
+      try {
+        await database.getUserrole(false);
+      } catch (e) {
+        try {
+          expect(e.toString()).toMatch('Userrolename has to be defined and of type string');
+          done();
+        } catch (err) {
+          done(err);
+        }
+      }
+    });
+
+    it('GetUserrole throws error if userrole does not exists', async (done) => {
+      try {
+        await database.getUserrole('Admin');
+      } catch (e) {
+        try {
+          expect(e.toString()).toMatch('Userrole does not exists');
+          done();
+        } catch (err) {
+          done(err);
+        }
+      }
+    });
+
+    it('GetUserroles gets all userroles from database', async () => {
+      const userroles = [];
+
+      for (let i = 0; i < 10; i += 1) {
+        userroles.push(new Userrole(`Test Userrole ${1}`, (i % 2 === 1), true));
+      }
+      await Promise.all(userroles.map(async (userrole) => {
+        await database.addUserrole(userrole);
+      }));
+
+      const dbUserroles = await database.getUserroles();
+      expect(dbUserroles.length).toBe(userroles.length);
+      for (let i = 0; i < dbUserroles.length; i += 1) {
+        const userrole = dbUserroles[i];
+
+        expect(userrole.name).toEqual(userroles[i].name);
+        expect(userrole.canChangeProperties).toEqual(userroles[i].canChangeProperties);
+        expect(userrole.canViewAdvancedData).toEqual(userroles[i].canViewAdvancedData);
+        expect(userrole.canEditUserrole).toEqual(userroles[i].canEditUserrole);
+      }
+    });
+
+    it('GetUserroles returns empty array if no userroles exists', async () => {
+      const dbUserroles = await database.getUserroles();
+      expect(dbUserroles.length).toBe(0);
+    });
+  });
+
   describe('User functions', () => {
     beforeEach(async () => {
       await database.clearCollection('users');
+      await database.clearCollection('userroles');
     });
 
     it('AddUser adds user to database', async () => {
-      const user = {
-        username: 'Test User',
-        password: 'Test',
-        canEdit: false,
-      };
+      const userrole = new Userrole('Admin', true, true);
+      const newUserrole = await database.addUserrole(userrole);
+
+      const user = new User('Test User', 'Test', 'Admin');
       const newUser = await database.addUser(user);
       const docUser = await UserModel.findOne({ username: user.username });
       expect(docUser._id).toEqual(newUser._id);
       expect(docUser.username).toEqual(newUser.username);
+      expect(docUser.userrole).toEqual(newUserrole._id);
     });
 
-    it('Throws an error if the username is not definded', async (done) => {
-      try {
-        await database.addUser({ password: 'Test', canEdit: false });
-      } catch (e) {
-        try {
-          expect(e.toString()).toMatch('Username has to be defined and of type string');
-          done();
-        } catch (err) {
-          done(err);
-        }
-      }
-    });
-
-    it('Throws an error if the username is not of type string', async (done) => {
-      try {
-        await database.addUser({ username: false });
-      } catch (e) {
-        try {
-          expect(e.toString()).toMatch('Username has to be defined and of type string');
-          done();
-        } catch (err) {
-          done(err);
-        }
-      }
-    });
-
-    it('Throws an error if the password is not definded', async (done) => {
+    it('Throws an error if the argument is not an instance of the class user', async (done) => {
       try {
         await database.addUser({ username: 'Test' });
       } catch (e) {
         try {
-          expect(e.toString()).toMatch('Password has to be defined and of type string');
-          done();
-        } catch (err) {
-          done(err);
-        }
-      }
-    });
-
-    it('Throws an error if the password is not of type string', async (done) => {
-      try {
-        await database.addUser({ username: 'Test', password: false });
-      } catch (e) {
-        try {
-          expect(e.toString()).toMatch('Password has to be defined and of type string');
-          done();
-        } catch (err) {
-          done(err);
-        }
-      }
-    });
-
-    it('Throws an error if the canEdit is not definded', async (done) => {
-      try {
-        await database.addUser({ username: 'Test', password: 'Test' });
-      } catch (e) {
-        try {
-          expect(e.toString()).toMatch('canEdit has to be defined and of type boolean');
-          done();
-        } catch (err) {
-          done(err);
-        }
-      }
-    });
-
-    it('Throws an error if the canEdit is not of type boolean', async (done) => {
-      try {
-        await database.addUser({ username: 'Test', password: 'Test', canEdit: 'true' });
-      } catch (e) {
-        try {
-          expect(e.toString()).toMatch('canEdit has to be defined and of type boolean');
+          expect(e.toString()).toMatch('User has to be defined and an instance of the class User');
           done();
         } catch (err) {
           done(err);
@@ -2963,11 +3022,10 @@ describe('MongoDBAdapter Functions', () => {
     });
 
     it('DeleteUser deletes user from database', async (done) => {
-      const user = {
-        username: 'Test User',
-        password: 'Test',
-        canEdit: false,
-      };
+      const userrole = new Userrole('Admin', true, true);
+      const newUserrole = await database.addUserrole(userrole);
+      const user = new User('Test User', 'Test', 'Admin');
+
       const newUser = await database.addUser(user);
       const dbUser = await database.deleteUser(newUser.username);
       expect(dbUser.id).toMatch(newUser._id.toString());
@@ -2999,49 +3057,23 @@ describe('MongoDBAdapter Functions', () => {
       }
     });
 
-    it('UpdateUser updates user', async () => {
-      const user = {
-        username: 'Test User',
-        password: 'Test',
-        canEdit: false,
-      };
+    it('UpdateUserrole updates userrole of user', async () => {
+      await database.addUserrole(new Userrole('Admin', true, true));
+      const guestUserrole = await database.addUserrole(new Userrole('Guest', true, true));
+
+      const user = new User('Test User', 'Test', 'Admin');
       const newUser = await database.addUser(user);
-      const dbUser = await database.updateUser({
-        username: user.username,
-        newUsername: `${user.username}1`,
-        canEdit: !user.canEdit,
-      });
-      expect(dbUser.id).toMatch(newUser._id.toString());
-      expect(dbUser.username).toEqual(`${newUser.username}1`);
-      expect(dbUser.password).toEqual(newUser.password);
-      expect(dbUser.canEdit).toEqual(!newUser.canEdit);
+
+      const dbUser = await database.updateUserrole('Test User', 'Guest');
+      console.log(dbUser);
+
+      expect(dbUser.id.toString()).toMatch(newUser._id.toString());
+      expect(dbUser.userrole.toString()).toMatch(guestUserrole._id.toString());
     });
 
-    it('throws error if newUsername is not a string', async (done) => {
-      const user = {
-        username: 'Test User',
-        password: 'Test',
-        canEdit: false,
-      };
-      await database.addUser(user);
+    it('UpdateUserrole throws error if username is not a string', async (done) => {
       try {
-        await database.updateUser({
-          username: user.username,
-          newUsername: 1,
-        });
-      } catch (err) {
-        try {
-          expect(err.toString()).toMatch('New username has to be of type string');
-          done();
-        } catch (e) {
-          done(e);
-        }
-      }
-    });
-
-    it('UpdateUser throws error if username is not a string', async (done) => {
-      try {
-        await database.updateUser({});
+        await database.updateUserrole(true);
       } catch (err) {
         try {
           expect(err.toString()).toMatch('Username has to be defined and of type string');
@@ -3052,12 +3084,12 @@ describe('MongoDBAdapter Functions', () => {
       }
     });
 
-    it('UpdateUser throws error if canEdit is not a boolean', async (done) => {
+    it('UpdateUserrole throws error if userrole is not a string', async (done) => {
       try {
-        await database.updateUser({ username: 'User' });
+        await database.updateUserrole('Test User', true);
       } catch (err) {
         try {
-          expect(err.toString()).toMatch('Can edit has to be defined and of type boolean');
+          expect(err.toString()).toMatch('Userrole has to be defined and of type string');
           done();
         } catch (e) {
           done(e);
@@ -3065,9 +3097,10 @@ describe('MongoDBAdapter Functions', () => {
       }
     });
 
-    it('UpdateUser throws error if user does not exists', async (done) => {
+    it('UpdateUserrole throws error if user does not exists', async (done) => {
+      await database.addUserrole(new Userrole('Admin', true, true));
       try {
-        await database.updateUser({ username: 'User', canEdit: false });
+        await database.updateUserrole('User', 'Admin');
       } catch (err) {
         try {
           expect(err.toString()).toMatch('User does not exists');
@@ -3078,37 +3111,49 @@ describe('MongoDBAdapter Functions', () => {
       }
     });
 
+    it('UpdateUserrole throws error if userrole does not exists', async (done) => {
+      await database.addUserrole(new Userrole('Admin', true, true));
+      await database.addUser(new User('Test User', 'Test', 'Admin'));
+
+      try {
+        await database.updateUserrole('Test User', 'Userrole');
+      } catch (err) {
+        try {
+          expect(err.toString()).toMatch('Userrole does not exists');
+          done();
+        } catch (e) {
+          done(e);
+        }
+      }
+    });
+
     it('ChangeUserPassword changes the password of the user', async () => {
-      const user = {
-        username: 'Test User',
-        password: 'Test',
-        canEdit: false,
-      };
-      const newUser = await database.addUser(user);
-      const dbUser = await database.changeUserPassword({
-        username: user.username,
-        oldPassword: user.password,
-        newPassword: 'New Test',
-      });
-      expect(dbUser.id).toMatch(newUser._id.toString());
-      expect(dbUser.username).toEqual(newUser.username);
+      const user = new User('Test User', 'Test', 'Admin');
+      await database.addUserrole(new Userrole('Admin', true, true));
+      await database.addUser(user);
+
+      const dbUser = await database.changeUserPassword(
+        user.username,
+        user.password,
+        'New Test',
+      );
+      expect(dbUser.username).toEqual(user.username);
       expect(bcrypt.compareSync('New Test', dbUser.password)).toBe(true);
     });
 
     it('ChangeUserPassword throws error if the old password does not match with the existing one', async (done) => {
-      const user = {
-        username: 'Test User',
-        password: 'Test',
-        canEdit: false,
-      };
+      const user = new User('Test User', 'Test', 'Admin');
+      await database.addUserrole(new Userrole('Admin', true, true));
       await database.addUser(user);
 
+      await database.changeUserPassword(
+        user.username,
+        user.password,
+        'New Test',
+      );
+
       try {
-        await database.changeUserPassword({
-          username: user.username,
-          oldPassword: 'Test Falsch',
-          newPassword: 'New Test',
-        });
+        await database.changeUserPassword(user.username, 'Test Falsch', 'New Test');
       } catch (e) {
         try {
           expect(e.toString()).toMatch('The old password does not match');
@@ -3121,11 +3166,7 @@ describe('MongoDBAdapter Functions', () => {
 
     it('ChangeUserPassword throws error if the user does not exists', async (done) => {
       try {
-        await database.changeUserPassword({
-          username: 'admin',
-          oldPassword: 'Test Falsch',
-          newPassword: 'New Test',
-        });
+        await database.changeUserPassword('admin', 'Test Falsch', 'New Test');
       } catch (e) {
         try {
           expect(e.toString()).toMatch('User does not exists');
@@ -3138,8 +3179,7 @@ describe('MongoDBAdapter Functions', () => {
 
     it('ChangeUserPassword throws error if the username is not defined', async (done) => {
       try {
-        await database.changeUserPassword({
-        });
+        await database.changeUserPassword();
       } catch (e) {
         try {
           expect(e.toString()).toMatch('Username has to be defined and of type string');
@@ -3152,9 +3192,7 @@ describe('MongoDBAdapter Functions', () => {
 
     it('ChangeUserPassword throws error if the username is not type of string', async (done) => {
       try {
-        await database.changeUserPassword({
-          username: false,
-        });
+        await database.changeUserPassword(false);
       } catch (e) {
         try {
           expect(e.toString()).toMatch('Username has to be defined and of type string');
@@ -3167,9 +3205,7 @@ describe('MongoDBAdapter Functions', () => {
 
     it('ChangeUserPassword throws error if the oldPassword is not defined', async (done) => {
       try {
-        await database.changeUserPassword({
-          username: 'Test',
-        });
+        await database.changeUserPassword('Test');
       } catch (e) {
         try {
           expect(e.toString()).toMatch('Old password has to be defined and of type string');
@@ -3182,10 +3218,7 @@ describe('MongoDBAdapter Functions', () => {
 
     it('ChangeUserPassword throws error if the oldPassword is not type of string', async (done) => {
       try {
-        await database.changeUserPassword({
-          username: 'Test',
-          oldPassword: false,
-        });
+        await database.changeUserPassword('Test', false);
       } catch (e) {
         try {
           expect(e.toString()).toMatch('Old password has to be defined and of type string');
@@ -3198,10 +3231,7 @@ describe('MongoDBAdapter Functions', () => {
 
     it('ChangeUserPassword throws error if the newPassword is not defined', async (done) => {
       try {
-        await database.changeUserPassword({
-          username: 'Test',
-          oldPassword: 'Test',
-        });
+        await database.changeUserPassword('Test', 'Test');
       } catch (e) {
         try {
           expect(e.toString()).toMatch('New password has to be defined and of type string');
@@ -3214,11 +3244,7 @@ describe('MongoDBAdapter Functions', () => {
 
     it('ChangeUserPassword throws error if the newPassword is not type of string', async (done) => {
       try {
-        await database.changeUserPassword({
-          username: 'Test',
-          oldPassword: 'Test',
-          newPassword: false,
-        });
+        await database.changeUserPassword('Test', 'Test', false);
       } catch (e) {
         try {
           expect(e.toString()).toMatch('New password has to be defined and of type string');
@@ -3230,25 +3256,22 @@ describe('MongoDBAdapter Functions', () => {
     });
 
     it('GetUser gets user from database', async () => {
-      const user = {
-        username: 'Test User',
-        password: 'Test',
-        canEdit: false,
-      };
-      const newUser = await database.addUser(user);
-      const dbUser = await database.getUser(newUser.username);
-      expect(dbUser.id).toEqual(newUser._id);
+      const user = new User('Test User', 'Test', 'Admin');
+      await database.addUserrole(new Userrole('Admin', true, true));
+      const dbUser = await database.addUser(user);
+      const newUser = await database.getUser(user.username);
+
+      expect(dbUser.id.toString()).toMatch(newUser.id.toString());
       expect(dbUser.username).toEqual(newUser.username);
-      expect(dbUser.password).toEqual(newUser.password);
-      expect(dbUser.canEdit).toEqual(newUser.canEdit);
+      expect(dbUser.userrole).toEqual(newUser.userrole);
     });
 
-    it('GetUser throws error if id is not defined', async (done) => {
+    it('GetUser throws error if username is not defined', async (done) => {
       try {
         await database.getUser();
       } catch (e) {
         try {
-          expect(e.toString()).toMatch('userid has to be defined and of type string');
+          expect(e.toString()).toMatch('username has to be defined and of type string');
           done();
         } catch (err) {
           done(err);
@@ -3256,12 +3279,12 @@ describe('MongoDBAdapter Functions', () => {
       }
     });
 
-    it('GetUser throws error if id is not a string', async (done) => {
+    it('GetUser throws error if username is not a string', async (done) => {
       try {
         await database.getUser(false);
       } catch (e) {
         try {
-          expect(e.toString()).toMatch('userid has to be defined and of type string');
+          expect(e.toString()).toMatch('username has to be defined and of type string');
           done();
         } catch (err) {
           done(err);
@@ -3283,14 +3306,11 @@ describe('MongoDBAdapter Functions', () => {
     });
 
     it('GetUsers gets all users from database', async () => {
+      await database.addUserrole(new Userrole('Admin', true, true));
       const users = [];
 
       for (let i = 0; i < 10; i += 1) {
-        users.push({
-          username: `Test User ${1}`,
-          password: `Test ${i}`,
-          canEdit: false,
-        });
+        users.push(new User(`Test User ${1}`, `Test ${i}`, 'Admin'));
       }
       await Promise.all(users.map(async (user) => {
         await database.addUser(user);

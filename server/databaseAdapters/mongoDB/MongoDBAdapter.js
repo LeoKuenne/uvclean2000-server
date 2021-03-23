@@ -17,6 +17,9 @@ const MainLogger = require('../../Logger.js').logger;
 const UserModel = require('./models/user');
 const Settings = require('../../dataModels/Settings');
 const SettingsModel = require('./models/settings');
+const User = require('../../dataModels/User');
+const UserroleModel = require('./models/userrole');
+const Userrole = require('../../dataModels/Userrole');
 
 const UVCGroupModel = UVCGroup.uvcGroupModel;
 
@@ -1390,17 +1393,98 @@ module.exports = class MongoDBAdapter extends EventEmitter {
   }
 
   /**
+   * Adds an userrole with the given rights
+   * @param {Userrole} userrole The userrole object to add
+   */
+  async addUserrole(userrole) {
+    if (this.db === undefined) throw new Error('Database is not connected');
+    if (!(userrole instanceof Userrole)) { throw new Error('Userrole has to be defined and an instance of the class User'); }
+
+    logger.info('Adding userrole %o', userrole);
+
+    // try {
+    //   await this.getUser(userrole.name);
+    //   throw new Error('User already exists');
+    // } catch (error) {
+    //   if (error.message !== 'User does not exists') throw error;
+    // }
+
+    const docUserrole = new UserroleModel(userrole);
+    const err = docUserrole.validateSync();
+    if (err !== undefined) throw err;
+    return docUserrole.save();
+  }
+
+  /**
+   * Gets an userrole with the given name
+   * @param {String} userrolename The userrolename to get
+   */
+  async getUserrole(userrolename) {
+    if (this.db === undefined) throw new Error('Database is not connected');
+    if (typeof userrolename !== 'string') { throw new Error('Userrolename has to be defined and of type string'); }
+
+    logger.debug('Getting userrole %s', userrolename);
+
+    const docUserrole = await UserroleModel.findOne({
+      name: userrolename,
+    }).lean();
+
+    if (docUserrole === null) {
+      throw new Error('Userrole does not exists');
+    }
+
+    return {
+      id: docUserrole._id,
+      name: docUserrole.name,
+      canChangeProperties: docUserrole.canChangeProperties,
+      canViewAdvancedData: docUserrole.canViewAdvancedData,
+      canEditUserrole: docUserrole.canEditUserrole,
+    };
+  }
+
+  /**
+   * Deletes an userrole with the given name
+   * @param {String} userrolename The userrolename of the userrole to be deleted
+   */
+  async deleteUserrole(userrolename) {
+    if (this.db === undefined) throw new Error('Database is not connected');
+    if (typeof userrolename !== 'string') { throw new Error('Userrolename has to be defined and of type string'); }
+
+    logger.info('Deleting userrole %s', userrolename);
+
+    return UserroleModel.findOneAndRemove({ name: userrolename }).lean().exec();
+  }
+
+  /**
+   * Get all userroles
+   */
+  async getUserroles() {
+    if (this.db === undefined) throw new Error('Database is not connected');
+
+    const docUsers = await UserroleModel.find().lean().exec();
+    logger.debug('Getting all userroles');
+
+    const userroles = [];
+    docUsers.forEach((userrole) => {
+      userroles.push({
+        id: userrole._id,
+        name: userrole.name,
+        canChangeProperties: userrole.canChangeProperties,
+        canViewAdvancedData: userrole.canViewAdvancedData,
+        canEditUserrole: userrole.canEditUserrole,
+      });
+    });
+
+    return userroles;
+  }
+
+  /**
    * Adds an user with the given rights
-   * @param {Object} user The user object to add
-   * @param {String} user.username The Username of the user
-   * @param {String} user.password The Username of the user
-   * @param {Boolean} user.canEdit Right to edit all properties
+   * @param {User} user The user object to add
    */
   async addUser(user) {
     if (this.db === undefined) throw new Error('Database is not connected');
-    if (typeof user.username !== 'string') { throw new Error('Username has to be defined and of type string'); }
-    if (typeof user.password !== 'string') { throw new Error('Password has to be defined and of type string'); }
-    if (typeof user.canEdit !== 'boolean') { throw new Error('canEdit has to be defined and of type boolean'); }
+    if (!(user instanceof User)) { throw new Error('User has to be defined and an instance of the class User'); }
 
     logger.info('Adding user %o', user);
 
@@ -1411,12 +1495,15 @@ module.exports = class MongoDBAdapter extends EventEmitter {
       if (error.message !== 'User does not exists') throw error;
     }
 
+    const userrole = await UserroleModel.findOne({ name: user.userrole }).lean().exec();
+    if (userrole === null) throw new Error('Userrole does not exist');
+
     const hash = await bcrypt.hash(user.password, 10);
 
     const docUser = new UserModel({
       username: user.username,
       password: hash,
-      canEdit: user.canEdit,
+      userrole: userrole._id,
     });
     const err = docUser.validateSync();
     if (err !== undefined) throw err;
@@ -1437,61 +1524,60 @@ module.exports = class MongoDBAdapter extends EventEmitter {
   }
 
   /**
-   * Updates an user with the given rights
-   * @param {Object} user The User of the user to be updated
-   * @param {String} user.username The User of the user to be updated
-   * @param {String} user.newUsername The new username of the user
-   * @param {Boolean} user.canEdit The new canEdit value of the user
+   * Updates the userrole of the user
+   * @param {String} username The username of the user to be updated with
+   * @param {String} userrole The new userrole of the user
    */
-  async updateUser(user) {
+  async updateUserrole(username, userrole) {
     if (this.db === undefined) throw new Error('Database is not connected');
-    if (typeof user.username !== 'string') { throw new Error('Username has to be defined and of type string'); }
-    if (user.newUsername && typeof user.newUsername !== 'string') { throw new Error('New username has to be of type string'); }
-    if (typeof user.canEdit !== 'boolean') { throw new Error('Can edit has to be defined and of type boolean'); }
+    if (typeof username !== 'string') { throw new Error('Username has to be defined and of type string'); }
+    if (typeof userrole !== 'string') { throw new Error('Userrole has to be defined and of type string'); }
 
-    logger.info('Updating user with %o', user);
+    logger.info('Updating user %s to new role %s', username, userrole);
 
-    await UserModel.findOneAndUpdate(
-      { username: user.username },
-      {
-        username: (user.newUsername) ? user.newUsername : user.username,
-        canEdit: user.canEdit,
-      },
-    );
+    const dbUserrole = await UserroleModel.findOne({ name: userrole }).lean().exec();
+    if (dbUserrole === null) throw new Error('Userrole does not exists');
 
-    const docUser = await UserModel.findOne({
-      username: user.newUsername,
-    });
+    const docUser = await UserModel.findOneAndUpdate(
+      { username },
+      { userrole: dbUserrole._id },
+      { new: true },
+    ).lean();
 
     if (docUser === null) throw new Error('User does not exists');
-    return docUser;
+
+    return {
+      id: docUser._id,
+      username: docUser.username,
+      userrole: docUser.userrole,
+    };
   }
 
   /**
    * Changes the password of the user with the given rights
-   * @param {Object} user The user object to change the password of
-   * @param {String} user.username The username to change the password of
-   * @param {String} user.oldPassword The old password of the user
-   * @param {String} user.newPassword The new password of the user
+   * @param {String} username The username to change the password of
+   * @param {String} oldPassword The old password of the user
+   * @param {String} newPassword The new password of the user
    */
-  async changeUserPassword(user) {
+  async changeUserPassword(username, oldPassword, newPassword) {
     if (this.db === undefined) throw new Error('Database is not connected');
-    if (typeof user.username !== 'string') { throw new Error('Username has to be defined and of type string'); }
-    if (typeof user.oldPassword !== 'string') { throw new Error('Old password has to be defined and of type string'); }
-    if (typeof user.newPassword !== 'string') { throw new Error('New password has to be defined and of type string'); }
+    if (typeof username !== 'string') { throw new Error('Username has to be defined and of type string'); }
+    if (typeof oldPassword !== 'string') { throw new Error('Old password has to be defined and of type string'); }
+    if (typeof newPassword !== 'string') { throw new Error('New password has to be defined and of type string'); }
 
-    const dbUser = await this.getUser(user.username);
+    const dbUser = await this.getUser(username);
+    const match = await bcrypt.compare(oldPassword, dbUser.password);
+    console.log(match, oldPassword, dbUser.password);
+    if (!match) throw new Error('The old password does not match!');
 
-    if (!bcrypt.compareSync(user.oldPassword, dbUser.password)) throw new Error('The old password does not match!');
+    logger.info('Updating password of user %s with %s', username, newPassword);
 
-    logger.info('Updating users password with %o', user);
-
-    const newPassword = await bcrypt.hash(user.newPassword, 10);
+    const hashedNewPassword = await bcrypt.hash(newPassword, 10);
 
     return UserModel.findOneAndUpdate(
-      { username: user.username },
+      { username },
       {
-        password: newPassword,
+        password: hashedNewPassword,
       }, { new: true },
     );
   }
@@ -1502,7 +1588,7 @@ module.exports = class MongoDBAdapter extends EventEmitter {
    */
   async getUser(username) {
     if (this.db === undefined) throw new Error('Database is not connected');
-    if (typeof username !== 'string') { throw new Error('userid has to be defined and of type string'); }
+    if (typeof username !== 'string') { throw new Error('username has to be defined and of type string'); }
 
     logger.debug('Getting user %s', username);
 
@@ -1518,7 +1604,7 @@ module.exports = class MongoDBAdapter extends EventEmitter {
       id: docUser._id,
       username: docUser.username,
       password: docUser.password,
-      canEdit: docUser.canEdit,
+      userrole: docUser.userrole,
     };
   }
 
