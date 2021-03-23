@@ -1,12 +1,22 @@
 const fs = require('fs');
+
 const MainLogger = require('./server/Logger.js').logger;
+
 const { setTransports } = require('./server/Logger.js');
 
 const logger = MainLogger.child({ service: 'Startup' });
 
-logger.info('Reading config file UVCleanServer.config.json');
-const file = fs.readFileSync('./server/UVCleanServer.config.json');
+let path = '.';
+
+if (process.argv.length === 3 && typeof process.argv[2] === 'string') {
+  // eslint-disable-next-line prefer-destructuring
+  path = process.argv[2];
+}
+
+const file = fs.readFileSync(`${path}/server/UVCleanServer.config.json`);
 const configFile = JSON.parse(file);
+
+logger.info(`Reading config file ${path}`);
 
 let config = {};
 switch (configFile.env) {
