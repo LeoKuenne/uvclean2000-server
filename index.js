@@ -8,17 +8,17 @@ const logger = MainLogger.child({ service: 'Startup' });
 
 let path = '.';
 
-console.log(process.argv);
-
 if (process.argv.indexOf('-p') > -1) {
   // eslint-disable-next-line prefer-destructuring
   path = process.argv[process.argv.indexOf('-p') + 1];
 }
+logger.info(`Working directory ${path}`);
 
+logger.info('Loading config');
 const file = fs.readFileSync(`${path}/server/UVCleanServer.config.json`);
 const configFile = JSON.parse(file);
 
-logger.info(`Reading config file ${path}`);
+logger.info(`Version ${configFile.version}`);
 
 let config = {};
 switch (configFile.env) {
