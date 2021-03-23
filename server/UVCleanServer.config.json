@@ -1,5 +1,5 @@
 {
-  "env": "production",
+  "env": "development",
   "version": "1.1.1b4",
   "production": {
     "desc": "Production, frontend build completed and placed in dashboard/static, Backend is running on server. Cors is disabled",
@@ -35,11 +35,10 @@
       "port": 1883
     },
     "database": {
-      "mongoDB": {
-        "uri": "192.168.4.10",
-        "port": 27017,
-        "database": "uvclean-server"
-      }
+      "databaseType": "mongoDB",
+      "uri": "192.168.4.10",
+      "port": 27017,
+      "database": "uvclean-server"
     },
     "settings": {
       "defaultEngineLevel": 1
@@ -66,7 +65,7 @@
     "http": {
       "cors": "127.0.0.1:8080",
       "port": 3000,
-      "secure": false,
+      "secure": true,
       "key": "C:/workspace_nodejs/uvclean2000-server/server/ssl/localhost_key.pem",
       "cert": "C:/workspace_nodejs/uvclean2000-server/server/ssl/localhost_cert.pem"
     },
@@ -79,11 +78,10 @@
       "port": 1883
     },
     "database": {
-      "mongoDB": {
-        "uri": "192.168.178.66",
-        "port": 27017,
-        "database": "uvclean-server"
-      }
+      "databaseType": "mongoDB",
+      "uri": "192.168.178.66",
+      "port": 27017,
+      "database": "uvclean-server"
     },
     "settings": {
       "defaultEngineLevel": 1
@@ -122,11 +120,10 @@
       "port": 1883
     },
     "database": {
-      "mongoDB": {
-        "uri": "192.168.178.66",
-        "port": 27017,
-        "database": "uvclean-server"
-      }
+      "databaseType": "mongoDB",
+      "uri": "192.168.178.66",
+      "port": 27017,
+      "database": "uvclean-server"
     },
     "settings": {
       "defaultEngineLevel": 1

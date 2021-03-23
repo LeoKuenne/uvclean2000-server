@@ -24,15 +24,15 @@ let config = {};
 switch (configFile.env) {
   case 'production':
     config = configFile.production;
-    logger.info('Loading config for production', config);
+    logger.info('Loading config for production, description %s', config.desc);
     break;
   case 'development':
     config = configFile.development;
-    logger.info('Loading config for development', config);
+    logger.info('Loading config for development, description %s', config.desc);
     break;
   case 'staging':
     config = configFile.staging;
-    logger.info('Loading config for staging', config);
+    logger.info('Loading config for staging, description %s', config.desc);
     break;
 
   default:
