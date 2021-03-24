@@ -8,7 +8,11 @@ const cookieParser = require('cookie-parser');
 const MainLogger = require('../Logger.js').logger;
 const userMiddleware = require('./middleware/user');
 const Settings = require('../dataModels/Settings.js');
-const AddUserCommand = require('../commands/UserCommand/AddUserCommand.js');
+const AddUserCommand = require('../commands/UserCommand/CreateUserCommand.js');
+const ChangeUserPasswordCommand = require('../commands/UserCommand/ChangeUserPasswordCommand.js');
+const ChangeUserroleCommand = require('../commands/UserCommand/ChangeUserUserroleCommand.js');
+const CreateUserroleCommand = require('../commands/UserCommand/CreateUserroleCommand.js');
+const DeleteUserroleCommand = require('../commands/UserCommand/DeleteUserroleCommand.js');
 
 const logger = MainLogger.child({ service: 'ExpressServer' });
 
@@ -42,24 +46,6 @@ module.exports = class ExpressServer {
     this.app.use('/ui/login', express.static(`${__dirname}/sites/login.html`));
     this.app.use('/ui/managment', userMiddleware.isLoggedIn, express.static(`${__dirname}/sites/managment.html`));
     this.app.use('/static/', express.static(`${__dirname}/sites/static/`));
-
-    this.app.post('/sign-up', userMiddleware.isLoggedIn, userMiddleware.validateRegister, async (req, res, next) => {
-      logger.info('Got request on sign-up route. Request: %o', req.body);
-
-      try {
-        await AddUserCommand.execute(req.body.username, req.body.password, req.body.userrole);
-        logger.info('Added User %s to database', req.body.username);
-
-        return res.status(201).send({
-          msg: 'Registered!',
-        });
-      } catch (error) {
-        server.emit('error', { service: 'ExpressServer', error });
-        return res.status(401).send({
-          msg: error.message,
-        });
-      }
-    });
 
     this.app.post('/login', async (req, res, next) => {
       logger.info('Got valid request on login route. Request: %o', req.body);
@@ -101,6 +87,93 @@ module.exports = class ExpressServer {
     });
 
     this.app.get('/logout', (req, res) => res.clearCookie('UVCleanSID').send({ url: '/ui/login' }));
+
+    apiRouter.post('/addUser', userMiddleware.isLoggedIn, userMiddleware.validateRegister, async (req, res, next) => {
+      logger.info('Got request on addUser route. Request: %o', req.body);
+
+      try {
+        await AddUserCommand.execute(req.body.username, req.body.password, req.body.userrole);
+        logger.info('Added User %s to database', req.body.username);
+
+        return res.status(201).send({
+          msg: 'Registered!',
+        });
+      } catch (error) {
+        server.emit('error', { service: 'ExpressServer', error });
+        return res.status(401).send({
+          msg: error.message,
+        });
+      }
+    });
+
+    apiRouter.post('/createUserrole', userMiddleware.isLoggedIn, async (req, res, next) => {
+      logger.info('Got request on createUserrole route. Request: %o', req.body);
+
+      let newUserrole = null;
+      try {
+        newUserrole = await CreateUserroleCommand.execute(req.body.userrole,
+          (typeof req.body.canChangeProperties === 'string') ? req.body.canChangeProperties === 'true' : undefined,
+          (typeof req.body.canViewAdvancedData === 'string') ? req.body.canViewAdvancedData === 'true' : undefined);
+
+        return res.status(201).send(newUserrole);
+      } catch (error) {
+        server.emit('error', { service: 'ExpressServer', error });
+        return res.status(401).send({
+          msg: error.message,
+        });
+      }
+    });
+
+    apiRouter.post('/deleteUserrole', userMiddleware.isLoggedIn, async (req, res, next) => {
+      logger.info('Got request on deleteUserrole route. Request: %o', req.body);
+
+      let newUserrole = null;
+      try {
+        newUserrole = await DeleteUserroleCommand.execute(req.body.userrolename);
+        console.log(newUserrole);
+
+        return res.status(201).send(newUserrole);
+      } catch (error) {
+        server.emit('error', { service: 'ExpressServer', error });
+        return res.status(401).send({
+          msg: error.message,
+        });
+      }
+    });
+
+    apiRouter.post('/updateUser', userMiddleware.isLoggedIn, async (req, res, next) => {
+      logger.info('Got request on updateUser route. Request: %o', req.body);
+
+      const { action } = req.query;
+
+      try {
+        if (!action) {
+          throw new Error('Action query parameter must be provided');
+        }
+
+        let newUser = null;
+
+        switch (action) {
+          case 'changePassword':
+            newUser = await ChangeUserPasswordCommand.execute(req.body.username,
+              req.body.oldPassword, req.body.newPassword, req.body.newPasswordRepeated);
+            break;
+          case 'changeUserrole':
+            newUser = await ChangeUserroleCommand.execute(req.body.username, req.body.newUserrole);
+            break;
+
+          default:
+            throw new Error('Action is not available');
+        }
+
+        return res.status(201).send(newUser);
+      } catch (error) {
+        server.emit('error', { service: 'ExpressServer', error });
+        return res.status(401).send({
+          msg: error.message,
+        });
+      }
+    });
 
     apiRouter.get('/settings', async (req, res) => {
       logger.info('Got GET request on /settings');

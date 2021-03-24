@@ -11,7 +11,11 @@ const ExpressServer = require('../../server/ExpressServer/ExpressServer');
 const MongoDBAdapter = require('../../server/databaseAdapters/mongoDB/MongoDBAdapter.js');
 const User = require('../../server/dataModels/User');
 const Userrole = require('../../server/dataModels/Userrole');
-const AddUserCommand = require('../../server/commands/UserCommand/AddUserCommand');
+const CreateUserCommand = require('../../server/commands/UserCommand/CreateUserCommand');
+const ChangeUserPasswordCommand = require('../../server/commands/UserCommand/ChangeUserPasswordCommand');
+const ChangeUserroleCommand = require('../../server/commands/UserCommand/ChangeUserUserroleCommand');
+const CreateUserroleCommand = require('../../server/commands/UserCommand/CreateUserroleCommand');
+const DeleteUserroleCommand = require('../../server/commands/UserCommand/DeleteUserroleCommand');
 
 let request = null;
 
@@ -19,8 +23,16 @@ let expressServer = null;
 let database = null;
 let server = null;
 
+const token = jwt.sign({
+  username: 'Test',
+  userId: '123',
+}, 'SECRETKEY', {
+  expiresIn: '1d',
+});
+
 beforeAll(async () => {
   server = new EventEmitter();
+  server.on('error', (e) => { console.error(e); });
   database = new MongoDBAdapter(global.__MONGO_URI__.replace('mongodb://', ''), '');
   await database.connect();
   expressServer = new ExpressServer(
@@ -30,7 +42,11 @@ beforeAll(async () => {
   expressServer.startExpressServer();
   request = supertest(expressServer.app);
 
-  AddUserCommand.register(database);
+  CreateUserCommand.register(database);
+  ChangeUserPasswordCommand.register(database);
+  ChangeUserroleCommand.register(database);
+  CreateUserroleCommand.register(database);
+  DeleteUserroleCommand.register(database);
 });
 
 afterAll(async () => {
@@ -43,7 +59,7 @@ describe('Express Route testing', () => {
     database.clearCollection('uvcdevices');
     database.clearCollection('uvcgroups');
     database.clearCollection('airvolumes');
-    database.clearCollection('users');
+    // database.clearCollection('users');
   });
 
   describe('api routes', () => {
@@ -189,10 +205,174 @@ describe('Express Route testing', () => {
       });
       done();
     });
+
+    describe.only('POST /api/deleteUserrole', () => {
+      beforeAll(async () => {
+        await database.addUserrole(new Userrole('Guest', true, true));
+      });
+
+      afterAll(async () => {
+        await database.clearCollection('userroles');
+        await database.clearCollection('users');
+      });
+
+      it('Deletes an userrole and returns it', async () => {
+        const res = await request.post('/api/deleteUserrole?user=Test')
+          .set('Content-Type', 'application/json')
+          .set('cookie', [`UVCleanSID=${token}`])
+          .send('{"userrolename":"Guest"}');
+
+        expect(res.status).toBe(201);
+        expect(res.body.name).toMatch('Guest');
+        expect(res.body.canChangeProperties).toBe(true);
+        expect(res.body.canViewAdvancedData).toBe(true);
+      });
+
+      it('returns 401 if no canChangePropertie is passed', async () => {
+        const res = await request.post('/api/deleteUserrole?user=Test')
+          .set('Content-Type', 'application/json')
+          .set('cookie', [`UVCleanSID=${token}`])
+          .send('{}');
+
+        expect(res.status).toBe(401);
+        expect(res.body.msg).toMatch('Userrolename has to be defined and of type string');
+      });
+    });
+
+    describe('POST /api/createUserrole', () => {
+      beforeEach(async () => {
+        await database.clearCollection('userroles');
+        await database.clearCollection('users');
+      });
+
+      it('Creates an userrole and returns it', async () => {
+        const res = await request.post('/api/createUserrole?user=Test')
+          .set('Content-Type', 'application/json')
+          .set('cookie', [`UVCleanSID=${token}`])
+          .send('{"userrole":"Guest", "canChangeProperties":"true", "canViewAdvancedData":"true"}');
+
+        expect(res.status).toBe(201);
+        expect(res.body.name).toMatch('Guest');
+        expect(res.body.canChangeProperties).toBe(true);
+        expect(res.body.canViewAdvancedData).toBe(true);
+      });
+
+      it('returns 401 if no canChangePropertie is passed', async () => {
+        const res = await request.post('/api/createUserrole?user=Test')
+          .set('Content-Type', 'application/json')
+          .set('cookie', [`UVCleanSID=${token}`])
+          .send('{"userrole":"Guest", "canViewAdvancedData":"true"}');
+
+        expect(res.status).toBe(401);
+        expect(res.body.msg).toMatch('CanChangeProperties for the Userrole must be defined and of type boolean');
+      });
+
+      it('returns 401 if no canViewAdvancedData is passed', async () => {
+        const res = await request.post('/api/createUserrole?user=Test')
+          .set('Content-Type', 'application/json')
+          .set('cookie', [`UVCleanSID=${token}`])
+          .send('{"userrole":"Guest", "canChangeProperties":"true"}');
+
+        expect(res.status).toBe(401);
+        expect(res.body.msg).toMatch('CanViewAdvancedData for the Userrole must be defined and of type boolean');
+      });
+    });
+
+    describe('POST /api/updateUser', () => {
+      beforeAll(async () => {
+        await database.addUserrole(new Userrole('Admin', true, true));
+        await database.addUserrole(new Userrole('Guest', true, true));
+        await database.addUser(new User('TestUsername', 'UsernamePassword', 'Admin'));
+      });
+
+      afterAll(async () => {
+        await database.clearCollection('userroles');
+        await database.clearCollection('users');
+      });
+
+      it('action changePassword changes the user password and returns the new user', async () => {
+        const user = await database.getUser('TestUsername');
+        const res = await request.post('/api/updateUser?user=Test&action=changePassword')
+          .set('Content-Type', 'application/json')
+          .set('cookie', [`UVCleanSID=${token}`])
+          .send('{"username":"TestUsername", "oldPassword":"UsernamePassword", "newPassword":"NewPassword", "newPasswordRepeated":"NewPassword"}');
+
+        expect(res.status).toBe(201);
+        expect(res.body.password).toBeDefined();
+        expect(res.body.username).toMatch('TestUsername');
+        expect(res.body.userrole).toMatch(user.userrole.toString());
+      });
+
+      it('action changePassword returns 401 if the repeated password does not match', async () => {
+        const res = await request.post('/api/updateUser?user=Test&action=changePassword')
+          .set('Content-Type', 'application/json')
+          .set('cookie', [`UVCleanSID=${token}`])
+          .send('{"username":"TestUsername", "oldPassword":"UsernamePassword", "newPassword":"NewPassword", "newPasswordRepeated":"password"}');
+
+        expect(res.status).toBe(401);
+        expect(res.body.msg).toMatch('The new password does not match with the repeated password');
+      });
+
+      it('action changePassword returns 401 if the old password does not match', async () => {
+        const res = await request.post('/api/updateUser?user=Test&action=changePassword')
+          .set('Content-Type', 'application/json')
+          .set('cookie', [`UVCleanSID=${token}`])
+          .send('{"username":"TestUsername", "oldPassword":"password", "newPassword":"NewPassword", "newPasswordRepeated":"NewPassword"}');
+
+        expect(res.status).toBe(401);
+        expect(res.body.msg).toMatch('The old password does not match');
+      });
+
+      it('action changePassword returns 401 if the new password does not match the rules', async () => {
+        const res = await request.post('/api/updateUser?user=Test&action=changePassword')
+          .set('Content-Type', 'application/json')
+          .set('cookie', [`UVCleanSID=${token}`])
+          .send('{"username":"TestUsername", "oldPassword":"password", "newPassword":"NewPassword++ß123_.", "newPasswordRepeated":"NewPassword++ß123_."}');
+
+        expect(res.status).toBe(401);
+        expect(res.body.msg).toMatch('Password has to be vaild. Password length has to be at least 5. '
+        + `Only letters and numbers are allowed.\n Invalid characters: ${('NewPassword++ß123_.').match(/[^0-9A-Za-z+#-.!&]/gm).join(',')}`);
+      });
+
+      it('action changeUserrole changes the userrole and returns the new user', async () => {
+        const res = await request.post('/api/updateUser?user=Test&action=changeUserrole')
+          .set('Content-Type', 'application/json')
+          .set('cookie', [`UVCleanSID=${token}`])
+          .send('{"username":"TestUsername", "newUserrole":"Guest"}');
+
+        const user = await database.getUser('TestUsername');
+
+        expect(res.status).toBe(201);
+        expect(res.body.username).toMatch('TestUsername');
+        expect(res.body.userrole).toMatch(user.userrole.toString());
+      });
+
+      it('action changeUserrole returns 401 if the new userrole does not exists', async () => {
+        const res = await request.post('/api/updateUser?user=Test&action=changeUserrole')
+          .set('Content-Type', 'application/json')
+          .set('cookie', [`UVCleanSID=${token}`])
+          .send('{"username":"TestUsername", "newUserrole":"Test"}');
+
+        const user = await database.getUser('TestUsername');
+
+        expect(res.status).toBe(401);
+        expect(res.body.msg).toMatch('Userrole does not exists');
+      });
+
+      it('action changeUserrole returns 401 if the username is not provided', async () => {
+        const res = await request.post('/api/updateUser?user=Test&action=changeUserrole')
+          .set('Content-Type', 'application/json')
+          .set('cookie', [`UVCleanSID=${token}`])
+          .send('{"newUserrole":"Test"}');
+
+        expect(res.status).toBe(401);
+        expect(res.body.msg).toMatch('Username has to be defined and of type string');
+      });
+    });
   });
 
   describe('user routes', () => {
-    it('POST /sign-up route responses with Status 201 and "Registerd!"', async (done) => {
+    it('POST /addUser route responses with Status 201 and "Registerd!"', async (done) => {
       await database.addUserrole(new Userrole('Admin', true, true));
 
       const token = jwt.sign({
@@ -203,7 +383,7 @@ describe('Express Route testing', () => {
         expiresIn: '1d',
       });
 
-      const res = await request.post('/sign-up?user=Test')
+      const res = await request.post('/addUser?user=Test')
         .set('Content-Type', 'application/json')
         .set('cookie', [`UVCleanSID=${token}`])
         .send('{"username":"TestUsername", "password":"UsernamePassword", "password_repeat":"UsernamePassword", "userrole":"Admin"}');
@@ -214,7 +394,7 @@ describe('Express Route testing', () => {
       done();
     });
 
-    it('POST /sign-up route creates user in database', async (done) => {
+    it('POST /addUser route creates user in database', async (done) => {
       await database.addUserrole(new Userrole('Admin', true, true));
 
       const token = jwt.sign({
@@ -225,7 +405,7 @@ describe('Express Route testing', () => {
         expiresIn: '1d',
       });
 
-      const res = await request.post('/sign-up?user=Test')
+      const res = await request.post('/addUser?user=Test')
         .set('Content-Type', 'application/json')
         .set('cookie', [`UVCleanSID=${token}`])
         .send('{"username":"TestUsername", "password":"UsernamePassword", "password_repeat":"UsernamePassword", "userrole":"Admin"}');
@@ -237,7 +417,7 @@ describe('Express Route testing', () => {
       done();
     });
 
-    it('POST /sign-up responses with 401 when user already exists', async (done) => {
+    it('POST /addUser responses with 401 when user already exists', async (done) => {
       await database.addUserrole(new Userrole('Admin', true, true));
       await database.addUser(new User('TestUsername', 'UsernamePassword', 'Admin'));
 
@@ -249,17 +429,13 @@ describe('Express Route testing', () => {
         expiresIn: '1d',
       });
 
-      server.on('error', (e) => console.log(e.error));
-
-      const res = await request.post('/sign-up?user=Test')
+      const res = await request.post('/addUser?user=Test')
         .set('Content-Type', 'application/json')
         .set('cookie', [`UVCleanSID=${token}`])
         .send('{"username":"TestUsername", "password":"UsernamePassword", "password_repeat":"UsernamePassword", "userrole":"Admin"}');
 
       expect(res.body.msg).toMatch('User already exists');
       expect(res.status).toBe(401);
-
-      server.removeAllListeners();
 
       done();
     });

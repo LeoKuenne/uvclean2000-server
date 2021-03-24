@@ -1560,7 +1560,6 @@ module.exports = class MongoDBAdapter extends EventEmitter {
 
     const dbUser = await this.getUser(username);
     const match = await bcrypt.compare(oldPassword, dbUser.password);
-    console.log(match, oldPassword, dbUser.password);
     if (!match) throw new Error('The old password does not match!');
 
     logger.info('Updating password of user %s with %s', username, newPassword);
@@ -1572,7 +1571,7 @@ module.exports = class MongoDBAdapter extends EventEmitter {
       {
         password: hashedNewPassword,
       }, { new: true },
-    );
+    ).lean().exec();
   }
 
   /**
