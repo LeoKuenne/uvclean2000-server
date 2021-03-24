@@ -25,7 +25,11 @@ const UpdateUser = require('./commands/SocketIOCommands/UpdateUser');
 const UpdateUserPassword = require('./commands/SocketIOCommands/UpdateUserPassword');
 const IdentifyDevice = require('./commands/SocketIOCommands/IdentifyDevice');
 const Settings = require('./dataModels/Settings');
-const AddUserCommand = require('./commands/UserCommand/AddUserCommand');
+const CreateUserCommand = require('./commands/UserCommand/CreateUserCommand');
+const ChangeUserPasswordCommand = require('./commands/UserCommand/ChangeUserPasswordCommand');
+const ChangeUserroleCommand = require('./commands/UserCommand/ChangeUserUserroleCommand');
+const CreateUserroleCommand = require('./commands/UserCommand/CreateUserroleCommand');
+const DeleteUserroleCommand = require('./commands/UserCommand/DeleteUserroleCommand');
 
 const logger = MainLogger.child({ service: 'UVCleanServer' });
 
@@ -39,7 +43,11 @@ class UVCleanServer extends EventEmitter {
     this.express = new ExpressServer(this, this.database);
     fs.writeFileSync(config.mqtt.secret, 'NQCNtEul3sEuOwMSRExMeh_RQ0iYD0USEemo00G4pCg=', { encoding: 'base64' });
 
-    AddUserCommand.register(this.database);
+    CreateUserCommand.register(this.database);
+    ChangeUserPasswordCommand.register(this.database);
+    ChangeUserroleCommand.register(this.database);
+    CreateUserroleCommand.register(this.database);
+    DeleteUserroleCommand.register(this.database);
   }
 
   async stopServer() {

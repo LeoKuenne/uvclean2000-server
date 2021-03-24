@@ -198,6 +198,7 @@ describe('Express Route testing', () => {
       const res = await request.get('/api/timestamps')
         .query({ device: '1' })
         .query({ propertie: 'airVolume' });
+
       expect(res.status).toBe(200);
       expect(res.body).toStrictEqual({
         from: new Date(0).toISOString(),
@@ -206,7 +207,45 @@ describe('Express Route testing', () => {
       done();
     });
 
-    describe.only('POST /api/deleteUserrole', () => {
+    describe.only('GET /api/user', () => {
+      afterAll(async () => {
+        await database.clearCollection('users');
+        await database.clearCollection('userroles');
+      });
+
+      it('GET /api/user', async () => {
+        const userrole = await database.addUserrole(new Userrole('Admin', true, true));
+        const user = await database.addUser(new User('admin', 'TestPassword', 'Admin'));
+
+        const res = await request.get('/api/user')
+          .query({ username: 'admin' });
+
+        expect(res.status).toBe(200);
+        expect(res.body).toEqual({
+          user: {
+            id: user._id.toString(),
+            username: user.username,
+            userrole: {
+              _id: userrole._id.toString(),
+              canChangeProperties: userrole.canChangeProperties,
+              canEditUserrole: userrole.canEditUserrole.toObject(),
+              canViewAdvancedData: userrole.canViewAdvancedData,
+              name: userrole.name,
+            },
+          },
+        });
+      });
+
+      it('GET /api/user returns 401 if no username is queried', async () => {
+        const res = await request.get('/api/user')
+          .query({});
+
+        expect(res.status).toBe(401);
+        expect(res.body.msg).toMatch('Username has to be defined and type of string');
+      });
+    });
+
+    describe('POST /api/deleteUserrole', () => {
       beforeAll(async () => {
         await database.addUserrole(new Userrole('Guest', true, true));
       });

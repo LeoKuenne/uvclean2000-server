@@ -1586,7 +1586,9 @@ module.exports = class MongoDBAdapter extends EventEmitter {
 
     const docUser = await UserModel.findOne({
       username,
-    });
+    }).populate('userrole', 'canChangeProperties canEditUserrole canViewAdvancedData name')
+      .lean()
+      .exec();
 
     if (docUser === null) {
       throw new Error('User does not exists');

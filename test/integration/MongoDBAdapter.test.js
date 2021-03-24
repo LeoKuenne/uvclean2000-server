@@ -3257,13 +3257,16 @@ describe('MongoDBAdapter Functions', () => {
 
     it('GetUser gets user from database', async () => {
       const user = new User('Test User', 'TestPassword', 'Admin');
-      await database.addUserrole(new Userrole('Admin', true, true));
+      const dbUserrole = await database.addUserrole(new Userrole('Admin', true, true));
       const dbUser = await database.addUser(user);
       const newUser = await database.getUser(user.username);
 
       expect(dbUser.id.toString()).toMatch(newUser.id.toString());
       expect(dbUser.username).toEqual(newUser.username);
-      expect(dbUser.userrole).toEqual(newUser.userrole);
+      expect(newUser.userrole.canChangeProperties).toEqual(dbUserrole.canChangeProperties);
+      expect(newUser.userrole.canEditUserrole).toBeDefined();
+      expect(newUser.userrole.canViewAdvancedData).toEqual(dbUserrole.canViewAdvancedData);
+      expect(newUser.userrole.name).toEqual(dbUserrole.name);
     });
 
     it('GetUser throws error if username is not defined', async (done) => {

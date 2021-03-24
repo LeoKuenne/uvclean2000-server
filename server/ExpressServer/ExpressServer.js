@@ -48,7 +48,7 @@ module.exports = class ExpressServer {
     this.app.use('/static/', express.static(`${__dirname}/sites/static/`));
 
     this.app.post('/login', async (req, res, next) => {
-      logger.info('Got valid request on login route. Request: %o', req.body);
+      logger.info('Got request on login route. Request: %o', req.body);
 
       try {
         const user = await this.database.getUser(req.body.username);
@@ -212,10 +212,11 @@ module.exports = class ExpressServer {
 
       logger.info(`Got GET request on /user with username=${username}`);
 
-      if (!username) return res.sendStatus(404).send({ msg: 'No username provided' });
+      if (username === undefined || typeof username !== 'string') return res.status(401).send({ msg: 'Username has to be defined and type of string' });
+
       try {
         const db = await this.database.getUser(username);
-        return res.json({ user: { id: db.id, username: db.username, canEdit: db.canEdit } });
+        return res.json({ user: { id: db.id, username: db.username, userrole: db.userrole } });
       } catch (error) {
         server.emit('error', { service: 'ExpressServer', error });
         return res.sendStatus(500);
