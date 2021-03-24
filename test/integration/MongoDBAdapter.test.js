@@ -3000,7 +3000,7 @@ describe('MongoDBAdapter Functions', () => {
       const userrole = new Userrole('Admin', true, true);
       const newUserrole = await database.addUserrole(userrole);
 
-      const user = new User('Test User', 'Test', 'Admin');
+      const user = new User('Test User', 'TestPassword', 'Admin');
       const newUser = await database.addUser(user);
       const docUser = await UserModel.findOne({ username: user.username });
       expect(docUser._id).toEqual(newUser._id);
@@ -3024,7 +3024,7 @@ describe('MongoDBAdapter Functions', () => {
     it('DeleteUser deletes user from database', async (done) => {
       const userrole = new Userrole('Admin', true, true);
       const newUserrole = await database.addUserrole(userrole);
-      const user = new User('Test User', 'Test', 'Admin');
+      const user = new User('Test User', 'TestPassword', 'Admin');
 
       const newUser = await database.addUser(user);
       const dbUser = await database.deleteUser(newUser.username);
@@ -3061,7 +3061,7 @@ describe('MongoDBAdapter Functions', () => {
       await database.addUserrole(new Userrole('Admin', true, true));
       const guestUserrole = await database.addUserrole(new Userrole('Guest', true, true));
 
-      const user = new User('Test User', 'Test', 'Admin');
+      const user = new User('Test User', 'TestPassword', 'Admin');
       const newUser = await database.addUser(user);
 
       const dbUser = await database.updateUserrole('Test User', 'Guest');
@@ -3113,7 +3113,7 @@ describe('MongoDBAdapter Functions', () => {
 
     it('UpdateUserrole throws error if userrole does not exists', async (done) => {
       await database.addUserrole(new Userrole('Admin', true, true));
-      await database.addUser(new User('Test User', 'Test', 'Admin'));
+      await database.addUser(new User('Test User', 'TestPassword', 'Admin'));
 
       try {
         await database.updateUserrole('Test User', 'Userrole');
@@ -3128,7 +3128,7 @@ describe('MongoDBAdapter Functions', () => {
     });
 
     it('ChangeUserPassword changes the password of the user', async () => {
-      const user = new User('Test User', 'Test', 'Admin');
+      const user = new User('Test User', 'TestPassword', 'Admin');
       await database.addUserrole(new Userrole('Admin', true, true));
       await database.addUser(user);
 
@@ -3142,7 +3142,7 @@ describe('MongoDBAdapter Functions', () => {
     });
 
     it('ChangeUserPassword throws error if the old password does not match with the existing one', async (done) => {
-      const user = new User('Test User', 'Test', 'Admin');
+      const user = new User('Test User', 'TestPassword', 'Admin');
       await database.addUserrole(new Userrole('Admin', true, true));
       await database.addUser(user);
 
@@ -3256,7 +3256,7 @@ describe('MongoDBAdapter Functions', () => {
     });
 
     it('GetUser gets user from database', async () => {
-      const user = new User('Test User', 'Test', 'Admin');
+      const user = new User('Test User', 'TestPassword', 'Admin');
       await database.addUserrole(new Userrole('Admin', true, true));
       const dbUser = await database.addUser(user);
       const newUser = await database.getUser(user.username);
@@ -3310,7 +3310,7 @@ describe('MongoDBAdapter Functions', () => {
       const users = [];
 
       for (let i = 0; i < 10; i += 1) {
-        users.push(new User(`Test User ${1}`, `Test ${i}`, 'Admin'));
+        users.push(new User(`Test User ${1}`, `TestPassword${i}`, 'Admin'));
       }
       await Promise.all(users.map(async (user) => {
         await database.addUser(user);

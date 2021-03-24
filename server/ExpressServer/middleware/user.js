@@ -5,15 +5,15 @@ const logger = MainLogger.child({ service: 'UserMiddleware' });
 
 module.exports = {
   validateRegister: (req, res, next) => {
-    logger.info('Validate sign up parameters, username: %s, password %s', req.body.username, req.body.username);
+    logger.debug('Validate sign up parameters, username: %s, password %s', req.body.username, req.body.username);
     if (!req.body.username) {
-      logger.info('Validating username: %s failed', req.body.username);
+      logger.debug('Validating username: %s failed', req.body.username);
       return res.status(400).send({
         msg: 'Please enter a username',
       });
     }
     if (!req.body.password) {
-      logger.info('Validating password: %s failed', req.body.password);
+      logger.debug('Validating password: %s failed', req.body.password);
       return res.status(400).send({
         msg: 'Please enter a password',
       });
@@ -36,7 +36,7 @@ module.exports = {
     next();
   },
   isLoggedIn: (req, res, next) => {
-    logger.info('Validate user to be logged in with cookie %o and query %o', req.cookies, req.query);
+    logger.debug('Validate user to be logged in with cookie %o and query %o', req.cookies, req.query);
     try {
       const token = req.cookies.UVCleanSID;
       const decoded = jwt.verify(

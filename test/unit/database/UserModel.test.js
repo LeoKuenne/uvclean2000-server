@@ -33,7 +33,7 @@ describe('User Model Test', () => {
     expect(savedUser._id).toBeDefined();
     expect(savedUser.username).toBe(user.username);
     expect(savedUser.password).toBe(user.password);
-    expect(savedUser.canEdit).toBe(user.canEdit);
+    expect(savedUser.userrole).toBe(user.userrole);
   });
 
   it('insert user successfully, but the field not defined in schema should be undefined', async () => {

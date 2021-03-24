@@ -43,37 +43,19 @@ module.exports = class ExpressServer {
     this.app.use('/ui/managment', userMiddleware.isLoggedIn, express.static(`${__dirname}/sites/managment.html`));
     this.app.use('/static/', express.static(`${__dirname}/sites/static/`));
 
-    this.app.post('/sign-up', userMiddleware.validateRegister, async (req, res, next) => {
-<<<<<<< HEAD
+    this.app.post('/sign-up', userMiddleware.isLoggedIn, userMiddleware.validateRegister, async (req, res, next) => {
       logger.info('Got request on sign-up route. Request: %o', req.body);
 
       try {
         await AddUserCommand.execute(req.body.username, req.body.password, req.body.userrole);
         logger.info('Added User %s to database', req.body.username);
-=======
-      logger.info('Got valid request on sign-up route. Request: %o', req.body);
-
-      try {
-        // TODO: Adding AddUserCommand.execute
->>>>>>> 912126b (Saving some changes...)
 
         return res.status(201).send({
           msg: 'Registered!',
         });
       } catch (error) {
-<<<<<<< HEAD
         server.emit('error', { service: 'ExpressServer', error });
         return res.status(401).send({
-=======
-        if (error.message === 'User already exists') {
-          logger.info('User %s already exists in database', req.body.username);
-          return res.status(401).send({
-            msg: error.message,
-          });
-        }
-        server.emit('error', { service: 'ExpressServer', error });
-        return res.status(500).send({
->>>>>>> 912126b (Saving some changes...)
           msg: error.message,
         });
       }
@@ -84,11 +66,11 @@ module.exports = class ExpressServer {
 
       try {
         const user = await this.database.getUser(req.body.username);
-        logger.info('User exists in database');
+        logger.debug('User exists in database');
         const match = await bcrypt.compare(req.body.password, user.password);
 
         if (match) {
-          logger.info('Password matches with database entry');
+          logger.debug('Password matches with database entry');
           const token = jwt.sign({
             username: user.username,
             userId: user.id,
@@ -98,7 +80,7 @@ module.exports = class ExpressServer {
           });
 
           res.cookie('UVCleanSID', token, { httpOnly: true });
-          logger.info('Responding with cookie "UVCleanSID", token, %o with user %o', { httpOnly: true }, user);
+          logger.debug('Responding with cookie "UVCleanSID", token, %o with user %o', { httpOnly: true }, user);
           return res.status(201).send({
             user,
             url: `/ui/managment?user=${user.username}`,

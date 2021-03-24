@@ -11,6 +11,7 @@ const ExpressServer = require('../../server/ExpressServer/ExpressServer');
 const MongoDBAdapter = require('../../server/databaseAdapters/mongoDB/MongoDBAdapter.js');
 const User = require('../../server/dataModels/User');
 const Userrole = require('../../server/dataModels/Userrole');
+const AddUserCommand = require('../../server/commands/UserCommand/AddUserCommand');
 
 let request = null;
 
@@ -28,6 +29,8 @@ beforeAll(async () => {
   );
   expressServer.startExpressServer();
   request = supertest(expressServer.app);
+
+  AddUserCommand.register(database);
 });
 
 afterAll(async () => {
@@ -189,10 +192,21 @@ describe('Express Route testing', () => {
   });
 
   describe('user routes', () => {
-    it.skip('POST /sign-up route responses with Status 201 and "Registerd!"', async (done) => {
-      const res = await request.post('/sign-up')
+    it('POST /sign-up route responses with Status 201 and "Registerd!"', async (done) => {
+      await database.addUserrole(new Userrole('Admin', true, true));
+
+      const token = jwt.sign({
+        username: 'Test',
+        userId: '123',
+      },
+      'SECRETKEY', {
+        expiresIn: '1d',
+      });
+
+      const res = await request.post('/sign-up?user=Test')
         .set('Content-Type', 'application/json')
-        .send('{"username":"TestUsername", "password":"UsernamePassword", "password_repeat":"UsernamePassword"}');
+        .set('cookie', [`UVCleanSID=${token}`])
+        .send('{"username":"TestUsername", "password":"UsernamePassword", "password_repeat":"UsernamePassword", "userrole":"Admin"}');
 
       expect(res.status).toBe(201);
       expect(res.body.msg).toMatch('Registered!');
@@ -200,10 +214,22 @@ describe('Express Route testing', () => {
       done();
     });
 
-    it.skip('POST /sign-up route creates user in database', async (done) => {
-      const res = await request.post('/sign-up')
+    it('POST /sign-up route creates user in database', async (done) => {
+      await database.addUserrole(new Userrole('Admin', true, true));
+
+      const token = jwt.sign({
+        username: 'Test',
+        userId: '123',
+      },
+      'SECRETKEY', {
+        expiresIn: '1d',
+      });
+
+      const res = await request.post('/sign-up?user=Test')
         .set('Content-Type', 'application/json')
-        .send('{"username":"TestUsername", "password":"UsernamePassword", "password_repeat":"UsernamePassword"}');
+        .set('cookie', [`UVCleanSID=${token}`])
+        .send('{"username":"TestUsername", "password":"UsernamePassword", "password_repeat":"UsernamePassword", "userrole":"Admin"}');
+
       const user = await database.getUser('TestUsername');
 
       expect(user.username).toMatch('TestUsername');
@@ -211,34 +237,59 @@ describe('Express Route testing', () => {
       done();
     });
 
-    it.skip('POST /sign-up responses with 401 when user already exists', async (done) => {
-      await database.addUser({ username: 'TestUsername', password: 'UsernamePassword', canEdit: false });
-      const res = await request.post('/sign-up')
+    it('POST /sign-up responses with 401 when user already exists', async (done) => {
+      await database.addUserrole(new Userrole('Admin', true, true));
+      await database.addUser(new User('TestUsername', 'UsernamePassword', 'Admin'));
+
+      const token = jwt.sign({
+        username: 'Test',
+        userId: '123',
+      },
+      'SECRETKEY', {
+        expiresIn: '1d',
+      });
+
+      server.on('error', (e) => console.log(e.error));
+
+      const res = await request.post('/sign-up?user=Test')
         .set('Content-Type', 'application/json')
-        .send('{"username":"TestUsername", "password":"UsernamePassword", "password_repeat":"UsernamePassword"}');
+        .set('cookie', [`UVCleanSID=${token}`])
+        .send('{"username":"TestUsername", "password":"UsernamePassword", "password_repeat":"UsernamePassword", "userrole":"Admin"}');
 
       expect(res.body.msg).toMatch('User already exists');
       expect(res.status).toBe(401);
 
+      server.removeAllListeners();
+
       done();
     });
 
-    it.skip('POST /login route returns token for user', async (done) => {
+    it('POST /login route returns token for user', async (done) => {
       await database.addUserrole(new Userrole('admin', true, true));
       const user = await database.addUser(new User('TestUsername', 'UsernamePassword', 'admin'));
       const res = await request.post('/login')
         .set('Content-Type', 'application/json')
         .send('{"username":"TestUsername", "password":"UsernamePassword"}');
 
-      const decoded = jwt.verify(
-        res.header['set-cookie'],
-        'SECRETKEY',
-      );
-      expect(res.status).toBe(200);
-      expect(res.body.msg).toMatch('Logged in!');
-      expect(res.body.user.id).toMatch(user._id.toString());
-      expect(decoded.username).toBe(user.username);
-      expect(decoded.userId).toMatch(user._id.toString());
+      const token = jwt.sign({
+        username: user.username,
+        userId: user.id,
+      },
+      'SECRETKEY', {
+        expiresIn: '1d',
+      });
+
+      expect(res.status).toBe(201);
+      expect(res.body).toEqual({
+        user: {
+          id: user._id.toString(),
+          username: user.username,
+          password: user.password,
+          userrole: user.userrole.toString(),
+        },
+        url: `/ui/managment?user=${user.username}`,
+      });
+      expect(res.header['set-cookie'][0]).toMatch(`UVCleanSID=${token}`);
 
       done();
     });
