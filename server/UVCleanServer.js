@@ -30,6 +30,8 @@ const ChangeUserPasswordCommand = require('./commands/UserCommand/ChangeUserPass
 const ChangeUserroleCommand = require('./commands/UserCommand/ChangeUserUserroleCommand');
 const CreateUserroleCommand = require('./commands/UserCommand/CreateUserroleCommand');
 const DeleteUserroleCommand = require('./commands/UserCommand/DeleteUserroleCommand');
+const User = require('./dataModels/User');
+const Userrole = require('./dataModels/Userrole');
 
 const logger = MainLogger.child({ service: 'UVCleanServer' });
 
@@ -121,6 +123,22 @@ class UVCleanServer extends EventEmitter {
 
         this.io.emit('databaseConnected');
 
+        await Promise.all(config.userrole.map(async (userrole) => {
+          logger.info(`Checking Userrole ${userrole.userrolename} to exists in database.`);
+          try {
+            await this.database.getUserrole(userrole.userrolename);
+            logger.info(`Userrole ${userrole.userrolename} exists in database.`);
+          } catch (error) {
+            if (error.message === 'Userrole does not exists') {
+              logger.info(`Adding Userrole ${userrole.userrolename} to database with object %o`, userrole);
+              this.database.addUserrole(new Userrole(userrole.userrolename,
+                userrole.canChangeProperties, userrole.canViewAdvancedData));
+              return;
+            }
+            throw error;
+          }
+        }));
+
         await Promise.all(config.user.map(async (user) => {
           logger.info(`Checking User ${user.username} to exists in database.`);
           try {
@@ -129,11 +147,7 @@ class UVCleanServer extends EventEmitter {
           } catch (error) {
             if (error.message === 'User does not exists') {
               logger.info(`Adding User ${user.username} to database with object %o`, user);
-              this.database.addUser({
-                username: user.username,
-                password: user.username,
-                canEdit: (user.canEdit !== undefined) ? user.canEdit === 'true' : false,
-              });
+              this.database.addUser(new User(user.username, user.password, user.userrole));
               return;
             }
             throw error;

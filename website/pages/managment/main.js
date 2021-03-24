@@ -31,6 +31,7 @@ fetch(`/api/user?username=${paramUser}`)
   })
   .then((response) => {
     store.user = response.user;
+    console.log(response);
   }).catch((err) => {
     console.error(err);
   });
@@ -45,7 +46,7 @@ new Vue({
   render: (h) => h(App),
   router,
   data: {
-    socket: (store.user.canEdit) ? socket : null,
+    socket: (store.user.userrole.canChangeProperties) ? socket : null,
   },
   async created() {
     window.onbeforeunload = () => {
