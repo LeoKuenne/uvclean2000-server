@@ -32,11 +32,13 @@
           </svg> -->
         </div>
       </div>
-      <div class="pl-2">
-        <h2 class="font-bold text-base">Userrights</h2>
-        <div class="space-x-2 text-sm flex items-center">
-          <label for="cbxCanEdit">Can edit:</label>
-          <input type="checkbox" id="cbxCanEdit" disabled :checked="user.canEdit">
+      <h2 class="font-bold text-base">Userrole: {{user.userrole.name}}</h2>
+      <div class="flex space-x-4">
+        <div class="space-x-2 text-sm flex items-center"
+          v-for="rule in user.userrole.rules" :key="rule.description">
+          <label for="cbxuserrole.canChangeProperties">{{rule.description}}</label>
+          <input type="checkbox" id="cbxuserrole.canChangeProperties"
+            disabled :checked="rule.allowed">
         </div>
       </div>
     </div>

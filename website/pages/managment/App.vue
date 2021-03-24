@@ -49,7 +49,7 @@
         </div>
         <router-link :to="{ name: 'settings' }"
           class="hidden md:flex text-color px-5 text-base align-baseline"
-          v-if="$dataStore.user.canEdit === true">
+          v-if="$dataStore.user.userrole.canChangeProperties === true">
           Settings
         </router-link>
         <button class="flex items-center space-x-1"

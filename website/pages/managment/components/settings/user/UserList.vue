@@ -3,7 +3,7 @@
     <div class="flex items-center space-x-5">
       <h2 class="text-lg font-bold">Users</h2>
       <button
-        v-if="$dataStore.user.canEdit"
+        v-if="$dataStore.user.userrole.canChangeProperties"
         @click="showUserAddForm"
         class="flex text-left text-primary bg-white shadow items-center p-2
         hover:text-gray-500 hover:transform hover:scale-105
@@ -55,10 +55,10 @@
       </button>
       <h2 class="font-bold text-lg">Userrights</h2>
       <div class="flex items-center">
-        <label for="form_canEdit">Can edit:</label>
-        <input id="form_canEdit"
-          v-model="formUser.canEdit"
-          :checked="formUser.canEdit"
+        <label for="form_userrole.canChangeProperties">Can edit:</label>
+        <input id="form_userrole.canChangeProperties"
+          v-model="formUser.userrole.canChangeProperties"
+          :checked="formUser.userrole.canChangeProperties"
           type="checkbox"
           class="rounded ml-2 border border-gray-500">
       </div>
@@ -68,7 +68,7 @@
           text-red-500"
           v-show="isFormEdit"
           :disabled="!isFormEdit"
-          @click="deleteUser(formUser.canEdit)">
+          @click="deleteUser(formUser.userrole.canChangeProperties)">
           Delete
         </button>
         <div class="float-right space-x-2">
@@ -133,7 +133,11 @@ export default {
   data() {
     return {
       users: [],
-      formUser: {},
+      formUser: {
+        userrole: {
+
+        },
+      },
       isFormEdit: false,
       showUserForm: false,
       showChangePasswordForm: false,
@@ -146,7 +150,9 @@ export default {
       this.formUser = {
         username: user.username,
         newUsername: user.username,
-        canEdit: user.canEdit,
+        userrole: {
+          canChangeProperties: false,
+        },
       };
       this.isFormEdit = true;
       this.showUserForm = true;
@@ -155,7 +161,9 @@ export default {
       this.errorMessage = '';
       this.formUser = {
         username: '',
-        canEdit: false,
+        userrole: {
+          canChangeProperties: false,
+        },
       };
       this.isFormEdit = false;
       this.showUserForm = true;
@@ -194,7 +202,6 @@ export default {
       this.$root.$data.socket.emit('user_add', {
         username: user.username,
         password: user.password,
-        canEdit: user.canEdit,
       });
     },
     updateUser() {
@@ -206,7 +213,6 @@ export default {
         username: this.formUser.username,
         newUsername: this.formUser.newUsername,
         password: this.formUser.password,
-        canEdit: this.formUser.canEdit,
       });
     },
     changeUserPassword(user) {
