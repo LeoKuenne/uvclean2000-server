@@ -3308,8 +3308,8 @@ describe('MongoDBAdapter Functions', () => {
       }
     });
 
-    it('GetUsers gets all users from database', async () => {
-      await database.addUserrole(new Userrole('Admin', true, true));
+    it.only('GetUsers gets all users from database', async () => {
+      const userrole = await database.addUserrole(new Userrole('Admin', true, true));
       const users = [];
 
       for (let i = 0; i < 10; i += 1) {
@@ -3325,7 +3325,10 @@ describe('MongoDBAdapter Functions', () => {
         const user = dbUsers[i];
 
         expect(user.username).toEqual(users[i].username);
-        expect(user.canEdit).toEqual(users[i].canEdit);
+        expect(user.userrole.canChangeProperties).toEqual(userrole.canChangeProperties);
+        expect(user.userrole.canEditUserrole).toBeDefined();
+        expect(user.userrole.canViewAdvancedData).toEqual(userrole.canViewAdvancedData);
+        expect(user.userrole.name).toEqual(userrole.name);
       }
     });
 

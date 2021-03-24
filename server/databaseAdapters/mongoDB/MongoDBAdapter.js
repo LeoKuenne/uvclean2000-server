@@ -1608,7 +1608,11 @@ module.exports = class MongoDBAdapter extends EventEmitter {
   async getUsers() {
     if (this.db === undefined) throw new Error('Database is not connected');
 
-    const docUsers = await UserModel.find().lean().exec();
+    const docUsers = await UserModel.find()
+      .populate('userrole', 'canChangeProperties canEditUserrole canViewAdvancedData name')
+      .lean()
+      .exec();
+
     logger.debug('Getting all users');
 
     const users = [];
@@ -1617,7 +1621,7 @@ module.exports = class MongoDBAdapter extends EventEmitter {
         id: user._id,
         username: user.username,
         password: user.password,
-        canEdit: user.canEdit,
+        userrole: user.userrole,
       });
     });
 

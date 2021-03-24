@@ -245,6 +245,49 @@ describe('Express Route testing', () => {
       });
     });
 
+    describe.only('GET /api/users', () => {
+      afterAll(async () => {
+        await database.clearCollection('users');
+        await database.clearCollection('userroles');
+      });
+
+      it('GET /api/users', async () => {
+        const userrole = await database.addUserrole(new Userrole('Admin', true, true));
+
+        const users = [];
+
+        for (let i = 0; i < 10; i += 1) {
+          users.push(new User(`admin${i}`, 'TestPassword', 'Admin'));
+        }
+
+        await Promise.all(users.map(async (user) => {
+          await database.addUser(user);
+        }));
+
+        const res = await request.get('/api/users');
+
+        expect(res.status).toBe(200);
+        expect(res.body.length).toBe(10);
+
+        for (let i = 0; i < 10; i += 1) {
+          expect(res.body).toEqual(
+            expect.arrayContaining([
+              expect.objectContaining({
+                username: users[i].username,
+                userrole: {
+                  _id: userrole._id.toString(),
+                  canChangeProperties: userrole.canChangeProperties,
+                  canEditUserrole: userrole.canEditUserrole.toObject(),
+                  canViewAdvancedData: userrole.canViewAdvancedData,
+                  name: userrole.name,
+                },
+              }),
+            ]),
+          );
+        }
+      });
+    });
+
     describe('POST /api/deleteUserrole', () => {
       beforeAll(async () => {
         await database.addUserrole(new Userrole('Guest', true, true));

@@ -232,7 +232,7 @@ module.exports = class ExpressServer {
         db.map((user) => {
           users.push({
             username: user.username,
-            canEdit: user.canEdit,
+            userrole: user.userrole,
             id: user.id,
           });
           return user;
