@@ -1611,7 +1611,7 @@ module.exports = class MongoDBAdapter extends EventEmitter {
     if (this.db === undefined) throw new Error('Database is not connected');
 
     const docUsers = await UserModel.find()
-      .populate('userrole', 'canChangeProperties canEditUserrole canViewAdvancedData name')
+      .populate('userrole')
       .lean()
       .exec();
 
@@ -1623,7 +1623,7 @@ module.exports = class MongoDBAdapter extends EventEmitter {
         id: user._id,
         username: user.username,
         password: user.password,
-        userrole: user.userrole,
+        userrole: new Userrole(user.userrole.name, user.userrole.canChangeProperties, user.userrole.canViewAdvancedData),
       });
     });
 

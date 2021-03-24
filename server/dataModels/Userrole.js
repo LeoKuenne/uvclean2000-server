@@ -8,11 +8,11 @@ module.exports = class Userrole {
 
     this.rules = {
       canChangeProperties: {
-        describtion: 'Can change Properties',
+        description: 'Can change Properties',
         allowed: canChangeProperties,
       },
       canViewAdvancedData: {
-        describtion: 'Can View Advanced Data',
+        description: 'Can View Advanced Data',
         allowed: canViewAdvancedData,
       },
     };

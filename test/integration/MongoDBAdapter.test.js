@@ -3331,9 +3331,11 @@ describe('MongoDBAdapter Functions', () => {
         const user = dbUsers[i];
 
         expect(user.username).toEqual(users[i].username);
-        expect(user.userrole.canChangeProperties).toEqual(userrole.canChangeProperties);
+        expect(user.userrole.rules.canChangeProperties.allowed)
+          .toEqual(userrole.canChangeProperties);
+        expect(user.userrole.rules.canViewAdvancedData.allowed)
+          .toEqual(userrole.canViewAdvancedData);
         expect(user.userrole.canEditUserrole).toBeDefined();
-        expect(user.userrole.canViewAdvancedData).toEqual(userrole.canViewAdvancedData);
         expect(user.userrole.name).toEqual(userrole.name);
       }
     });

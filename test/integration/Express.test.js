@@ -226,10 +226,11 @@ describe('Express Route testing', () => {
             id: user._id.toString(),
             username: user.username,
             userrole: {
-              _id: userrole._id.toString(),
-              canChangeProperties: userrole.canChangeProperties,
+              rules: {
+                canChangeProperties: { allowed: userrole.canChangeProperties, description: 'Can change Properties' },
+                canViewAdvancedData: { allowed: userrole.canViewAdvancedData, description: 'Can View Advanced Data' },
+              },
               canEditUserrole: userrole.canEditUserrole.toObject(),
-              canViewAdvancedData: userrole.canViewAdvancedData,
               name: userrole.name,
             },
           },
@@ -275,10 +276,11 @@ describe('Express Route testing', () => {
               expect.objectContaining({
                 username: users[i].username,
                 userrole: {
-                  _id: userrole._id.toString(),
-                  canChangeProperties: userrole.canChangeProperties,
+                  rules: {
+                    canChangeProperties: { allowed: userrole.canChangeProperties, description: 'Can change Properties' },
+                    canViewAdvancedData: { allowed: userrole.canViewAdvancedData, description: 'Can View Advanced Data' },
+                  },
                   canEditUserrole: userrole.canEditUserrole.toObject(),
-                  canViewAdvancedData: userrole.canViewAdvancedData,
                   name: userrole.name,
                 },
               }),
