@@ -1402,7 +1402,16 @@ module.exports = class MongoDBAdapter extends EventEmitter {
 
     logger.info('Adding userrole %o', userrole);
 
-    const docUserrole = new UserroleModel(userrole);
+    const userroleModelobject = {
+      name: userrole.name,
+    };
+
+    Object.keys(userrole.rules).forEach((key) => {
+      userroleModelobject[key] = userrole.rules[key].allowed;
+    });
+
+    const docUserrole = new UserroleModel(userroleModelobject);
+
     const err = docUserrole.validateSync();
     if (err !== undefined) throw err;
     return docUserrole.save();
@@ -1411,6 +1420,7 @@ module.exports = class MongoDBAdapter extends EventEmitter {
   /**
    * Gets an userrole with the given name
    * @param {String} userrolename The userrolename to get
+   * @returns {Userrole}
    */
   async getUserrole(userrolename) {
     if (this.db === undefined) throw new Error('Database is not connected');
@@ -1426,13 +1436,8 @@ module.exports = class MongoDBAdapter extends EventEmitter {
       throw new Error('Userrole does not exists');
     }
 
-    return {
-      id: docUserrole._id,
-      name: docUserrole.name,
-      canChangeProperties: docUserrole.canChangeProperties,
-      canViewAdvancedData: docUserrole.canViewAdvancedData,
-      canEditUserrole: docUserrole.canEditUserrole,
-    };
+    return new Userrole(docUserrole.name, docUserrole.canChangeProperties,
+      docUserrole.canViewAdvancedData, docUserrole.canEditUserrole);
   }
 
   /**
@@ -1459,13 +1464,8 @@ module.exports = class MongoDBAdapter extends EventEmitter {
 
     const userroles = [];
     docUsers.forEach((userrole) => {
-      userroles.push({
-        id: userrole._id,
-        name: userrole.name,
-        canChangeProperties: userrole.canChangeProperties,
-        canViewAdvancedData: userrole.canViewAdvancedData,
-        canEditUserrole: userrole.canEditUserrole,
-      });
+      userroles.push(new Userrole(userrole.name, userrole.canChangeProperties,
+        userrole.canViewAdvancedData, userrole.canEditUserrole));
     });
 
     return userroles;
@@ -1535,14 +1535,15 @@ module.exports = class MongoDBAdapter extends EventEmitter {
       { username },
       { userrole: dbUserrole._id },
       { new: true },
-    ).lean();
+    ).populate('userrole').lean();
 
     if (docUser === null) throw new Error('User does not exists');
 
     return {
       id: docUser._id,
       username: docUser.username,
-      userrole: docUser.userrole,
+      userrole: new Userrole(docUser.userrole.name, docUser.userrole.canChangeProperties,
+        docUser.userrole.canViewAdvancedData),
     };
   }
 
@@ -1598,7 +1599,8 @@ module.exports = class MongoDBAdapter extends EventEmitter {
       id: docUser._id,
       username: docUser.username,
       password: docUser.password,
-      userrole: docUser.userrole,
+      userrole: new Userrole(docUser.userrole.name, docUser.userrole.canChangeProperties,
+        docUser.userrole.canViewAdvancedData),
     };
   }
 

@@ -3,8 +3,8 @@ const Userrole = require('../../server/dataModels/Userrole');
 it('Creates an userrole', () => {
   const userrole = new Userrole('Name', true, true);
   expect(userrole.name).toMatch('Name');
-  expect(userrole.canChangeProperties).toBe(true);
-  expect(userrole.canViewAdvancedData).toBe(true);
+  expect(userrole.rules.canChangeProperties.allowed).toBe(true);
+  expect(userrole.rules.canViewAdvancedData.allowed).toBe(true);
 });
 
 it('Throws an error if name is not defined and not a string', () => {

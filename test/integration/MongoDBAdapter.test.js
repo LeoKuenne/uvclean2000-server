@@ -2892,14 +2892,17 @@ describe('MongoDBAdapter Functions', () => {
       const newUserrole = await database.addUserrole(userrole);
 
       const docUserrole = await database.deleteUserrole(newUserrole.name);
+
       expect(docUserrole._id).toEqual(newUserrole._id);
       expect(docUserrole.name).toEqual(newUserrole.name);
-      expect(docUserrole.canChangeProperties).toEqual(newUserrole.canChangeProperties);
-      expect(docUserrole.canViewAdvancedData).toEqual(newUserrole.canViewAdvancedData);
-      expect(docUserrole.canEditUserrole).toStrictEqual([]);
+      expect(userrole.rules.canChangeProperties.allowed)
+        .toEqual(docUserrole.canChangeProperties);
+      expect(userrole.rules.canViewAdvancedData.allowed)
+        .toEqual(docUserrole.canViewAdvancedData);
+      expect(userrole.canEditUserrole).toEqual(docUserrole.canEditUserrole);
 
       try {
-        await database.getUserrole(newUserrole.name);
+        await database.getUserrole(docUserrole.name);
       } catch (err) {
         try {
           expect(err.toString()).toMatch('Userrole does not exists');
@@ -2912,15 +2915,17 @@ describe('MongoDBAdapter Functions', () => {
 
     it('GetUserrole gets userrole from database', async () => {
       const userrole = new Userrole('Admin', true, true);
-      const dbUserrole = await database.addUserrole(userrole);
+      await database.addUserrole(userrole);
 
       const newUserrole = await database.getUserrole('Admin');
 
-      expect(dbUserrole._id.toString()).toMatch(newUserrole.id.toString());
       expect(userrole.name).toEqual(newUserrole.name);
-      expect(userrole.canChangeProperties).toEqual(newUserrole.canChangeProperties);
-      expect(userrole.canViewAdvancedData).toEqual(newUserrole.canViewAdvancedData);
-      expect(userrole.canEditUserrole).toEqual(newUserrole.canEditUserrole);
+      expect(userrole.rules.canChangeProperties.allowed)
+        .toEqual(newUserrole.rules.canChangeProperties.allowed);
+      expect(userrole.rules.canViewAdvancedData.allowed)
+        .toEqual(newUserrole.rules.canViewAdvancedData.allowed);
+      expect(userrole.canEditUserrole)
+        .toEqual(newUserrole.canEditUserrole);
     });
 
     it('GetUserrole throws error if userrolename is not defined', async (done) => {
@@ -2978,8 +2983,10 @@ describe('MongoDBAdapter Functions', () => {
         const userrole = dbUserroles[i];
 
         expect(userrole.name).toEqual(userroles[i].name);
-        expect(userrole.canChangeProperties).toEqual(userroles[i].canChangeProperties);
-        expect(userrole.canViewAdvancedData).toEqual(userroles[i].canViewAdvancedData);
+        expect(userrole.rules.canChangeProperties.allowed)
+          .toEqual(userroles[i].rules.canChangeProperties.allowed);
+        expect(userrole.rules.canViewAdvancedData.allowed)
+          .toEqual(userroles[i].rules.canViewAdvancedData.allowed);
         expect(userrole.canEditUserrole).toEqual(userroles[i].canEditUserrole);
       }
     });
@@ -3031,7 +3038,6 @@ describe('MongoDBAdapter Functions', () => {
       expect(dbUser.id).toMatch(newUser._id.toString());
       expect(dbUser.username).toEqual(newUser.username);
       expect(dbUser.password).toEqual(newUser.password);
-      expect(dbUser.canEdit).toEqual(newUser.canEdit);
       try {
         await database.getUser(newUser.username);
       } catch (err) {
@@ -3065,10 +3071,9 @@ describe('MongoDBAdapter Functions', () => {
       const newUser = await database.addUser(user);
 
       const dbUser = await database.updateUserrole('Test User', 'Guest');
-      console.log(dbUser);
 
       expect(dbUser.id.toString()).toMatch(newUser._id.toString());
-      expect(dbUser.userrole.toString()).toMatch(guestUserrole._id.toString());
+      expect(dbUser.userrole.name).toMatch(guestUserrole.name);
     });
 
     it('UpdateUserrole throws error if username is not a string', async (done) => {
@@ -3135,10 +3140,10 @@ describe('MongoDBAdapter Functions', () => {
       const dbUser = await database.changeUserPassword(
         user.username,
         user.password,
-        'New Test',
+        'NewTest',
       );
       expect(dbUser.username).toEqual(user.username);
-      expect(bcrypt.compareSync('New Test', dbUser.password)).toBe(true);
+      expect(bcrypt.compareSync('NewTest', dbUser.password)).toBe(true);
     });
 
     it('ChangeUserPassword throws error if the old password does not match with the existing one', async (done) => {
@@ -3149,11 +3154,11 @@ describe('MongoDBAdapter Functions', () => {
       await database.changeUserPassword(
         user.username,
         user.password,
-        'New Test',
+        'NewTest',
       );
 
       try {
-        await database.changeUserPassword(user.username, 'Test Falsch', 'New Test');
+        await database.changeUserPassword(user.username, 'Test Falsch', 'NewTest');
       } catch (e) {
         try {
           expect(e.toString()).toMatch('The old password does not match');
@@ -3166,7 +3171,7 @@ describe('MongoDBAdapter Functions', () => {
 
     it('ChangeUserPassword throws error if the user does not exists', async (done) => {
       try {
-        await database.changeUserPassword('admin', 'Test Falsch', 'New Test');
+        await database.changeUserPassword('admin', 'Test Falsch', 'NewTest');
       } catch (e) {
         try {
           expect(e.toString()).toMatch('User does not exists');
@@ -3261,11 +3266,12 @@ describe('MongoDBAdapter Functions', () => {
       const dbUser = await database.addUser(user);
       const newUser = await database.getUser(user.username);
 
-      expect(dbUser.id.toString()).toMatch(newUser.id.toString());
       expect(dbUser.username).toEqual(newUser.username);
-      expect(newUser.userrole.canChangeProperties).toEqual(dbUserrole.canChangeProperties);
+      expect(newUser.userrole.rules.canChangeProperties.allowed)
+        .toEqual(dbUserrole.canChangeProperties);
+      expect(newUser.userrole.rules.canViewAdvancedData.allowed)
+        .toEqual(dbUserrole.canViewAdvancedData);
       expect(newUser.userrole.canEditUserrole).toBeDefined();
-      expect(newUser.userrole.canViewAdvancedData).toEqual(dbUserrole.canViewAdvancedData);
       expect(newUser.userrole.name).toEqual(dbUserrole.name);
     });
 
@@ -3308,7 +3314,7 @@ describe('MongoDBAdapter Functions', () => {
       }
     });
 
-    it.only('GetUsers gets all users from database', async () => {
+    it('GetUsers gets all users from database', async () => {
       const userrole = await database.addUserrole(new Userrole('Admin', true, true));
       const users = [];
 
