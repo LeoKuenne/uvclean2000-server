@@ -1,11 +1,18 @@
 const mongoose = require('mongoose');
+const Userrole = require('../../../dataModels/Userrole');
 
-const userrole = new mongoose.Schema({
+const allRights = Userrole.getUserroleRights();
+
+const userroleObject = {
   name: { type: String, required: true },
-  canChangeProperties: { type: Boolean, default: false },
-  canViewAdvancedData: { type: Boolean, default: false },
   canEditUserrole: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Userrole' }],
+};
+
+allRights.forEach((right) => {
+  userroleObject[right.propertie] = { type: Boolean, default: false };
 });
+
+const userrole = new mongoose.Schema(userroleObject);
 
 const UserroleModel = mongoose.model('Userrole', userrole);
 

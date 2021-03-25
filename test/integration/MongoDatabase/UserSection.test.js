@@ -1,0 +1,581 @@
+/* eslint-disable no-underscore-dangle */
+/* eslint-disable no-await-in-loop */
+const bcrypt = require('bcrypt');
+const UserModel = require('../../../server/databaseAdapters/mongoDB/models/user.js');
+const UserroleModel = require('../../../server/databaseAdapters/mongoDB/models/userrole.js');
+const MongoDBAdapter = require('../../../server/databaseAdapters/mongoDB/MongoDBAdapter.js');
+const User = require('../../../server/dataModels/User.js');
+const Userrole = require('../../../server/dataModels/Userrole.js');
+
+let database;
+
+describe('MongoDBAdapter User Functions', () => {
+  beforeAll(async () => {
+    database = new MongoDBAdapter(global.__MONGO_URI__.replace('mongodb://', ''), '');
+    await database.connect();
+  });
+
+  afterAll(async () => {
+    await database.close();
+  });
+
+  describe('Userrole functions', () => {
+    beforeEach(async () => {
+      await database.clearCollection('users');
+      await database.clearCollection('userroles');
+    });
+
+    it('AddUserrole adds an userrole to the database', async () => {
+      const allRights = Userrole.getUserroleRights();
+      const rightsObject = {};
+      allRights.forEach((right) => {
+        rightsObject[right.propertie] = true;
+      });
+
+      const userrole = new Userrole('Admin', rightsObject);
+      const newUserrole = await database.addUserrole(userrole);
+      const docUserrole = await UserroleModel.findOne({ name: userrole.name }).lean();
+      expect(docUserrole._id).toEqual(newUserrole._id);
+      expect(docUserrole.userrolename).toEqual(newUserrole.userrolename);
+      expect(docUserrole.canEditUserrole).toStrictEqual([]);
+
+      allRights.forEach((right) => {
+        expect(docUserrole[right.propertie]).toEqual(newUserrole[right.propertie]);
+      });
+    });
+
+    it('DeleteUserrole deletes userrole from database', async (done) => {
+      const allRights = Userrole.getUserroleRights();
+      const rightsObject = {};
+      allRights.forEach((right) => {
+        rightsObject[right.propertie] = true;
+      });
+
+      const userrole = new Userrole('Admin', rightsObject);
+
+      const newUserrole = await database.addUserrole(userrole);
+
+      const docUserrole = await database.deleteUserrole(newUserrole.name);
+
+      expect(docUserrole._id).toEqual(newUserrole._id);
+      expect(docUserrole.name).toEqual(newUserrole.name);
+      expect(userrole.canEditUserrole).toEqual(docUserrole.canEditUserrole);
+
+      allRights.forEach((right) => {
+        expect(userrole.rules[right.propertie].allowed).toEqual(docUserrole[right.propertie]);
+      });
+
+      try {
+        await database.getUserrole(docUserrole.name);
+      } catch (err) {
+        try {
+          expect(err.toString()).toMatch('Userrole does not exists');
+          done();
+        } catch (e) {
+          done(e);
+        }
+      }
+    });
+
+    it('GetUserrole gets userrole from database', async () => {
+      const allRights = Userrole.getUserroleRights();
+      const rightsObject = {};
+      allRights.forEach((right) => {
+        rightsObject[right.propertie] = true;
+      });
+
+      const userrole = new Userrole('Admin', rightsObject);
+      await database.addUserrole(userrole);
+
+      const newUserrole = await database.getUserrole('Admin');
+
+      expect(userrole.name).toEqual(newUserrole.name);
+      expect(userrole.canEditUserrole).toEqual(newUserrole.canEditUserrole);
+
+      allRights.forEach((right) => {
+        expect(userrole.rules[right.propertie].allowed)
+          .toEqual(newUserrole.rules[right.propertie].allowed);
+      });
+    });
+
+    it('GetUserrole throws error if userrolename is not defined', async (done) => {
+      try {
+        await database.getUserrole();
+      } catch (e) {
+        try {
+          expect(e.toString()).toMatch('Userrolename has to be defined and of type string');
+          done();
+        } catch (err) {
+          done(err);
+        }
+      }
+    });
+
+    it('GetUserrole throws error if username is not a string', async (done) => {
+      try {
+        await database.getUserrole(false);
+      } catch (e) {
+        try {
+          expect(e.toString()).toMatch('Userrolename has to be defined and of type string');
+          done();
+        } catch (err) {
+          done(err);
+        }
+      }
+    });
+
+    it('GetUserrole throws error if userrole does not exists', async (done) => {
+      try {
+        await database.getUserrole('Admin');
+      } catch (e) {
+        try {
+          expect(e.toString()).toMatch('Userrole does not exists');
+          done();
+        } catch (err) {
+          done(err);
+        }
+      }
+    });
+
+    it('GetUserroles gets all userroles from database', async () => {
+      const allRights = Userrole.getUserroleRights();
+      const rightsObject = {};
+      allRights.forEach((right) => {
+        rightsObject[right.propertie] = true;
+      });
+
+      const userroles = [];
+
+      for (let i = 0; i < 10; i += 1) {
+        userroles.push(new Userrole(`Test Userrole ${i}`, rightsObject));
+      }
+
+      await Promise.all(userroles.map(async (userrole) => {
+        await database.addUserrole(userrole);
+      }));
+
+      const dbUserroles = await database.getUserroles();
+      expect(dbUserroles.length).toBe(userroles.length);
+
+      for (let i = 0; i < dbUserroles.length; i += 1) {
+        const userrole = dbUserroles[i];
+
+        expect(userroles[i].name).toEqual(userrole.name);
+        expect(userroles[i].canEditUserrole).toEqual(userrole.canEditUserrole);
+
+        allRights.forEach((right) => {
+          expect(userroles[i].rules[right.propertie].allowed)
+            .toEqual(userrole.rules[right.propertie].allowed);
+        });
+      }
+    });
+
+    it('GetUserroles returns empty array if no userroles exists', async () => {
+      const dbUserroles = await database.getUserroles();
+      expect(dbUserroles.length).toBe(0);
+    });
+  });
+
+  describe('User functions', () => {
+    beforeEach(async () => {
+      await database.clearCollection('users');
+      await database.clearCollection('userroles');
+    });
+
+    it('AddUser adds user to database', async () => {
+      const allRights = Userrole.getUserroleRights();
+      const rightsObject = {};
+      allRights.forEach((right) => {
+        rightsObject[right.propertie] = true;
+      });
+
+      const userrole = new Userrole('Admin', rightsObject);
+      const newUserrole = await database.addUserrole(userrole);
+
+      const user = new User('Test User', 'TestPassword', 'Admin');
+      const newUser = await database.addUser(user);
+      const docUser = await UserModel.findOne({ username: user.username });
+      expect(docUser._id).toEqual(newUser._id);
+      expect(docUser.username).toEqual(newUser.username);
+      expect(docUser.userrole).toEqual(newUserrole._id);
+    });
+
+    it('Throws an error if the argument is not an instance of the class user', async (done) => {
+      try {
+        await database.addUser({ username: 'Test' });
+      } catch (e) {
+        try {
+          expect(e.toString()).toMatch('User has to be defined and an instance of the class User');
+          done();
+        } catch (err) {
+          done(err);
+        }
+      }
+    });
+
+    it('DeleteUser deletes user from database', async (done) => {
+      const allRights = Userrole.getUserroleRights();
+      const rightsObject = {};
+      allRights.forEach((right) => {
+        rightsObject[right.propertie] = true;
+      });
+
+      const userrole = new Userrole('Admin', rightsObject);
+      const newUserrole = await database.addUserrole(userrole);
+      const user = new User('Test User', 'TestPassword', 'Admin');
+
+      const newUser = await database.addUser(user);
+      const dbUser = await database.deleteUser(newUser.username);
+      expect(dbUser.id).toMatch(newUser._id.toString());
+      expect(dbUser.username).toEqual(newUser.username);
+      expect(dbUser.password).toEqual(newUser.password);
+      try {
+        await database.getUser(newUser.username);
+      } catch (err) {
+        try {
+          expect(err.toString()).toMatch('User does not exists');
+          done();
+        } catch (e) {
+          done(e);
+        }
+      }
+    });
+
+    it('DeleteUser throws error if username is not a string', async (done) => {
+      try {
+        await database.deleteUser();
+      } catch (err) {
+        try {
+          expect(err.toString()).toMatch('Username has to be defined and of type string');
+          done();
+        } catch (e) {
+          done(e);
+        }
+      }
+    });
+
+    it('UpdateUserrole updates userrole of user', async () => {
+      const allRights = Userrole.getUserroleRights();
+      const rightsObject = {};
+      allRights.forEach((right) => {
+        rightsObject[right.propertie] = true;
+      });
+
+      await database.addUserrole(new Userrole('Admin', rightsObject));
+      const guestUserrole = await database.addUserrole(new Userrole('Guest', rightsObject));
+
+      const user = new User('Test User', 'TestPassword', 'Admin');
+      const newUser = await database.addUser(user);
+
+      const dbUser = await database.updateUserrole('Test User', 'Guest');
+
+      expect(dbUser.id.toString()).toMatch(newUser._id.toString());
+      expect(dbUser.userrole.name).toMatch(guestUserrole.name);
+    });
+
+    it('UpdateUserrole throws error if username is not a string', async (done) => {
+      try {
+        await database.updateUserrole(true);
+      } catch (err) {
+        try {
+          expect(err.toString()).toMatch('Username has to be defined and of type string');
+          done();
+        } catch (e) {
+          done(e);
+        }
+      }
+    });
+
+    it('UpdateUserrole throws error if userrole is not a string', async (done) => {
+      try {
+        await database.updateUserrole('Test User', true);
+      } catch (err) {
+        try {
+          expect(err.toString()).toMatch('Userrole has to be defined and of type string');
+          done();
+        } catch (e) {
+          done(e);
+        }
+      }
+    });
+
+    it('UpdateUserrole throws error if user does not exists', async (done) => {
+      const allRights = Userrole.getUserroleRights();
+      const rightsObject = {};
+      allRights.forEach((right) => {
+        rightsObject[right.propertie] = true;
+      });
+
+      await database.addUserrole(new Userrole('Admin', rightsObject));
+      try {
+        await database.updateUserrole('User', 'Admin');
+      } catch (err) {
+        try {
+          expect(err.toString()).toMatch('User does not exists');
+          done();
+        } catch (e) {
+          done(e);
+        }
+      }
+    });
+
+    it('UpdateUserrole throws error if userrole does not exists', async (done) => {
+      const allRights = Userrole.getUserroleRights();
+      const rightsObject = {};
+      allRights.forEach((right) => {
+        rightsObject[right.propertie] = true;
+      });
+
+      await database.addUserrole(new Userrole('Admin', rightsObject));
+      await database.addUser(new User('Test User', 'TestPassword', 'Admin'));
+
+      try {
+        await database.updateUserrole('Test User', 'Userrole');
+      } catch (err) {
+        try {
+          expect(err.toString()).toMatch('Userrole does not exists');
+          done();
+        } catch (e) {
+          done(e);
+        }
+      }
+    });
+
+    it('ChangeUserPassword changes the password of the user', async () => {
+      const allRights = Userrole.getUserroleRights();
+      const rightsObject = {};
+      allRights.forEach((right) => {
+        rightsObject[right.propertie] = true;
+      });
+
+      await database.addUserrole(new Userrole('Admin', rightsObject));
+      const user = new User('Test User', 'TestPassword', 'Admin');
+      await database.addUser(user);
+
+      const dbUser = await database.changeUserPassword(
+        user.username,
+        user.password,
+        'NewTest',
+      );
+      expect(dbUser.username).toEqual(user.username);
+      expect(bcrypt.compareSync('NewTest', dbUser.password)).toBe(true);
+    });
+
+    it('ChangeUserPassword throws error if the old password does not match with the existing one', async (done) => {
+      const allRights = Userrole.getUserroleRights();
+      const rightsObject = {};
+      allRights.forEach((right) => {
+        rightsObject[right.propertie] = true;
+      });
+
+      const user = new User('Test User', 'TestPassword', 'Admin');
+      await database.addUserrole(new Userrole('Admin', rightsObject));
+      await database.addUser(user);
+
+      await database.changeUserPassword(
+        user.username,
+        user.password,
+        'NewTest',
+      );
+
+      try {
+        await database.changeUserPassword(user.username, 'Test Falsch', 'NewTest');
+      } catch (e) {
+        try {
+          expect(e.toString()).toMatch('The old password does not match');
+          done();
+        } catch (err) {
+          done(err);
+        }
+      }
+    });
+
+    it('ChangeUserPassword throws error if the user does not exists', async (done) => {
+      try {
+        await database.changeUserPassword('admin', 'Test Falsch', 'NewTest');
+      } catch (e) {
+        try {
+          expect(e.toString()).toMatch('User does not exists');
+          done();
+        } catch (err) {
+          done(err);
+        }
+      }
+    });
+
+    it('ChangeUserPassword throws error if the username is not defined', async (done) => {
+      try {
+        await database.changeUserPassword();
+      } catch (e) {
+        try {
+          expect(e.toString()).toMatch('Username has to be defined and of type string');
+          done();
+        } catch (err) {
+          done(err);
+        }
+      }
+    });
+
+    it('ChangeUserPassword throws error if the username is not type of string', async (done) => {
+      try {
+        await database.changeUserPassword(false);
+      } catch (e) {
+        try {
+          expect(e.toString()).toMatch('Username has to be defined and of type string');
+          done();
+        } catch (err) {
+          done(err);
+        }
+      }
+    });
+
+    it('ChangeUserPassword throws error if the oldPassword is not defined', async (done) => {
+      try {
+        await database.changeUserPassword('Test');
+      } catch (e) {
+        try {
+          expect(e.toString()).toMatch('Old password has to be defined and of type string');
+          done();
+        } catch (err) {
+          done(err);
+        }
+      }
+    });
+
+    it('ChangeUserPassword throws error if the oldPassword is not type of string', async (done) => {
+      try {
+        await database.changeUserPassword('Test', false);
+      } catch (e) {
+        try {
+          expect(e.toString()).toMatch('Old password has to be defined and of type string');
+          done();
+        } catch (err) {
+          done(err);
+        }
+      }
+    });
+
+    it('ChangeUserPassword throws error if the newPassword is not defined', async (done) => {
+      try {
+        await database.changeUserPassword('Test', 'Test');
+      } catch (e) {
+        try {
+          expect(e.toString()).toMatch('New password has to be defined and of type string');
+          done();
+        } catch (err) {
+          done(err);
+        }
+      }
+    });
+
+    it('ChangeUserPassword throws error if the newPassword is not type of string', async (done) => {
+      try {
+        await database.changeUserPassword('Test', 'Test', false);
+      } catch (e) {
+        try {
+          expect(e.toString()).toMatch('New password has to be defined and of type string');
+          done();
+        } catch (err) {
+          done(err);
+        }
+      }
+    });
+
+    it('GetUser gets user from database', async () => {
+      const allRights = Userrole.getUserroleRights();
+      const rightsObject = {};
+      allRights.forEach((right) => {
+        rightsObject[right.propertie] = true;
+      });
+
+      const dbUserrole = await database.addUserrole(new Userrole('Admin', rightsObject));
+      const dbUser = await database.addUser(new User('Test User', 'TestPassword', 'Admin'));
+      const newUser = await database.getUser(dbUser.username);
+
+      expect(dbUser.username).toEqual(newUser.username);
+      expect(newUser.userrole.canEditUserrole).toEqual(dbUserrole.canEditUserrole.toObject());
+
+      allRights.forEach((right) => {
+        expect(newUser.userrole.rules[right.propertie].allowed)
+          .toEqual(dbUserrole[right.propertie]);
+      });
+    });
+
+    it('GetUser throws error if username is not defined', async (done) => {
+      try {
+        await database.getUser();
+      } catch (e) {
+        try {
+          expect(e.toString()).toMatch('username has to be defined and of type string');
+          done();
+        } catch (err) {
+          done(err);
+        }
+      }
+    });
+
+    it('GetUser throws error if username is not a string', async (done) => {
+      try {
+        await database.getUser(false);
+      } catch (e) {
+        try {
+          expect(e.toString()).toMatch('username has to be defined and of type string');
+          done();
+        } catch (err) {
+          done(err);
+        }
+      }
+    });
+
+    it('GetUser throws error if user does not exists', async (done) => {
+      try {
+        await database.getUser('602e5dde6a51ff41b0625057');
+      } catch (e) {
+        try {
+          expect(e.toString()).toMatch('User does not exists');
+          done();
+        } catch (err) {
+          done(err);
+        }
+      }
+    });
+
+    it('GetUsers gets all users from database', async () => {
+      const allRights = Userrole.getUserroleRights();
+      const rightsObject = {};
+      allRights.forEach((right) => {
+        rightsObject[right.propertie] = true;
+      });
+
+      const userrole = await database.addUserrole(new Userrole('Admin', rightsObject));
+      const users = [];
+
+      for (let i = 0; i < 10; i += 1) {
+        users.push(new User(`Test User ${1}`, `TestPassword${i}`, 'Admin'));
+      }
+      await Promise.all(users.map(async (user) => {
+        await database.addUser(user);
+      }));
+
+      const dbUsers = await database.getUsers();
+      expect(dbUsers.length).toBe(users.length);
+      for (let i = 0; i < dbUsers.length; i += 1) {
+        const user = dbUsers[i];
+
+        expect(user.username).toEqual(users[i].username);
+        expect(user.userrole.canEditUserrole).toEqual(userrole.canEditUserrole.toObject());
+        expect(user.userrole.name).toEqual(userrole.name);
+
+        allRights.forEach((right) => {
+          expect(user.userrole.rules[right.propertie].allowed)
+            .toEqual(userrole[right.propertie]);
+        });
+      }
+    });
+
+    it('GetUsers returns empty array if no users exists', async () => {
+      const dbUsers = await database.getUsers();
+      expect(dbUsers.length).toBe(0);
+    });
+  });
+});

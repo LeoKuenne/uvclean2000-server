@@ -1,10 +1,19 @@
+/* eslint-disable no-new */
 const Userrole = require('../../server/dataModels/Userrole');
 
 it('Creates an userrole', () => {
-  const userrole = new Userrole('Name', true, true);
+  const allRights = Userrole.getUserroleRights();
+  const rightsObject = {};
+  allRights.forEach((right) => {
+    rightsObject[right.propertie] = true;
+  });
+  const userrole = new Userrole('Name', rightsObject);
   expect(userrole.name).toMatch('Name');
-  expect(userrole.rules.canChangeProperties.allowed).toBe(true);
-  expect(userrole.rules.canViewAdvancedData.allowed).toBe(true);
+
+  allRights.forEach((right) => {
+    expect(userrole.rules[right.propertie].allowed).toBe(true);
+    expect(userrole.rules[right.propertie].description).toMatch(right.description);
+  });
 });
 
 it('Throws an error if name is not defined and not a string', () => {
@@ -20,28 +29,36 @@ it('Throws an error if name is not defined and not a string', () => {
   }
 });
 
-it('Throws an error if CanChangeProperties is not defined and not a string', () => {
+it('Throws an error if rights is not defined', () => {
   try {
     new Userrole('Name');
   } catch (error) {
-    expect(error.message).toMatch('CanChangeProperties for the Userrole must be defined and of type boolean');
-  }
-  try {
-    new Userrole('Name', 'true');
-  } catch (error) {
-    expect(error.message).toMatch('CanChangeProperties for the Userrole must be defined and of type boolean');
+    expect(error.message).toMatch('Rights for the Userrole must be defined and of type object');
   }
 });
 
-it('Throws an error if CanViewAdvancedData is not defined and not a string', () => {
+it('Throws an error if canChangeProperties is not defined and not a string', () => {
   try {
-    new Userrole('Name', true);
+    new Userrole('Name', { });
   } catch (error) {
-    expect(error.message).toMatch('CanViewAdvancedData for the Userrole must be defined and of type boolean');
+    expect(error.message).toMatch('canChangeProperties for the Userrole must be defined and of type boolean');
   }
   try {
-    new Userrole('Name', true, 'true');
+    new Userrole('Name', { canChangeProperties: 'true' });
   } catch (error) {
-    expect(error.message).toMatch('CanViewAdvancedData for the Userrole must be defined and of type boolean');
+    expect(error.message).toMatch('canChangeProperties for the Userrole must be defined and of type boolean');
+  }
+});
+
+it('Throws an error if canViewAdvancedData is not defined and not a string', () => {
+  try {
+    new Userrole('Name', { canChangeProperties: true });
+  } catch (error) {
+    expect(error.message).toMatch('canViewAdvancedData for the Userrole must be defined and of type boolean');
+  }
+  try {
+    new Userrole('Name', { canChangeProperties: true, canViewAdvancedData: 'true' });
+  } catch (error) {
+    expect(error.message).toMatch('canViewAdvancedData for the Userrole must be defined and of type boolean');
   }
 });

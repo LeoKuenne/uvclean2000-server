@@ -8,11 +8,12 @@ const cookieParser = require('cookie-parser');
 const MainLogger = require('../Logger.js').logger;
 const userMiddleware = require('./middleware/user');
 const Settings = require('../dataModels/Settings.js');
-const AddUserCommand = require('../commands/UserCommand/CreateUserCommand.js');
+const CreateUserCommand = require('../commands/UserCommand/CreateUserCommand.js');
 const ChangeUserPasswordCommand = require('../commands/UserCommand/ChangeUserPasswordCommand.js');
 const ChangeUserroleCommand = require('../commands/UserCommand/ChangeUserUserroleCommand.js');
 const CreateUserroleCommand = require('../commands/UserCommand/CreateUserroleCommand.js');
 const DeleteUserroleCommand = require('../commands/UserCommand/DeleteUserroleCommand.js');
+const Userrole = require('../dataModels/Userrole.js');
 
 const logger = MainLogger.child({ service: 'ExpressServer' });
 
@@ -92,12 +93,9 @@ module.exports = class ExpressServer {
       logger.info('Got request on addUser route. Request: %o', req.body);
 
       try {
-        await AddUserCommand.execute(req.body.username, req.body.password, req.body.userrole);
-        logger.info('Added User %s to database', req.body.username);
-
-        return res.status(201).send({
-          msg: 'Registered!',
-        });
+        const newUser = await CreateUserCommand.execute(req.body.username, req.body.password,
+          req.body.userrole);
+        return res.status(201).send(newUser);
       } catch (error) {
         server.emit('error', { service: 'ExpressServer', error });
         return res.status(401).send({
@@ -111,9 +109,14 @@ module.exports = class ExpressServer {
 
       let newUserrole = null;
       try {
-        newUserrole = await CreateUserroleCommand.execute(req.body.userrole,
-          (typeof req.body.canChangeProperties === 'string') ? req.body.canChangeProperties === 'true' : undefined,
-          (typeof req.body.canViewAdvancedData === 'string') ? req.body.canViewAdvancedData === 'true' : undefined);
+        const allRights = Userrole.getUserroleRights();
+        const rightsObject = {};
+        allRights.forEach((right) => {
+          if (req.body[right.propertie]) rightsObject[right.propertie] = req.body[right.propertie] === 'true';
+        });
+
+        newUserrole = await CreateUserroleCommand.execute(req.body.userrole, rightsObject);
+        console.log(newUserrole);
 
         return res.status(201).send(newUserrole);
       } catch (error) {

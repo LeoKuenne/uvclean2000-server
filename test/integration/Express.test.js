@@ -4,9 +4,11 @@ global.config = {
 
 /* eslint-disable no-await-in-loop */
 /* eslint-disable no-underscore-dangle */
+const bcrypt = require('bcrypt');
 const supertest = require('supertest');
 const { EventEmitter } = require('events');
 const jwt = require('jsonwebtoken');
+const { S_IFREG } = require('constants');
 const ExpressServer = require('../../server/ExpressServer/ExpressServer');
 const MongoDBAdapter = require('../../server/databaseAdapters/mongoDB/MongoDBAdapter.js');
 const User = require('../../server/dataModels/User');
@@ -207,14 +209,21 @@ describe('Express Route testing', () => {
       done();
     });
 
-    describe.only('GET /api/user', () => {
+    describe('GET /api/user', () => {
       afterAll(async () => {
         await database.clearCollection('users');
         await database.clearCollection('userroles');
       });
 
       it('GET /api/user', async () => {
-        const userrole = await database.addUserrole(new Userrole('Admin', true, true));
+        const allRights = Userrole.getUserroleRights();
+        const rightsObject = {};
+        allRights.forEach((right) => {
+          rightsObject[right.propertie] = true;
+        });
+
+        const userrole = new Userrole('Admin', rightsObject);
+        await database.addUserrole(userrole);
         const user = await database.addUser(new User('admin', 'TestPassword', 'Admin'));
 
         const res = await request.get('/api/user')
@@ -226,11 +235,8 @@ describe('Express Route testing', () => {
             id: user._id.toString(),
             username: user.username,
             userrole: {
-              rules: {
-                canChangeProperties: { allowed: userrole.canChangeProperties, description: 'Can change Properties' },
-                canViewAdvancedData: { allowed: userrole.canViewAdvancedData, description: 'Can View Advanced Data' },
-              },
-              canEditUserrole: userrole.canEditUserrole.toObject(),
+              rules: userrole.rules,
+              canEditUserrole: userrole.canEditUserrole,
               name: userrole.name,
             },
           },
@@ -246,14 +252,21 @@ describe('Express Route testing', () => {
       });
     });
 
-    describe.only('GET /api/users', () => {
+    describe('GET /api/users', () => {
       afterAll(async () => {
         await database.clearCollection('users');
         await database.clearCollection('userroles');
       });
 
       it('GET /api/users', async () => {
-        const userrole = await database.addUserrole(new Userrole('Admin', true, true));
+        const allRights = Userrole.getUserroleRights();
+        const rightsObject = {};
+        allRights.forEach((right) => {
+          rightsObject[right.propertie] = true;
+        });
+
+        const userrole = new Userrole('Admin', rightsObject);
+        await database.addUserrole(userrole);
 
         const users = [];
 
@@ -276,12 +289,9 @@ describe('Express Route testing', () => {
               expect.objectContaining({
                 username: users[i].username,
                 userrole: {
-                  rules: {
-                    canChangeProperties: { allowed: userrole.canChangeProperties, description: 'Can change Properties' },
-                    canViewAdvancedData: { allowed: userrole.canViewAdvancedData, description: 'Can View Advanced Data' },
-                  },
-                  canEditUserrole: userrole.canEditUserrole.toObject(),
                   name: userrole.name,
+                  rules: userrole.rules,
+                  canEditUserrole: userrole.canEditUserrole,
                 },
               }),
             ]),
@@ -292,7 +302,12 @@ describe('Express Route testing', () => {
 
     describe('POST /api/deleteUserrole', () => {
       beforeAll(async () => {
-        await database.addUserrole(new Userrole('Guest', true, true));
+        const allRights = Userrole.getUserroleRights();
+        const rightsObject = {};
+        allRights.forEach((right) => {
+          rightsObject[right.propertie] = true;
+        });
+        await database.addUserrole(new Userrole('Guest', rightsObject));
       });
 
       afterAll(async () => {
@@ -301,6 +316,8 @@ describe('Express Route testing', () => {
       });
 
       it('Deletes an userrole and returns it', async () => {
+        const allRights = Userrole.getUserroleRights();
+
         const res = await request.post('/api/deleteUserrole?user=Test')
           .set('Content-Type', 'application/json')
           .set('cookie', [`UVCleanSID=${token}`])
@@ -308,8 +325,9 @@ describe('Express Route testing', () => {
 
         expect(res.status).toBe(201);
         expect(res.body.name).toMatch('Guest');
-        expect(res.body.canChangeProperties).toBe(true);
-        expect(res.body.canViewAdvancedData).toBe(true);
+        allRights.forEach((right) => {
+          expect(res.body[right.propertie]).toBe(true);
+        });
       });
 
       it('returns 401 if no canChangePropertie is passed', async () => {
@@ -330,42 +348,61 @@ describe('Express Route testing', () => {
       });
 
       it('Creates an userrole and returns it', async () => {
+        const allRights = Userrole.getUserroleRights();
+
+        let createString = '';
+        allRights.forEach((right) => {
+          createString += `"${right.propertie}":"true",`;
+        });
+
         const res = await request.post('/api/createUserrole?user=Test')
           .set('Content-Type', 'application/json')
           .set('cookie', [`UVCleanSID=${token}`])
-          .send('{"userrole":"Guest", "canChangeProperties":"true", "canViewAdvancedData":"true"}');
+          .send(`{"userrole":"Guest", ${createString.substring(0, createString.length - 1)}}`);
 
         expect(res.status).toBe(201);
         expect(res.body.name).toMatch('Guest');
-        expect(res.body.canChangeProperties).toBe(true);
-        expect(res.body.canViewAdvancedData).toBe(true);
+        allRights.forEach((right) => {
+          expect(res.body.rules[right.propertie].allowed).toBe(true);
+          expect(res.body.rules[right.propertie].desciption).toBe(right.desciption);
+        });
       });
 
-      it('returns 401 if no canChangePropertie is passed', async () => {
-        const res = await request.post('/api/createUserrole?user=Test')
-          .set('Content-Type', 'application/json')
-          .set('cookie', [`UVCleanSID=${token}`])
-          .send('{"userrole":"Guest", "canViewAdvancedData":"true"}');
+      it('returns 401 if not all properties are passed', async (done) => {
+        const allRights = Userrole.getUserroleRights();
+        if (allRights.length === 0) throw new Error('Route can not return 401 because there is no rule to set');
 
-        expect(res.status).toBe(401);
-        expect(res.body.msg).toMatch('CanChangeProperties for the Userrole must be defined and of type boolean');
-      });
+        let createString = '';
 
-      it('returns 401 if no canViewAdvancedData is passed', async () => {
-        const res = await request.post('/api/createUserrole?user=Test')
-          .set('Content-Type', 'application/json')
-          .set('cookie', [`UVCleanSID=${token}`])
-          .send('{"userrole":"Guest", "canChangeProperties":"true"}');
+        await allRights.reduce(async (memo, right) => {
+          await memo;
+          const res = await request.post('/api/createUserrole?user=Test')
+            .set('Content-Type', 'application/json')
+            .set('cookie', [`UVCleanSID=${token}`])
+            .send(`{"userrole":"Guest"${createString}}`);
 
-        expect(res.status).toBe(401);
-        expect(res.body.msg).toMatch('CanViewAdvancedData for the Userrole must be defined and of type boolean');
+          try {
+            expect(res.status).toBe(401);
+            expect(res.body.msg).toMatch(`${right.propertie} for the Userrole must be defined and of type boolean`);
+            done();
+          } catch (error) {
+            done(error);
+          }
+          createString += `,"${right.propertie}": "true"`;
+        }, undefined);
       });
     });
 
     describe('POST /api/updateUser', () => {
       beforeAll(async () => {
-        await database.addUserrole(new Userrole('Admin', true, true));
-        await database.addUserrole(new Userrole('Guest', true, true));
+        const allRights = Userrole.getUserroleRights();
+        const rightsObject = {};
+        allRights.forEach((right) => {
+          rightsObject[right.propertie] = true;
+        });
+
+        await database.addUserrole(new Userrole('Admin', rightsObject));
+        await database.addUserrole(new Userrole('Guest', rightsObject));
         await database.addUser(new User('TestUsername', 'UsernamePassword', 'Admin'));
       });
 
@@ -375,16 +412,16 @@ describe('Express Route testing', () => {
       });
 
       it('action changePassword changes the user password and returns the new user', async () => {
-        const user = await database.getUser('TestUsername');
+        await database.getUser('TestUsername');
+        await database.getUserrole('Admin');
         const res = await request.post('/api/updateUser?user=Test&action=changePassword')
           .set('Content-Type', 'application/json')
           .set('cookie', [`UVCleanSID=${token}`])
           .send('{"username":"TestUsername", "oldPassword":"UsernamePassword", "newPassword":"NewPassword", "newPasswordRepeated":"NewPassword"}');
 
         expect(res.status).toBe(201);
-        expect(res.body.password).toBeDefined();
+        expect(bcrypt.compareSync('NewPassword', res.body.password)).toBe(true);
         expect(res.body.username).toMatch('TestUsername');
-        expect(res.body.userrole).toMatch(user.userrole.toString());
       });
 
       it('action changePassword returns 401 if the repeated password does not match', async () => {
@@ -424,11 +461,12 @@ describe('Express Route testing', () => {
           .set('cookie', [`UVCleanSID=${token}`])
           .send('{"username":"TestUsername", "newUserrole":"Guest"}');
 
-        const user = await database.getUser('TestUsername');
+        await database.getUser('TestUsername');
+        const userrole = await database.getUserrole('Guest');
 
         expect(res.status).toBe(201);
         expect(res.body.username).toMatch('TestUsername');
-        expect(res.body.userrole).toMatch(user.userrole.toString());
+        expect(res.body.userrole).toEqual(userrole);
       });
 
       it('action changeUserrole returns 401 if the new userrole does not exists', async () => {
@@ -456,64 +494,63 @@ describe('Express Route testing', () => {
   });
 
   describe('user routes', () => {
-    it('POST /addUser route responses with Status 201 and "Registerd!"', async (done) => {
-      await database.addUserrole(new Userrole('Admin', true, true));
+    afterEach(async () => {
+      await database.clearCollection('users');
+      await database.clearCollection('userroles');
+    });
 
-      const token = jwt.sign({
-        username: 'Test',
-        userId: '123',
-      },
-      'SECRETKEY', {
-        expiresIn: '1d',
+    it('POST /addUser return the user and responses with status 201', async (done) => {
+      const allRights = Userrole.getUserroleRights();
+      const rightsObject = {};
+      allRights.forEach((right) => {
+        rightsObject[right.propertie] = true;
       });
+      await database.addUserrole(new Userrole('Admin', rightsObject));
 
-      const res = await request.post('/addUser?user=Test')
+      const res = await request.post('/api/addUser?user=Test')
         .set('Content-Type', 'application/json')
         .set('cookie', [`UVCleanSID=${token}`])
         .send('{"username":"TestUsername", "password":"UsernamePassword", "password_repeat":"UsernamePassword", "userrole":"Admin"}');
 
       expect(res.status).toBe(201);
-      expect(res.body.msg).toMatch('Registered!');
+
+      const user = await database.getUser('TestUsername');
+      expect(res.body.username).toEqual(user.username);
+      expect(res.body.userrole.name).toEqual(user.userrole.name);
 
       done();
     });
 
     it('POST /addUser route creates user in database', async (done) => {
-      await database.addUserrole(new Userrole('Admin', true, true));
-
-      const token = jwt.sign({
-        username: 'Test',
-        userId: '123',
-      },
-      'SECRETKEY', {
-        expiresIn: '1d',
+      const allRights = Userrole.getUserroleRights();
+      const rightsObject = {};
+      allRights.forEach((right) => {
+        rightsObject[right.propertie] = true;
       });
+      await database.addUserrole(new Userrole('Admin', rightsObject));
 
-      const res = await request.post('/addUser?user=Test')
+      const res = await request.post('/api/addUser?user=Test')
         .set('Content-Type', 'application/json')
         .set('cookie', [`UVCleanSID=${token}`])
         .send('{"username":"TestUsername", "password":"UsernamePassword", "password_repeat":"UsernamePassword", "userrole":"Admin"}');
 
+      expect(res.status).toBe(201);
       const user = await database.getUser('TestUsername');
-
       expect(user.username).toMatch('TestUsername');
-
+      expect(user.userrole.name).toMatch('Admin');
       done();
     });
 
     it('POST /addUser responses with 401 when user already exists', async (done) => {
-      await database.addUserrole(new Userrole('Admin', true, true));
+      const allRights = Userrole.getUserroleRights();
+      const rightsObject = {};
+      allRights.forEach((right) => {
+        rightsObject[right.propertie] = true;
+      });
+      await database.addUserrole(new Userrole('Admin', rightsObject));
       await database.addUser(new User('TestUsername', 'UsernamePassword', 'Admin'));
 
-      const token = jwt.sign({
-        username: 'Test',
-        userId: '123',
-      },
-      'SECRETKEY', {
-        expiresIn: '1d',
-      });
-
-      const res = await request.post('/addUser?user=Test')
+      const res = await request.post('/api/addUser?user=Test')
         .set('Content-Type', 'application/json')
         .set('cookie', [`UVCleanSID=${token}`])
         .send('{"username":"TestUsername", "password":"UsernamePassword", "password_repeat":"UsernamePassword", "userrole":"Admin"}');
@@ -523,36 +560,42 @@ describe('Express Route testing', () => {
 
       done();
     });
+  });
 
-    it('POST /login route returns token for user', async (done) => {
-      await database.addUserrole(new Userrole('admin', true, true));
-      const user = await database.addUser(new User('TestUsername', 'UsernamePassword', 'admin'));
-      const res = await request.post('/login')
-        .set('Content-Type', 'application/json')
-        .send('{"username":"TestUsername", "password":"UsernamePassword"}');
-
-      const token = jwt.sign({
-        username: user.username,
-        userId: user.id,
-      },
-      'SECRETKEY', {
-        expiresIn: '1d',
-      });
-
-      expect(res.status).toBe(201);
-      expect(res.body).toEqual({
-        user: {
-          id: user._id.toString(),
-          username: user.username,
-          password: user.password,
-          userrole: user.userrole.toString(),
-        },
-        url: `/ui/managment?user=${user.username}`,
-      });
-      expect(res.header['set-cookie'][0]).toMatch(`UVCleanSID=${token}`);
-
-      done();
+  it('POST /login route returns token for user', async (done) => {
+    const allRights = Userrole.getUserroleRights();
+    const rightsObject = {};
+    allRights.forEach((right) => {
+      rightsObject[right.propertie] = true;
     });
+    const userrole = new Userrole('admin', rightsObject);
+    await database.addUserrole(userrole);
+    const user = await database.addUser(new User('TestUsername', 'UsernamePassword', 'admin'));
+    const res = await request.post('/login')
+      .set('Content-Type', 'application/json')
+      .send('{"username":"TestUsername", "password":"UsernamePassword"}');
+
+    const token = jwt.sign({
+      username: user.username,
+      userId: user.id,
+    },
+    'SECRETKEY', {
+      expiresIn: '1d',
+    });
+
+    expect(res.status).toBe(201);
+    expect(res.body).toEqual({
+      user: {
+        id: user._id.toString(),
+        username: user.username,
+        password: user.password,
+        userrole,
+      },
+      url: `/ui/managment?user=${user.username}`,
+    });
+    expect(res.header['set-cookie'][0]).toMatch(`UVCleanSID=${token}`);
+
+    done();
   });
 
   it('GET /ui/managment route returns 401 if not logged in', async (done) => {
@@ -564,7 +607,13 @@ describe('Express Route testing', () => {
   });
 
   it.skip('GET /login route returns 201 if logged in', async (done) => {
-    await database.addUserrole(new Userrole('admin', true, true));
+    const allRights = Userrole.getUserroleRights();
+    const rightsObject = {};
+    allRights.forEach((right) => {
+      rightsObject[right.propertie] = true;
+    });
+
+    await database.addUserrole(new Userrole('admin', rightsObject));
     await database.addUser(new User('TestUsername', 'UsernamePassword', 'admin'));
     const res = await request.post('/login')
       .set('Content-Type', 'application/json')

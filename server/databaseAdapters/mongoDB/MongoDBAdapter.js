@@ -1436,8 +1436,13 @@ module.exports = class MongoDBAdapter extends EventEmitter {
       throw new Error('Userrole does not exists');
     }
 
-    return new Userrole(docUserrole.name, docUserrole.canChangeProperties,
-      docUserrole.canViewAdvancedData, docUserrole.canEditUserrole);
+    const allRights = Userrole.getUserroleRights();
+    const rightsObject = {};
+    allRights.forEach((right) => {
+      rightsObject[right.propertie] = docUserrole[right.propertie];
+    });
+
+    return new Userrole(docUserrole.name, rightsObject);
   }
 
   /**
@@ -1459,13 +1464,19 @@ module.exports = class MongoDBAdapter extends EventEmitter {
   async getUserroles() {
     if (this.db === undefined) throw new Error('Database is not connected');
 
-    const docUsers = await UserroleModel.find().lean().exec();
+    const docUserroles = await UserroleModel.find().lean().exec();
     logger.debug('Getting all userroles');
 
     const userroles = [];
-    docUsers.forEach((userrole) => {
-      userroles.push(new Userrole(userrole.name, userrole.canChangeProperties,
-        userrole.canViewAdvancedData, userrole.canEditUserrole));
+    docUserroles.forEach((userrole) => {
+      const allRights = Userrole.getUserroleRights();
+      const rightsObject = {};
+
+      allRights.forEach((right) => {
+        rightsObject[right.propertie] = userrole[right.propertie];
+      });
+
+      userroles.push(new Userrole(userrole.name, rightsObject));
     });
 
     return userroles;
@@ -1539,11 +1550,17 @@ module.exports = class MongoDBAdapter extends EventEmitter {
 
     if (docUser === null) throw new Error('User does not exists');
 
+    const allRights = Userrole.getUserroleRights();
+    const rightsObject = {};
+
+    allRights.forEach((right) => {
+      rightsObject[right.propertie] = docUser.userrole[right.propertie];
+    });
+
     return {
       id: docUser._id,
       username: docUser.username,
-      userrole: new Userrole(docUser.userrole.name, docUser.userrole.canChangeProperties,
-        docUser.userrole.canViewAdvancedData),
+      userrole: new Userrole(docUser.userrole.name, rightsObject),
     };
   }
 
@@ -1587,7 +1604,7 @@ module.exports = class MongoDBAdapter extends EventEmitter {
 
     const docUser = await UserModel.findOne({
       username,
-    }).populate('userrole', 'canChangeProperties canEditUserrole canViewAdvancedData name')
+    }).populate('userrole')
       .lean()
       .exec();
 
@@ -1595,12 +1612,17 @@ module.exports = class MongoDBAdapter extends EventEmitter {
       throw new Error('User does not exists');
     }
 
+    const allRights = Userrole.getUserroleRights();
+    const rightsObject = {};
+    allRights.forEach((right) => {
+      rightsObject[right.propertie] = docUser.userrole[right.propertie];
+    });
+
     return {
       id: docUser._id,
       username: docUser.username,
       password: docUser.password,
-      userrole: new Userrole(docUser.userrole.name, docUser.userrole.canChangeProperties,
-        docUser.userrole.canViewAdvancedData),
+      userrole: new Userrole(docUser.userrole.name, rightsObject),
     };
   }
 
@@ -1619,11 +1641,17 @@ module.exports = class MongoDBAdapter extends EventEmitter {
 
     const users = [];
     docUsers.forEach((user) => {
+      const allRights = Userrole.getUserroleRights();
+      const rightsObject = {};
+      allRights.forEach((right) => {
+        rightsObject[right.propertie] = user.userrole[right.propertie];
+      });
+
       users.push({
         id: user._id,
         username: user.username,
         password: user.password,
-        userrole: new Userrole(user.userrole.name, user.userrole.canChangeProperties, user.userrole.canViewAdvancedData),
+        userrole: new Userrole(user.userrole.name, rightsObject),
       });
     });
 

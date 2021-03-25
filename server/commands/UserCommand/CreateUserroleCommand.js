@@ -15,11 +15,12 @@ module.exports = {
   register(db) {
     database = db;
   },
-  async execute(userrolename, canChangeProperties, canViewAdvancedData) {
-    logger.info('Executing CreateUserroleCommand with userrolename: %s, canChangeProperties: %s, canViewAdvancedData: %s', userrolename, canChangeProperties, canViewAdvancedData);
+  async execute(userrolename, rightsObject) {
+    logger.info('Executing CreateUserroleCommand with userrolename: %s, rights: %o', userrolename, rightsObject);
 
-    const userrole = new Userrole(userrolename, canChangeProperties, canViewAdvancedData);
+    const userrole = new Userrole(userrolename, rightsObject);
 
-    return database.addUserrole(userrole);
+    await database.addUserrole(userrole);
+    return database.getUserrole(userrole.name);
   },
 };
