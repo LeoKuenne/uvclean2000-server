@@ -1411,11 +1411,21 @@ module.exports = class MongoDBAdapter extends EventEmitter {
 
     const userroleModelobject = {
       name: userrole.name,
+      canEditUserrole: [],
     };
 
     Object.keys(userrole.rules).forEach((key) => {
       userroleModelobject[key] = userrole.rules[key].allowed;
     });
+
+    await Promise.all(userrole.canEditUserrole.map(async (u) => {
+      const userroleToEdit = await UserroleModel.findOne({
+        name: u,
+      }).lean().exec();
+      if (userroleToEdit !== null) {
+        userroleModelobject.canEditUserrole.push(userroleToEdit._id.toString());
+      }
+    }));
 
     const docUserrole = new UserroleModel(userroleModelobject);
 
@@ -1437,7 +1447,7 @@ module.exports = class MongoDBAdapter extends EventEmitter {
 
     const docUserrole = await UserroleModel.findOne({
       name: userrolename,
-    }).lean();
+    }).populate('canEditUserrole').lean();
 
     if (docUserrole === null) {
       throw new Error('Userrole does not exists');
@@ -1449,7 +1459,7 @@ module.exports = class MongoDBAdapter extends EventEmitter {
       rightsObject[right.propertie] = docUserrole[right.propertie];
     });
 
-    return new Userrole(docUserrole.name, rightsObject);
+    return new Userrole(docUserrole.name, rightsObject, docUserrole.canEditUserrole);
   }
 
   /**
@@ -1466,11 +1476,21 @@ module.exports = class MongoDBAdapter extends EventEmitter {
 
     const userroleModelobject = {
       name: userrole.name,
+      canEditUserrole: [],
     };
 
     Object.keys(userrole.rules).forEach((key) => {
       userroleModelobject[key] = userrole.rules[key].allowed;
     });
+
+    await Promise.all(userrole.canEditUserrole.map(async (u) => {
+      const userroleToEdit = await UserroleModel.findOne({
+        name: u,
+      }).lean().exec();
+      if (userroleToEdit !== null) {
+        userroleModelobject.canEditUserrole.push(userroleToEdit._id.toString());
+      }
+    }));
 
     const docUserrole = await UserroleModel.findOneAndUpdate(
       { name: userrolename },
@@ -1492,6 +1512,21 @@ module.exports = class MongoDBAdapter extends EventEmitter {
     if (typeof userrolename !== 'string') { throw new Error('Userrolename has to be defined and of type string'); }
 
     logger.info('Deleting userrole %s', userrolename);
+    const dbUserrole = await UserroleModel.findOne({ name: userrolename }).lean().exec();
+
+    const userrolesWithDependencies = await UserroleModel.find({
+      canEditUserrole: {
+        $in: ObjectId(dbUserrole._id),
+      },
+    });
+
+    await Promise.all(userrolesWithDependencies.map(async (userrole) => {
+      await UserroleModel.findOneAndUpdate({
+        name: userrole.name,
+      }, {
+        $pull: { canEditUserrole: dbUserrole._id },
+      }).exec();
+    }));
 
     return UserroleModel.findOneAndRemove({ name: userrolename }).lean().exec();
   }

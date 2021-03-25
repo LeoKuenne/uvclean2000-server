@@ -1,7 +1,15 @@
 module.exports = class Userrole {
-  constructor(name, rights) {
+  /**
+   * Creates a valid Userrole class with name, the rights and the userroles that can be edited
+   * @param {String} name Name of the userrole
+   * @param {Object} rights Object with the rights as keys and the state as boolean
+   * @param {Array} canEditUserrole Array of Userrolenames that can be edited
+   */
+  constructor(name, rights, canEditUserrole = []) {
     if (!name || typeof name !== 'string') throw new Error('Name for the Userrole must be defined and of type string');
     if (!rights || typeof rights !== 'object') throw new Error('Rights for the Userrole must be defined and of type object');
+    if (!canEditUserrole || !Array.isArray(canEditUserrole)) throw new Error('CanEditUserrole for the Userrole must be defined and of type array');
+
     this.name = name;
     this.rules = {};
 
@@ -16,7 +24,7 @@ module.exports = class Userrole {
       };
     });
 
-    this.canEditUserrole = [];
+    this.canEditUserrole = canEditUserrole;
   }
 
   static getUserroleRights() {

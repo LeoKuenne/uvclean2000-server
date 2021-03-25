@@ -66,7 +66,40 @@ describe('MongoDBAdapter User Functions', () => {
       }
     });
 
-    it('updateUserrole updates an userrole in the database', async () => {
+    it('AddUserrole adds an userrole to the database and adds userrole ids to canEditUserrole', async (done) => {
+      const allRights = Userrole.getUserroleRights();
+      const rightsObject = {};
+      allRights.forEach((right) => {
+        rightsObject[right.propertie] = true;
+      });
+
+      await database.addUserrole(new Userrole('Test1', rightsObject));
+      await database.addUserrole(new Userrole('Test2', rightsObject));
+      await database.addUserrole(new Userrole('Admin', rightsObject, ['Test1', 'Test2']));
+
+      const docUserrole = await database.getUserrole('Admin');
+      const docUserrole1 = await database.getUserrole('Test1');
+      const docUserrole2 = await database.getUserrole('Test2');
+
+      expect(docUserrole.canEditUserrole).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            name: docUserrole1.name,
+          }),
+        ]),
+      );
+
+      expect(docUserrole.canEditUserrole).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            name: docUserrole2.name,
+          }),
+        ]),
+      );
+      done();
+    });
+
+    it('updateUserrole updates an userroles name and rights in the database', async () => {
       const allRights = Userrole.getUserroleRights();
       const rightsObject1 = {};
       const rightsObject2 = {};
@@ -86,6 +119,42 @@ describe('MongoDBAdapter User Functions', () => {
         expect(userrole2.rules[right.propertie].allowed)
           .toEqual(newUserrole.rules[right.propertie].allowed);
       });
+    });
+
+    it('updateUserrole updates an userrole canEditUserrole in the database', async () => {
+      const allRights = Userrole.getUserroleRights();
+      const rightsObject1 = {};
+      allRights.forEach((right) => {
+        rightsObject1[right.propertie] = true;
+      });
+
+      const userrole1 = new Userrole('Admin', rightsObject1);
+      const userrole2 = new Userrole('Test1', rightsObject1);
+      const userrole3 = new Userrole('Test2', rightsObject1);
+      await database.addUserrole(userrole1);
+      await database.addUserrole(userrole2);
+      await database.addUserrole(userrole3);
+
+      await database.updateUserrole('Admin', new Userrole('Admin', rightsObject1, ['Test1']));
+      const newUserrole = await database.getUserrole('Admin');
+
+      expect(newUserrole.name).toMatch('Admin');
+
+      expect(newUserrole.canEditUserrole).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            name: userrole2.name,
+          }),
+        ]),
+      );
+
+      expect(newUserrole.canEditUserrole).toEqual(
+        expect.not.arrayContaining([
+          expect.objectContaining({
+            name: userrole3.name,
+          }),
+        ]),
+      );
     });
 
     it('updateUserrole throws an error if userrole does not exists', async (done) => {
@@ -164,6 +233,32 @@ describe('MongoDBAdapter User Functions', () => {
       }
     });
 
+    it('DeleteUserrole deletes userrole from other canEditUserrole dependencies', async (done) => {
+      const allRights = Userrole.getUserroleRights();
+      const rightsObject = {};
+      allRights.forEach((right) => {
+        rightsObject[right.propertie] = true;
+      });
+
+      await database.addUserrole(new Userrole('Test1', rightsObject));
+      await database.addUserrole(new Userrole('Admin', rightsObject, ['Test1']));
+
+      await database.getUserrole('Admin');
+      await database.getUserrole('Test1');
+
+      await database.deleteUserrole('Test1');
+
+      const userrole = await database.getUserrole('Admin');
+
+      const dbUserrole = await UserroleModel.findOne({
+        name: 'Admin',
+      }).lean().exec();
+
+      expect(userrole.canEditUserrole).toEqual([]);
+      expect(dbUserrole.canEditUserrole).toEqual([]);
+      done();
+    });
+
     it('GetUserrole gets userrole from database', async () => {
       const allRights = Userrole.getUserroleRights();
       const rightsObject = {};
@@ -183,6 +278,8 @@ describe('MongoDBAdapter User Functions', () => {
         expect(userrole.rules[right.propertie].allowed)
           .toEqual(newUserrole.rules[right.propertie].allowed);
       });
+
+      expect(userrole.canEditUserrole).toEqual([]);
     });
 
     it('GetUserrole throws error if userrolename is not defined', async (done) => {
@@ -247,8 +344,14 @@ describe('MongoDBAdapter User Functions', () => {
       for (let i = 0; i < dbUserroles.length; i += 1) {
         const userrole = dbUserroles[i];
 
-        expect(userroles[i].name).toEqual(userrole.name);
-        expect(userroles[i].canEditUserrole).toEqual(userrole.canEditUserrole);
+        expect(dbUserroles).toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({
+              name: userrole.name,
+              canEditUserrole: [],
+            }),
+          ]),
+        );
 
         allRights.forEach((right) => {
           expect(userroles[i].rules[right.propertie].allowed)
