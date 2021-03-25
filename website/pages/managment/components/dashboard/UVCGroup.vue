@@ -14,10 +14,12 @@
             :showIcon="true"
             :menuItems="[
               {text: 'Edit',
-                disabled: this.$root.$dataStore.user.userrole.canChangeProperties === false},
+                disabled: this.$root.$dataStore.user.userrole.rules.canChangeProperties
+                  .allowed === false},
               {text: 'View chart', disabled: false},
               {text: 'Set Devices',
-                disabled: this.$root.$dataStore.user.userrole.canChangeProperties === false},
+                disabled: this.$root.$dataStore.user.userrole.rules.canChangeProperties
+                  .allowed === false},
             ]"
             @itemClicked="menuItemClicked($event)">
           </dropdownMenu>
@@ -52,7 +54,7 @@
             prop: 'engineState',
             newValue: !group.engineState
           })"
-          :disabled="$dataStore.user.userrole.canChangeProperties === false">
+          :disabled="$dataStore.user.userrole.rules.canChangeProperties.allowed === false">
           {{state}}
         </button>
         <div class="col-span-2 px-2">
@@ -118,7 +120,7 @@
             prop: 'eventMode',
             newValue: !group.eventMode
           })"
-          :disabled="$dataStore.user.userrole.canChangeProperties === false">
+          :disabled="$dataStore.user.userrole.rules.canChangeProperties.allowed === false">
           {{eventMode}}
         </button>
         <div class="col-span-2 px-2">
@@ -180,7 +182,7 @@
             prop: 'engineLevel',
             newValue: $event.target.value
           })"
-          :disabled="$dataStore.user.userrole.canChangeProperties === false">
+          :disabled="$dataStore.user.userrole.rules.canChangeProperties.allowed === false">
           <option value="1">1</option>
           <option value="2">2</option>
           <option value="3">3</option>

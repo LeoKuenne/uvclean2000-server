@@ -8,16 +8,17 @@ const bcrypt = require('bcrypt');
 const supertest = require('supertest');
 const { EventEmitter } = require('events');
 const jwt = require('jsonwebtoken');
-const { S_IFREG } = require('constants');
 const ExpressServer = require('../../server/ExpressServer/ExpressServer');
 const MongoDBAdapter = require('../../server/databaseAdapters/mongoDB/MongoDBAdapter.js');
 const User = require('../../server/dataModels/User');
 const Userrole = require('../../server/dataModels/Userrole');
 const CreateUserCommand = require('../../server/commands/UserCommand/CreateUserCommand');
 const ChangeUserPasswordCommand = require('../../server/commands/UserCommand/ChangeUserPasswordCommand');
-const ChangeUserroleCommand = require('../../server/commands/UserCommand/ChangeUserUserroleCommand');
+const ChangeUserroleCommand = require('../../server/commands/UserCommand/ChangeUserroleOfUserCommand');
 const CreateUserroleCommand = require('../../server/commands/UserCommand/CreateUserroleCommand');
 const DeleteUserroleCommand = require('../../server/commands/UserCommand/DeleteUserroleCommand');
+const UpdateUserroleNameCommand = require('../../server/commands/UserCommand/UpdateUserroleNameCommand');
+const UpdateUserroleRightsCommand = require('../../server/commands/UserCommand/UpdateUserroleRightsCommand');
 
 let request = null;
 
@@ -49,6 +50,8 @@ beforeAll(async () => {
   ChangeUserroleCommand.register(database);
   CreateUserroleCommand.register(database);
   DeleteUserroleCommand.register(database);
+  UpdateUserroleNameCommand.register(database);
+  UpdateUserroleRightsCommand.register(database);
 });
 
 afterAll(async () => {
@@ -390,6 +393,73 @@ describe('Express Route testing', () => {
           }
           createString += `,"${right.propertie}": "true"`;
         }, undefined);
+      });
+    });
+
+    describe.only('POST /api/updateUserrole', () => {
+      afterEach(async () => {
+        await database.clearCollection('userroles');
+        await database.clearCollection('users');
+      });
+
+      it('Updates the userrole with new Name if action is changeName and returns it', async () => {
+        const allRights = Userrole.getUserroleRights();
+        const rightsObject = {};
+        allRights.forEach((right) => {
+          rightsObject[right.propertie] = true;
+        });
+
+        const userrole = new Userrole('Admin', rightsObject);
+        await database.addUserrole(userrole);
+
+        const res = await request.post('/api/updateUserrole?action=changeName&user=Test')
+          .set('Content-Type', 'application/json')
+          .set('cookie', [`UVCleanSID=${token}`])
+          .send('{"oldUsername":"Admin", "newUsername":"TestUser"}');
+
+        const newUserrole = await database.getUserrole('TestUser');
+
+        expect(newUserrole.name).toMatch('TestUser');
+
+        expect(res.status).toBe(201);
+        expect(res.body.name).toMatch('TestUser');
+        allRights.forEach((right) => {
+          expect(res.body[right.propertie]).toBe(true);
+        });
+      });
+
+      it('Updates the userrole with action changeRights and returns it', async () => {
+        const allRights = Userrole.getUserroleRights();
+        const rightsObject = {};
+        allRights.forEach((right) => {
+          rightsObject[right.propertie] = true;
+        });
+
+        const userrole = new Userrole('Admin', rightsObject);
+        await database.addUserrole(userrole);
+
+        let createString = '';
+        allRights.forEach((right) => {
+          createString += `"${right.propertie}":"false",`;
+        });
+
+        const res = await request.post('/api/updateUserrole?action=changeRights&user=Test')
+          .set('Content-Type', 'application/json')
+          .set('cookie', [`UVCleanSID=${token}`])
+          .send(`{"userrole":"Admin",${createString.substring(0, createString.length - 1)}}`);
+
+        const newUserrole = await database.getUserrole('Admin');
+
+        expect(newUserrole.name).toMatch('Admin');
+        allRights.forEach((right) => {
+          expect(newUserrole.rules[right.propertie].allowed).toBe(false);
+        });
+
+        expect(res.status).toBe(201);
+        expect(res.body.name).toMatch('Admin');
+        allRights.forEach((right) => {
+          expect(res.body[right.propertie]).toBe(false);
+        });
       });
     });
 

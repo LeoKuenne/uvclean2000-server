@@ -1400,6 +1400,13 @@ module.exports = class MongoDBAdapter extends EventEmitter {
     if (this.db === undefined) throw new Error('Database is not connected');
     if (!(userrole instanceof Userrole)) { throw new Error('Userrole has to be defined and an instance of the class User'); }
 
+    try {
+      await this.getUserrole(userrole.name);
+      throw new Error('Userrole already exists');
+    } catch (error) {
+      if (error.message !== 'Userrole does not exists') throw error;
+    }
+
     logger.info('Adding userrole %o', userrole);
 
     const userroleModelobject = {
@@ -1443,6 +1450,37 @@ module.exports = class MongoDBAdapter extends EventEmitter {
     });
 
     return new Userrole(docUserrole.name, rightsObject);
+  }
+
+  /**
+   * Updates an userrole with the given rights
+   * @param {string} userrolename The userrole name to update
+   * @param {Userrole} userrole The userrole object to updateWith
+   */
+  async updateUserrole(userrolename, userrole) {
+    if (this.db === undefined) throw new Error('Database is not connected');
+    if (typeof userrolename !== 'string') { throw new Error('Name has to be defined and type of string'); }
+    if (!(userrole instanceof Userrole)) { throw new Error('Userrole has to be defined and an instance of the class User'); }
+
+    logger.info('Updating userrole %s with %o', userrolename, userrole);
+
+    const userroleModelobject = {
+      name: userrole.name,
+    };
+
+    Object.keys(userrole.rules).forEach((key) => {
+      userroleModelobject[key] = userrole.rules[key].allowed;
+    });
+
+    const docUserrole = await UserroleModel.findOneAndUpdate(
+      { name: userrolename },
+      userroleModelobject,
+      { new: true },
+    ).lean().exec();
+
+    if (docUserrole === null) throw new Error('Userrole does not exists');
+
+    return docUserrole;
   }
 
   /**
@@ -1524,7 +1562,7 @@ module.exports = class MongoDBAdapter extends EventEmitter {
 
     logger.info('Deleting user %o', username);
 
-    return UserModel.findOneAndRemove({ username });
+    return UserModel.findOneAndRemove({ username }).lean().exec();
   }
 
   /**
@@ -1532,7 +1570,7 @@ module.exports = class MongoDBAdapter extends EventEmitter {
    * @param {String} username The username of the user to be updated with
    * @param {String} userrole The new userrole of the user
    */
-  async updateUserrole(username, userrole) {
+  async updateUserroleOfUser(username, userrole) {
     if (this.db === undefined) throw new Error('Database is not connected');
     if (typeof username !== 'string') { throw new Error('Username has to be defined and of type string'); }
     if (typeof userrole !== 'string') { throw new Error('Userrole has to be defined and of type string'); }

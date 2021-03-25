@@ -17,6 +17,6 @@ module.exports = {
   async execute(username, userrole) {
     logger.info('Executing ChangeUserUserroleCommand with username: %s, userrole: %s', username, userrole);
 
-    return database.updateUserrole(username, userrole);
+    return database.updateUserroleOfUser(username, userrole);
   },
 };

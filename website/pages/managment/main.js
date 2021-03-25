@@ -11,11 +11,9 @@ Vue.config.productionTip = false;
 const store = Vue.observable({
   devices: [],
   groups: [],
-  user: {
-    userrole: {
-      canChangeProperties: false,
-    },
-  },
+  user: {},
+  userroles: [],
+  userroleRights: [],
   settings: {},
   users: [],
 });
@@ -35,7 +33,7 @@ fetch(`/api/user?username=${paramUser}`)
   })
   .then((response) => {
     store.user = response.user;
-    console.log(store.user);
+    console.log(store);
   }).then(() => {
     // eslint-disable-next-line no-undef
     const socket = io();
@@ -47,7 +45,7 @@ fetch(`/api/user?username=${paramUser}`)
       render: (h) => h(App),
       router,
       data: {
-        socket: (store.user.userrole.canChangeProperties) ? socket : null,
+        socket: (store.user.userrole.rules.canChangeProperties.allowed) ? socket : null,
       },
       async created() {
         window.onbeforeunload = () => {
@@ -151,7 +149,8 @@ fetch(`/api/user?username=${paramUser}`)
             const us = u;
             if (u.username === user.username) {
               us.username = user.newUsername;
-              us.userrole.canChangeProperties = user.userrole.canChangeProperties;
+              us.userrole.rules.canChangeProperties.allowed = user.userrole.rules
+                .canChangeProperties.allowed;
             }
             return u;
           });
@@ -307,7 +306,8 @@ fetch(`/api/user?username=${paramUser}`)
 
         try {
           await this.fetchDataFromServer();
-          this.socket = (this.$dataStore.user.userrole.canChangeProperties) ? socket : null;
+          this.socket = (this.$dataStore.user.userrole.rules.canChangeProperties.allowed)
+            ? socket : null;
         } catch (error) {
           console.error('error in backend', error);
           Vue.$toast.open({
@@ -340,6 +340,45 @@ fetch(`/api/user?username=${paramUser}`)
             .then((data) => {
               this.$dataStore.groups = data;
             });
+        },
+        async getUsers() {
+          try {
+            const response = await fetch(`/api/users?user=${this.$dataStore.user.username}`);
+            if (response.status === 404) {
+              throw new Error('No data avalaible');
+            }
+            this.errorMessage = '';
+            return response.json();
+          } catch (error) {
+            console.error(error);
+          }
+          return [];
+        },
+        async getUserroles() {
+          try {
+            const response = await fetch(`/api/getUserroles?user=${this.$dataStore.user.username}`);
+            if (response.status === 404) {
+              throw new Error('No data avalaible');
+            }
+            this.errorMessage = '';
+            return response.json();
+          } catch (error) {
+            console.error(error);
+          }
+          return [];
+        },
+        async getUserroleRights() {
+          try {
+            const response = await fetch(`/api/getAllUserroleRights?user=${this.$dataStore.user.username}`);
+            if (response.status === 404) {
+              throw new Error('No data avalaible');
+            }
+            this.errorMessage = '';
+            return response.json();
+          } catch (error) {
+            console.error(error);
+          }
+          return [];
         },
       },
     }).$mount('#app');

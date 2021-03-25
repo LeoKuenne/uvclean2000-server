@@ -27,11 +27,14 @@ const IdentifyDevice = require('./commands/SocketIOCommands/IdentifyDevice');
 const Settings = require('./dataModels/Settings');
 const CreateUserCommand = require('./commands/UserCommand/CreateUserCommand');
 const ChangeUserPasswordCommand = require('./commands/UserCommand/ChangeUserPasswordCommand');
-const ChangeUserroleCommand = require('./commands/UserCommand/ChangeUserUserroleCommand');
+const ChangeUserroleOfUserCommand = require('./commands/UserCommand/ChangeUserroleOfUserCommand');
 const CreateUserroleCommand = require('./commands/UserCommand/CreateUserroleCommand');
 const DeleteUserroleCommand = require('./commands/UserCommand/DeleteUserroleCommand');
+const UpdateUserroleNameCommand = require('./commands/UserCommand/UpdateUserroleNameCommand');
 const User = require('./dataModels/User');
 const Userrole = require('./dataModels/Userrole');
+const DeleteUserCommand = require('./commands/UserCommand/DeleteUserCommand');
+const UpdateUserroleRightsCommand = require('./commands/UserCommand/UpdateUserroleRightsCommand');
 
 const logger = MainLogger.child({ service: 'UVCleanServer' });
 
@@ -46,10 +49,13 @@ class UVCleanServer extends EventEmitter {
     fs.writeFileSync(config.mqtt.secret, 'NQCNtEul3sEuOwMSRExMeh_RQ0iYD0USEemo00G4pCg=', { encoding: 'base64' });
 
     CreateUserCommand.register(this.database);
+    DeleteUserCommand.register(this.database);
     ChangeUserPasswordCommand.register(this.database);
-    ChangeUserroleCommand.register(this.database);
+    ChangeUserroleOfUserCommand.register(this.database);
     CreateUserroleCommand.register(this.database);
     DeleteUserroleCommand.register(this.database);
+    UpdateUserroleNameCommand.register(this.database);
+    UpdateUserroleRightsCommand.register(this.database);
   }
 
   async stopServer() {
@@ -131,8 +137,15 @@ class UVCleanServer extends EventEmitter {
           } catch (error) {
             if (error.message === 'Userrole does not exists') {
               logger.info(`Adding Userrole ${userrole.userrolename} to database with object %o`, userrole);
-              this.database.addUserrole(new Userrole(userrole.userrolename,
-                userrole.canChangeProperties, userrole.canViewAdvancedData));
+
+              const allRights = Userrole.getUserroleRights();
+              const rightsObject = {};
+              allRights.forEach((right) => {
+                rightsObject[right.propertie] = (userrole[right.propertie])
+                  ? userrole[right.propertie] : false;
+              });
+
+              this.database.addUserrole(new Userrole(userrole.userrolename, rightsObject));
               return;
             }
             throw error;

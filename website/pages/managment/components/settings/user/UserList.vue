@@ -3,8 +3,8 @@
     <div class="flex items-center space-x-5">
       <h2 class="text-lg font-bold">Users</h2>
       <button
-        v-if="$dataStore.user.userrole.canChangeProperties"
-        @click="showUserAddForm"
+        v-if="$dataStore.user.userrole.rules.canChangeProperties.allowed"
+        @click="showUserAddForm()"
         class="flex text-left text-primary bg-white shadow items-center p-2
         hover:text-gray-500 hover:transform hover:scale-105
           hover:font-semibold transition-all">
@@ -53,14 +53,15 @@
         @click="showUserForm = false; showChangePasswordForm = true;">
         Change Password
       </button>
-      <h2 class="font-bold text-lg">Userrights</h2>
-      <div class="flex items-center">
-        <label for="form_userrole.canChangeProperties">Can edit:</label>
-        <input id="form_userrole.canChangeProperties"
-          v-model="formUser.userrole.canChangeProperties"
-          :checked="formUser.userrole.canChangeProperties"
-          type="checkbox"
-          class="rounded ml-2 border border-gray-500">
+      <div class="flex w-full space-x-2 items-center">
+        <h2 class="font-bold text-lg">Userrole:</h2>
+        <select class="text-lg w-full p-2 border border-gray-300 rounded"
+          :value="formUser.userrole"
+          @change="formUser.userrole = $event.target.value">
+          <option v-for="role in $dataStore.userroles" :key="role.name" :value="role.name">
+            {{role.name}}
+          </option>
+        </select>
       </div>
       <div class="">
         <button
@@ -68,7 +69,7 @@
           text-red-500"
           v-show="isFormEdit"
           :disabled="!isFormEdit"
-          @click="deleteUser(formUser.userrole.canChangeProperties)">
+          @click="deleteUser(formUser)">
           Delete
         </button>
         <div class="float-right space-x-2">
@@ -132,8 +133,8 @@ export default {
   },
   data() {
     return {
-      users: [],
       formUser: {
+        username: '',
         userrole: {
 
         },
@@ -150,14 +151,12 @@ export default {
       this.formUser = {
         username: user.username,
         newUsername: user.username,
-        userrole: {
-          canChangeProperties: false,
-        },
+        userrole: user.userrole.name,
       };
       this.isFormEdit = true;
       this.showUserForm = true;
     },
-    showUserAddForm() {
+    async showUserAddForm() {
       this.errorMessage = '';
       this.formUser = {
         username: '',
@@ -172,14 +171,31 @@ export default {
       this.showUserForm = false;
       this.showChangePasswordForm = false;
     },
-    deleteUser() {
-      this.showUserForm = false;
-      if (this.$root.$data.socket === null) return;
-      this.$root.$data.socket.emit('user_delete', {
-        username: this.formUser.username,
+    async deleteUser(user) {
+      const response = await fetch(`/api/deleteUser?user=${this.$dataStore.user.username}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          username: user.username,
+        }),
       });
+
+      const json = await response.json();
+      if (response.status !== 201) {
+        this.errorMessage = json.msg;
+        return;
+      }
+
+      this.showUserForm = false;
+      // if (this.$root.$data.socket === null) return;
+      // this.$root.$data.socket.emit('user_delete', {
+      //   username: this.formUser.username,
+      // });
     },
-    addUser(user) {
+    async addUser(user) {
+      console.log(user);
       if (user.username.length <= 3 || user.username.match(/[^0-9A-Za-z+ ]/gm) !== null) {
         this.errorMessage = 'Username has to be vaild. Only numbers and letters are allowed. Provide at least 3 characters.\n';
         if (user.username.match(/[^0-9A-Za-z+#-.!&]/gm) !== null) this.errorMessage += ` Invalid characters: ${user.username.match(/[^0-9A-Za-z+ ]/gm).join(',')}`;
@@ -196,26 +212,60 @@ export default {
         this.errorMessage = 'Passwords do not match';
         return;
       }
-      this.showUserForm = false;
 
-      if (this.$root.$data.socket === null) return;
-      this.$root.$data.socket.emit('user_add', {
-        username: user.username,
-        password: user.password,
+      const response = await fetch(`/api/addUser?user=${this.$dataStore.user.username}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          username: user.username,
+          password: user.password,
+          password_repeat: user.passwordrepeat,
+          userrole: user.userrole,
+        }),
       });
+
+      const json = await response.json();
+      if (response.status !== 201) {
+        this.errorMessage = json.msg;
+        return;
+      }
+
+      this.showUserForm = false;
+      // if (this.$root.$data.socket === null) return;
     },
-    updateUser() {
+    async updateUser(user) {
       this.errorMessage = '';
       this.showUserForm = false;
 
-      if (this.$root.$data.socket === null) return;
-      this.$root.$data.socket.emit('user_update', {
-        username: this.formUser.username,
-        newUsername: this.formUser.newUsername,
-        password: this.formUser.password,
+      const response = await fetch(`/api/updateUser?action=changeUserrole&user=${this.$dataStore.user.username}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          username: user.username,
+          newUserrole: user.userrole,
+        }),
       });
+
+      const json = await response.json();
+      if (response.status !== 201) {
+        this.errorMessage = json.msg;
+        return;
+      }
+
+      this.showUserForm = false;
+
+      // if (this.$root.$data.socket === null) return;
+      // this.$root.$data.socket.emit('user_update', {
+      //   username: this.formUser.username,
+      //   newUsername: this.formUser.newUsername,
+      //   password: this.formUser.password,
+      // });
     },
-    changeUserPassword(user) {
+    async changeUserPassword(user) {
       this.errorMessage = '';
 
       if (user.oldPassword.length <= 5 || user.oldPassword === undefined) {
@@ -229,19 +279,37 @@ export default {
         return;
       }
 
-      if (user.newPassword.length <= 5 || user.newPassword !== user.newPasswordrepeat) {
+      if (user.newPasswordrepeat.length <= 5 || user.newPassword !== user.newPasswordrepeat) {
         this.errorMessage = 'Passwords do not match';
         return;
       }
 
-      this.showChangePasswordForm = false;
-
-      if (this.$root.$data.socket === null) return;
-      this.$root.$data.socket.emit('user_updatePassword', {
-        username: user.username,
-        oldPassword: user.oldPassword,
-        newPassword: user.newPassword,
+      const response = await fetch(`/api/updateUser?action=changePassword&user=${this.$dataStore.user.username}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          username: user.username,
+          oldPassword: user.oldPassword,
+          newPassword: user.newPassword,
+          newPasswordRepeated: user.newPasswordrepeat,
+        }),
       });
+
+      const json = await response.json();
+      if (response.status !== 201) {
+        this.errorMessage = json;
+        return;
+      }
+
+      // if (this.$root.$data.socket === null) return;
+      // this.$root.$data.socket.emit('user_updatePassword', {
+      //   username: user.username,
+      //   oldPassword: user.oldPassword,
+      //   newPassword: user.newPassword,
+      // });
+      this.showChangePasswordForm = false;
     },
   },
   computed: {
@@ -252,21 +320,11 @@ export default {
       return (this.isFormEdit) ? 'Update' : 'Add';
     },
   },
-  created() {
-    fetch('/api/users')
-      .then((response) => {
-        if (response.status === 404) {
-          throw new Error('No data avalaible');
-        }
-        this.errorMessage = '';
-        return response.json();
-      })
-      .then((response) => {
-        this.$dataStore.users = response;
-      })
-      .catch((err) => {
-        console.error(err);
-      });
+  async beforeCreate() {
+    this.$dataStore.users = await this.$root.getUsers();
+    this.$dataStore.userroles = await this.$root.getUserroles();
+    this.$dataStore.userroleRights = await this.$root.getUserroleRights();
+    console.log(this.$dataStore);
   },
 
 };

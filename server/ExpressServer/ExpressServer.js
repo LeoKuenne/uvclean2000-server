@@ -9,10 +9,13 @@ const MainLogger = require('../Logger.js').logger;
 const userMiddleware = require('./middleware/user');
 const Settings = require('../dataModels/Settings.js');
 const CreateUserCommand = require('../commands/UserCommand/CreateUserCommand.js');
+const DeleteUserCommand = require('../commands/UserCommand/DeleteUserCommand.js');
 const ChangeUserPasswordCommand = require('../commands/UserCommand/ChangeUserPasswordCommand.js');
-const ChangeUserroleCommand = require('../commands/UserCommand/ChangeUserUserroleCommand.js');
+const ChangeUserroleCommand = require('../commands/UserCommand/ChangeUserroleOfUserCommand.js');
 const CreateUserroleCommand = require('../commands/UserCommand/CreateUserroleCommand.js');
 const DeleteUserroleCommand = require('../commands/UserCommand/DeleteUserroleCommand.js');
+const UpdateUserroleNameCommand = require('../commands/UserCommand/UpdateUserroleNameCommand.js');
+const UpdateUserroleRightsCommand = require('../commands/UserCommand/UpdateUserroleRightsCommand.js');
 const Userrole = require('../dataModels/Userrole.js');
 
 const logger = MainLogger.child({ service: 'ExpressServer' });
@@ -89,6 +92,33 @@ module.exports = class ExpressServer {
 
     this.app.get('/logout', (req, res) => res.clearCookie('UVCleanSID').send({ url: '/ui/login' }));
 
+    apiRouter.get('/getAllUserroleRights', userMiddleware.isLoggedIn, async (req, res, next) => {
+      logger.info('Got request on getAllUserroleRights route. Request: %o', req.body);
+
+      try {
+        return res.status(201).send(Userrole.getUserroleRights());
+      } catch (error) {
+        server.emit('error', { service: 'ExpressServer', error });
+        return res.status(401).send({
+          msg: error.message,
+        });
+      }
+    });
+
+    apiRouter.get('/getUserroles', userMiddleware.isLoggedIn, async (req, res, next) => {
+      logger.info('Got request on getUserroles route. Request: %o', req.body);
+
+      try {
+        const userroles = await database.getUserroles();
+        return res.status(201).send(userroles);
+      } catch (error) {
+        server.emit('error', { service: 'ExpressServer', error });
+        return res.status(401).send({
+          msg: error.message,
+        });
+      }
+    });
+
     apiRouter.post('/addUser', userMiddleware.isLoggedIn, userMiddleware.validateRegister, async (req, res, next) => {
       logger.info('Got request on addUser route. Request: %o', req.body);
 
@@ -104,15 +134,30 @@ module.exports = class ExpressServer {
       }
     });
 
-    apiRouter.post('/createUserrole', userMiddleware.isLoggedIn, async (req, res, next) => {
-      logger.info('Got request on createUserrole route. Request: %o', req.body);
+    apiRouter.post('/deleteUser', userMiddleware.isLoggedIn, async (req, res, next) => {
+      logger.info('Got request on deleteUser route. Request: %o', req.body);
+
+      try {
+        const oldUser = await DeleteUserCommand.execute(req.body.username);
+        return res.status(201).send(oldUser);
+      } catch (error) {
+        server.emit('error', { service: 'ExpressServer', error });
+        return res.status(401).send({
+          msg: error.message,
+        });
+      }
+    });
+
+    apiRouter.post('/addUserrole', userMiddleware.isLoggedIn, async (req, res, next) => {
+      logger.info('Got request on addUserrole route. Request: %o', req.body);
 
       let newUserrole = null;
       try {
         const allRights = Userrole.getUserroleRights();
         const rightsObject = {};
         allRights.forEach((right) => {
-          if (req.body[right.propertie]) rightsObject[right.propertie] = req.body[right.propertie] === 'true';
+          if (typeof req.body[right.propertie] === 'string') rightsObject[right.propertie] = req.body[right.propertie] === 'true';
+          else rightsObject[right.propertie] = req.body[right.propertie];
         });
 
         newUserrole = await CreateUserroleCommand.execute(req.body.userrole, rightsObject);
@@ -136,6 +181,49 @@ module.exports = class ExpressServer {
         console.log(newUserrole);
 
         return res.status(201).send(newUserrole);
+      } catch (error) {
+        server.emit('error', { service: 'ExpressServer', error });
+        return res.status(401).send({
+          msg: error.message,
+        });
+      }
+    });
+
+    apiRouter.post('/updateUserrole', userMiddleware.isLoggedIn, async (req, res, next) => {
+      logger.info('Got request on updateUser route. Request: %o', req.body);
+
+      const { action } = req.query;
+
+      let allRights = null;
+      let rightsObject = null;
+
+      try {
+        if (!action) {
+          throw new Error('Action query parameter must be provided');
+        }
+
+        let newUser = null;
+
+        switch (action) {
+          case 'changeName':
+            newUser = await UpdateUserroleNameCommand
+              .execute(req.body.oldUsername, req.body.newUsername);
+            break;
+          case 'changeRights':
+            allRights = Userrole.getUserroleRights();
+            rightsObject = {};
+            allRights.forEach((right) => {
+              if (typeof req.body[right.propertie] === 'string') rightsObject[right.propertie] = req.body[right.propertie] === 'true';
+              else rightsObject[right.propertie] = req.body[right.propertie];
+            });
+            newUser = await UpdateUserroleRightsCommand.execute(req.body.userrole, rightsObject);
+            break;
+
+          default:
+            throw new Error('Action is not available');
+        }
+
+        return res.status(201).send(newUser);
       } catch (error) {
         server.emit('error', { service: 'ExpressServer', error });
         return res.status(401).send({

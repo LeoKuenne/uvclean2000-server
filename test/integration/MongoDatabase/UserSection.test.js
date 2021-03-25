@@ -44,6 +44,93 @@ describe('MongoDBAdapter User Functions', () => {
       });
     });
 
+    it('AddUserrole adds an userrole to the database', async (done) => {
+      const allRights = Userrole.getUserroleRights();
+      const rightsObject = {};
+      allRights.forEach((right) => {
+        rightsObject[right.propertie] = true;
+      });
+
+      await database.addUserrole(new Userrole('Admin', rightsObject));
+
+      try {
+        await database.addUserrole(new Userrole('Admin', rightsObject));
+        done(new Error('add Userrole did not throw'));
+      } catch (err) {
+        try {
+          expect(err.toString()).toMatch('Userrole already exists');
+          done();
+        } catch (e) {
+          done(e);
+        }
+      }
+    });
+
+    it('updateUserrole updates an userrole in the database', async () => {
+      const allRights = Userrole.getUserroleRights();
+      const rightsObject1 = {};
+      const rightsObject2 = {};
+      allRights.forEach((right) => {
+        rightsObject1[right.propertie] = true;
+        rightsObject2[right.propertie] = false;
+      });
+
+      const userrole1 = new Userrole('Admin', rightsObject1);
+      await database.addUserrole(userrole1);
+      const userrole2 = new Userrole('Guest', rightsObject2);
+      await database.updateUserrole('Admin', userrole2);
+      const newUserrole = await database.getUserrole('Guest');
+
+      expect(newUserrole.name).toMatch('Guest');
+      allRights.forEach((right) => {
+        expect(userrole2.rules[right.propertie].allowed)
+          .toEqual(newUserrole.rules[right.propertie].allowed);
+      });
+    });
+
+    it('updateUserrole throws an error if userrole does not exists', async (done) => {
+      const allRights = Userrole.getUserroleRights();
+      const rightsObject1 = {};
+      allRights.forEach((right) => {
+        rightsObject1[right.propertie] = true;
+      });
+
+      const userrole1 = new Userrole('Admin', rightsObject1);
+      try {
+        await database.updateUserrole('Admin', userrole1);
+        throw new Error('updateUserrole did not throw');
+      } catch (error) {
+        try {
+          expect(error.message).toMatch('Userrole does not exists');
+          done();
+        } catch (e) { done(e); }
+      }
+    });
+
+    it('updateUserrole throws an error if userrolename is not a string', async (done) => {
+      try {
+        await database.updateUserrole(false);
+        throw new Error('updateUserrole did not throw');
+      } catch (error) {
+        try {
+          expect(error.message).toMatch('Name has to be defined and type of string');
+          done();
+        } catch (e) { done(e); }
+      }
+    });
+
+    it('updateUserrole throws an error if userrole is not an instance of class userrole', async (done) => {
+      try {
+        await database.updateUserrole('false');
+        throw new Error('updateUserrole did not throw');
+      } catch (error) {
+        try {
+          expect(error.message).toMatch('Userrole has to be defined and an instance of the class User');
+          done();
+        } catch (e) { done(e); }
+      }
+    });
+
     it('DeleteUserrole deletes userrole from database', async (done) => {
       const allRights = Userrole.getUserroleRights();
       const rightsObject = {};
@@ -200,6 +287,27 @@ describe('MongoDBAdapter User Functions', () => {
       expect(docUser.userrole).toEqual(newUserrole._id);
     });
 
+    it('Throws an error if the user already exists', async (done) => {
+      const allRights = Userrole.getUserroleRights();
+      const rightsObject = {};
+      allRights.forEach((right) => {
+        rightsObject[right.propertie] = true;
+      });
+
+      await database.addUserrole(new Userrole('Admin', rightsObject));
+      await database.addUser(new User('TestUser', 'TestPassword', 'Admin'));
+      try {
+        await database.addUser(new User('TestUser', 'TestPassword', 'Admin'));
+      } catch (e) {
+        try {
+          expect(e.toString()).toMatch('User already exists');
+          done();
+        } catch (err) {
+          done(err);
+        }
+      }
+    });
+
     it('Throws an error if the argument is not an instance of the class user', async (done) => {
       try {
         await database.addUser({ username: 'Test' });
@@ -226,7 +334,7 @@ describe('MongoDBAdapter User Functions', () => {
 
       const newUser = await database.addUser(user);
       const dbUser = await database.deleteUser(newUser.username);
-      expect(dbUser.id).toMatch(newUser._id.toString());
+      expect(dbUser._id.toString()).toMatch(newUser._id.toString());
       expect(dbUser.username).toEqual(newUser.username);
       expect(dbUser.password).toEqual(newUser.password);
       try {
@@ -267,7 +375,7 @@ describe('MongoDBAdapter User Functions', () => {
       const user = new User('Test User', 'TestPassword', 'Admin');
       const newUser = await database.addUser(user);
 
-      const dbUser = await database.updateUserrole('Test User', 'Guest');
+      const dbUser = await database.updateUserroleOfUser('Test User', 'Guest');
 
       expect(dbUser.id.toString()).toMatch(newUser._id.toString());
       expect(dbUser.userrole.name).toMatch(guestUserrole.name);
@@ -275,7 +383,7 @@ describe('MongoDBAdapter User Functions', () => {
 
     it('UpdateUserrole throws error if username is not a string', async (done) => {
       try {
-        await database.updateUserrole(true);
+        await database.updateUserroleOfUser(true);
       } catch (err) {
         try {
           expect(err.toString()).toMatch('Username has to be defined and of type string');
@@ -288,7 +396,7 @@ describe('MongoDBAdapter User Functions', () => {
 
     it('UpdateUserrole throws error if userrole is not a string', async (done) => {
       try {
-        await database.updateUserrole('Test User', true);
+        await database.updateUserroleOfUser('Test User', true);
       } catch (err) {
         try {
           expect(err.toString()).toMatch('Userrole has to be defined and of type string');
@@ -308,7 +416,7 @@ describe('MongoDBAdapter User Functions', () => {
 
       await database.addUserrole(new Userrole('Admin', rightsObject));
       try {
-        await database.updateUserrole('User', 'Admin');
+        await database.updateUserroleOfUser('User', 'Admin');
       } catch (err) {
         try {
           expect(err.toString()).toMatch('User does not exists');
@@ -330,7 +438,7 @@ describe('MongoDBAdapter User Functions', () => {
       await database.addUser(new User('Test User', 'TestPassword', 'Admin'));
 
       try {
-        await database.updateUserrole('Test User', 'Userrole');
+        await database.updateUserroleOfUser('Test User', 'Userrole');
       } catch (err) {
         try {
           expect(err.toString()).toMatch('Userrole does not exists');
