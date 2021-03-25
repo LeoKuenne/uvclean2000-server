@@ -321,7 +321,7 @@ describe('MongoDBAdapter User Functions', () => {
       }
     });
 
-    it('GetUserroles gets all userroles from database', async () => {
+    it('userroles gets all userroles from database', async () => {
       const allRights = Userrole.getUserroleRights();
       const rightsObject = {};
       allRights.forEach((right) => {
@@ -360,7 +360,7 @@ describe('MongoDBAdapter User Functions', () => {
       }
     });
 
-    it('GetUserroles returns empty array if no userroles exists', async () => {
+    it('userroles returns empty array if no userroles exists', async () => {
       const dbUserroles = await database.getUserroles();
       expect(dbUserroles.length).toBe(0);
     });

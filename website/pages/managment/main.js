@@ -356,7 +356,7 @@ fetch(`/api/user?username=${paramUser}`)
         },
         async getUserroles() {
           try {
-            const response = await fetch(`/api/getUserroles?user=${this.$dataStore.user.username}`);
+            const response = await fetch(`/api/userroles?user=${this.$dataStore.user.username}`);
             if (response.status === 404) {
               throw new Error('No data avalaible');
             }
@@ -369,7 +369,7 @@ fetch(`/api/user?username=${paramUser}`)
         },
         async getUserroleRights() {
           try {
-            const response = await fetch(`/api/getAllUserroleRights?user=${this.$dataStore.user.username}`);
+            const response = await fetch(`/api/userrolerights?user=${this.$dataStore.user.username}`);
             if (response.status === 404) {
               throw new Error('No data avalaible');
             }

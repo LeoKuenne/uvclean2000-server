@@ -14,9 +14,12 @@ module.exports = {
   register(db) {
     database = db;
   },
-  async execute(userrolename, rightObject) {
-    logger.info('Executing UpdateUserroleRightsCommand with name: %s and rights object of %o', userrolename, rightObject);
+  async execute(userrolename, rightObject, canEditUserrole) {
+    logger.info('Executing UpdateUserroleRightsCommand with name: %s, rightsobject: %o, canEditUserrole: %o', userrolename, rightObject, canEditUserrole);
 
-    return database.updateUserrole(userrolename, new Userrole(userrolename, rightObject));
+    await database.updateUserrole(userrolename, new Userrole(userrolename, rightObject,
+      canEditUserrole));
+
+    return database.getUserrole(userrolename);
   },
 };
