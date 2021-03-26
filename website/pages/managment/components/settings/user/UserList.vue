@@ -188,6 +188,7 @@ export default {
         return;
       }
 
+      this.$dataStore.users = await this.$root.getUsers();
       this.showUserForm = false;
       // if (this.$root.$data.socket === null) return;
       // this.$root.$data.socket.emit('user_delete', {
@@ -232,6 +233,7 @@ export default {
         return;
       }
 
+      this.$dataStore.users = await this.$root.getUsers();
       this.showUserForm = false;
       // if (this.$root.$data.socket === null) return;
     },
@@ -256,6 +258,7 @@ export default {
         return;
       }
 
+      this.$dataStore.users = await this.$root.getUsers();
       this.showUserForm = false;
 
       // if (this.$root.$data.socket === null) return;
@@ -322,9 +325,6 @@ export default {
   },
   async beforeCreate() {
     this.$dataStore.users = await this.$root.getUsers();
-    this.$dataStore.userroles = await this.$root.getUserroles();
-    this.$dataStore.userroleRights = await this.$root.getUserroleRights();
-    console.log(this.$dataStore);
   },
 
 };

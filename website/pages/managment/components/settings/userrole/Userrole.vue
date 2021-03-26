@@ -35,13 +35,29 @@
           </svg> -->
         </div>
       </div>
-      <h2 class="font-bold text-base">Rights:</h2>
-      <div class="flex flex-col space-y-2 m-2">
-        <div class="space-x-2 text-sm flex items-center"
-          v-for="rule in userrole.rules" :key="rule.description">
-          <input type="checkbox" :id="'cbxuserrole' + rule.description"
-            disabled :checked="rule.allowed">
-          <label :for="'cbxuserrole' + rule.description">{{rule.description}}</label>
+      <div class="flex">
+        <div>
+          <h2 class="font-bold text-base">Rights:</h2>
+          <div class="flex flex-col space-y-2 m-2">
+            <div class="space-x-2 text-sm flex items-center"
+              v-for="rule in userrole.rules" :key="rule.description">
+              <input type="checkbox" :id="'cbxuserrole' + rule.description"
+                disabled :checked="rule.allowed">
+              <label :for="'cbxuserrole' + rule.description">{{rule.description}}</label>
+            </div>
+          </div>
+        </div>
+        <div>
+          <h2 class="font-bold text-base">Can edit:</h2>
+          <div class="flex flex-col space-y-2 m-2">
+            <div class=" space-x-2 text-sm flex items-center"
+              v-for="role in $dataStore.userroles.filter((r) => r.name !== userrole.name)"
+                :key="role.name">
+              <input type="checkbox" :id="'cbxuserrole' + role.name"
+                disabled :checked="isInCanEditUserrole(role)">
+              <label :for="'cbxuserrole' + role.name">{{role.name}}</label>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -52,6 +68,13 @@ export default {
   name: 'Userrole',
   props: {
     userrole: Object,
+  },
+  methods: {
+    isInCanEditUserrole(role) {
+      return this.userrole.canEditUserrole.filter(
+        (userroleCanEdit) => userroleCanEdit.name === role.name,
+      ).length === 1;
+    },
   },
 };
 </script>

@@ -145,7 +145,9 @@ class UVCleanServer extends EventEmitter {
                   ? userrole[right.propertie] : false;
               });
 
-              this.database.addUserrole(new Userrole(userrole.userrolename, rightsObject));
+              await this.database.addUserrole(
+                new Userrole(userrole.userrolename, rightsObject, userrole.canEditUserrole),
+              );
               return;
             }
             throw error;
@@ -166,6 +168,7 @@ class UVCleanServer extends EventEmitter {
             throw error;
           }
         }));
+
         try {
           if (this.client.connected) {
             const db = await this.database.getDevices();

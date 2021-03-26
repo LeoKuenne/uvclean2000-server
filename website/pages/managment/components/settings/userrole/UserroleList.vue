@@ -37,13 +37,29 @@
         type="text"
         placeholder="Technician"
         class="rounded p-2 border border-gray-500 mb-4">
-      <h2 class="font-bold text-lg">Userrights</h2>
-      <div class="flex flex-col space-y-2 m-2">
-        <div class="space-x-2 text-sm flex items-center"
-          v-for="rule in $dataStore.userroleRights" :key="rule.propertie">
-          <input type="checkbox" :id="'cbxuserrole' + rule.propertie" :value="rule.propertie"
-            :checked="rule.allowed" v-model="formUserrole.rules[rule.propertie]">
-          <label :for="'cbxuserrole' + rule.propertie">{{rule.description}}</label>
+      <div class="flex w-full">
+        <div class="w-1/2">
+          <h2 class="font-bold text-lg">Userrights</h2>
+          <div class="flex flex-col space-y-2 m-2">
+            <div class="space-x-2 text-sm flex items-center"
+              v-for="rule in $dataStore.userroleRights" :key="rule.propertie">
+              <input type="checkbox" :id="'cbxuserrole' + rule.propertie" :value="rule.propertie"
+                :checked="rule.allowed" v-model="formUserrole.rules[rule.propertie]">
+              <label :for="'cbxuserrole' + rule.propertie">{{rule.description}}</label>
+            </div>
+          </div>
+        </div>
+        <div class="w-1/2">
+          <h2 class="font-bold text-lg whitespace-normal">Can edit</h2>
+          <div class="flex flex-col space-y-2 m-2">
+            <div class="space-x-2 text-sm flex items-center"
+              v-for="role in $dataStore.userroles.filter((r) => r.name !== formUserrole.name)"
+                :key="role.name">
+              <input type="checkbox" :id="'cbxuserrole' + role.name" :value="role.name"
+                v-model="formUserrole.newCanEditUserrole">
+              <label :for="'cbxuserrole' + role.name">{{role.name}}</label>
+            </div>
+          </div>
         </div>
       </div>
       <div class="">
@@ -85,6 +101,7 @@ export default {
       formUserrole: {
         name: '',
         rules: {},
+        canEditUserrole: [],
       },
       isFormEdit: false,
       showUserForm: false,
@@ -92,15 +109,26 @@ export default {
     };
   },
   methods: {
+    isInCanEditUserrole(isRole, inRole) {
+      return (isRole.name === inRole.name) ? true
+        : inRole.canEditUserrole.filter(
+          (userroleCanEdit) => userroleCanEdit.name === isRole.name,
+        ).length === 1;
+    },
     editUserrole(userrole) {
       this.errorMessage = '';
       console.log(userrole);
       this.formUserrole = {
         name: userrole.name,
         rules: {},
+        canEditUserrole: [],
+        newCanEditUserrole: [],
       };
-      this.$dataStore.userroleRights.forEach((role) => {
-        this.formUserrole.rules[role.propertie] = userrole.rules[role.propertie].allowed;
+      this.$dataStore.userroleRights.forEach((rule) => {
+        this.formUserrole.rules[rule.propertie] = userrole.rules[rule.propertie].allowed;
+      });
+      userrole.canEditUserrole.forEach((role) => {
+        this.formUserrole.newCanEditUserrole.push(role.name);
       });
       this.isFormEdit = true;
       this.showUserForm = true;
@@ -110,6 +138,7 @@ export default {
       this.formUserrole = {
         name: '',
         rules: {},
+        newCanEditUserrole: [],
       };
       this.$dataStore.userroleRights.forEach((role) => {
         this.formUserrole.rules[role.propertie] = true;
@@ -134,6 +163,8 @@ export default {
         this.errorMessage = json.msg;
         return;
       }
+
+      this.$dataStore.userroles = await this.$root.getUserroles();
       this.showUserForm = false;
       // if (this.$root.$data.socket === null) return;
       // this.$root.$data.socket.emit('user_delete', {
@@ -154,6 +185,7 @@ export default {
 
       const fetchObject = {
         userrole: userrole.name,
+        canEditUserrole: userrole.newCanEditUserrole,
       };
       this.$dataStore.userroleRights.forEach((role) => {
         fetchObject[role.propertie] = userrole.rules[role.propertie];
@@ -161,7 +193,7 @@ export default {
 
       console.log(fetchObject);
 
-      const response = await fetch(`/api/addUserrole?user=${this.$dataStore.user.username}`, {
+      const response = await fetch(`/api/createUserrole?user=${this.$dataStore.user.username}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -175,6 +207,7 @@ export default {
         return;
       }
 
+      this.$dataStore.userroles = await this.$root.getUserroles();
       this.showUserForm = false;
 
       // if (this.$root.$data.socket === null) return;
@@ -209,6 +242,7 @@ export default {
               + '${userrole.name.match(/[^0-9A-Za-z+ ]/gm).join(',')}`;
         }
         fetchObject.userrole = userrole.name;
+        fetchObject.canEditUserrole = userrole.canEditUserrole;
         this.$dataStore.userroleRights.forEach((role) => {
           fetchObject[role.propertie] = userrole.rules[role.propertie];
         });
@@ -225,11 +259,13 @@ export default {
       });
 
       const json = await response.json();
+      console.log(json);
       if (response.status !== 201) {
         this.errorMessage = json.msg;
         return;
       }
 
+      this.$dataStore.userroles = await this.$root.getUserroles();
       this.showUserForm = false;
 
       // this.errorMessage = '';
@@ -251,9 +287,9 @@ export default {
       return (this.isFormEdit) ? 'Update' : 'Add';
     },
   },
-  created() {
-    this.$dataStore.userroles = this.$root.getUserroles();
-    this.$dataStore.userroleRights = this.$root.getUserroleRights();
+  async created() {
+    this.$dataStore.userroles = await this.$root.getUserroles();
+    this.$dataStore.userroleRights = await this.$root.getUserroleRights();
   },
 
 };

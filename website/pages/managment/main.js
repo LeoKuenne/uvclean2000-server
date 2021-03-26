@@ -357,8 +357,8 @@ fetch(`/api/user?username=${paramUser}`)
         async getUserroles() {
           try {
             const response = await fetch(`/api/userroles?user=${this.$dataStore.user.username}`);
-            if (response.status === 404) {
-              throw new Error('No data avalaible');
+            if (response.status !== 201) {
+              throw new Error(response.body);
             }
             this.errorMessage = '';
             return response.json();

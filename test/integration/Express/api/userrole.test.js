@@ -288,4 +288,45 @@ describe('Userrole api routes', () => {
       });
     });
   });
+
+  it.only('GET userroles returns all userroles', async () => {
+    const allRights = Userrole.getUserroleRights();
+    const rightsObject = {};
+    allRights.forEach((right) => {
+      rightsObject[right.propertie] = true;
+    });
+
+    const userroles = [];
+    for (let i = 0; i < 10; i += 1) {
+      userroles.push(new Userrole(`Admin${i}`, rightsObject, (i > 1) ? [`Admin${i - 1}`] : []));
+    }
+
+    await userroles.reduce(async (memo, user) => {
+      await memo;
+      await database.addUserrole(user);
+    }, undefined);
+
+    const res = await request.get('/api/userroles?user=Test')
+      .set('Content-Type', 'application/json')
+      .set('cookie', [`UVCleanSID=${token}`]);
+
+    expect(res.status).toBe(201);
+    expect(res.body.length).toBe(10);
+
+    for (let i = 0; i < 10; i += 1) {
+      expect(res.body).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            name: userroles[i].name,
+            rules: userroles[i].rules,
+            canEditUserrole: (i > 1) ? expect.arrayContaining([
+              expect.objectContaining({
+                name: `Admin${i - 1}`,
+              }),
+            ]) : [],
+          }),
+        ]),
+      );
+    }
+  });
 });

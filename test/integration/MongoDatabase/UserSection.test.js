@@ -44,7 +44,7 @@ describe('MongoDBAdapter User Functions', () => {
       });
     });
 
-    it('AddUserrole adds an userrole to the database', async (done) => {
+    it('AddUserrole throws an error if userrole already exists', async (done) => {
       const allRights = Userrole.getUserroleRights();
       const rightsObject = {};
       allRights.forEach((right) => {
@@ -97,6 +97,33 @@ describe('MongoDBAdapter User Functions', () => {
         ]),
       );
       done();
+    });
+
+    it('AddUserrole throws an error if an userrole is passed to canEditUserrole that not exists', async (done) => {
+      const allRights = Userrole.getUserroleRights();
+      const rightsObject = {};
+      allRights.forEach((right) => {
+        rightsObject[right.propertie] = true;
+      });
+
+      try {
+        await database.addUserrole(new Userrole('Admin', rightsObject, ['Test1', 'Test2']));
+        done(new Error('addUserrole did not throw'));
+      } catch (error) {
+        expect(error.message).toMatch('Userrole Test1 does not exists');
+      }
+
+      try {
+        await database.getUserrole('Admin');
+        done(new Error('User was added but it should not'));
+      } catch (err) {
+        try {
+          expect(err.toString()).toMatch('Userrole does not exists');
+          done();
+        } catch (e) {
+          done(e);
+        }
+      }
     });
 
     it('updateUserrole updates an userroles name and rights in the database', async () => {
@@ -200,6 +227,27 @@ describe('MongoDBAdapter User Functions', () => {
       }
     });
 
+    it('DeleteUserrole throws an error if the userrole is assigned to a user', async (done) => {
+      const allRights = Userrole.getUserroleRights();
+      const rightsObject = {};
+      allRights.forEach((right) => {
+        rightsObject[right.propertie] = true;
+      });
+
+      const userrole = new Userrole('Admin', rightsObject);
+      const newUserrole = await database.addUserrole(userrole);
+
+      await database.addUser(new User('Test User', 'TestPassword', 'Admin'));
+
+      try {
+        await database.deleteUserrole(newUserrole.name);
+        done(new Error('deleteUserrole did not throw'));
+      } catch (error) {
+        expect(error.message).toMatch('Userrole is still assigned to a user. Please remove the assignment');
+        done();
+      }
+    });
+
     it('DeleteUserrole deletes userrole from database', async (done) => {
       const allRights = Userrole.getUserroleRights();
       const rightsObject = {};
@@ -223,6 +271,7 @@ describe('MongoDBAdapter User Functions', () => {
 
       try {
         await database.getUserrole(docUserrole.name);
+        done(new Error('getUserrole did not throw'));
       } catch (err) {
         try {
           expect(err.toString()).toMatch('Userrole does not exists');

@@ -1424,7 +1424,9 @@ module.exports = class MongoDBAdapter extends EventEmitter {
       }).lean().exec();
       if (userroleToEdit !== null) {
         userroleModelobject.canEditUserrole.push(userroleToEdit._id.toString());
+        return u;
       }
+      throw new Error(`Userrole ${u} does not exists`);
     }));
 
     const docUserrole = new UserroleModel(userroleModelobject);
@@ -1512,6 +1514,15 @@ module.exports = class MongoDBAdapter extends EventEmitter {
     if (typeof userrolename !== 'string') { throw new Error('Userrolename has to be defined and of type string'); }
 
     logger.info('Deleting userrole %s', userrolename);
+
+    const userrole = await UserroleModel.findOne({ name: userrolename }).lean().exec();
+
+    if (userrole === null) throw new Error('Userrole does not exists');
+
+    const assignedUser = await UserModel.find({ userrole: userrole._id }).select('username').lean().exec();
+    if (assignedUser.length > 0) throw new Error('Userrole is still assigned to a user. Please remove the assignment');
+
+    // Getting all userroles that have the userrole assigned in their canEditUserrole
     const dbUserrole = await UserroleModel.findOne({ name: userrolename }).lean().exec();
 
     const userrolesWithDependencies = await UserroleModel.find({
@@ -1537,7 +1548,8 @@ module.exports = class MongoDBAdapter extends EventEmitter {
   async getUserroles() {
     if (this.db === undefined) throw new Error('Database is not connected');
 
-    const docUserroles = await UserroleModel.find().lean().exec();
+    const docUserroles = await UserroleModel.find()
+      .populate('canEditUserrole').lean().exec();
     logger.debug('Getting all userroles');
 
     const userroles = [];
@@ -1549,7 +1561,7 @@ module.exports = class MongoDBAdapter extends EventEmitter {
         rightsObject[right.propertie] = userrole[right.propertie];
       });
 
-      userroles.push(new Userrole(userrole.name, rightsObject));
+      userroles.push(new Userrole(userrole.name, rightsObject, userrole.canEditUserrole));
     });
 
     return userroles;

@@ -12,14 +12,15 @@
     },
     "userrole": [
       {
-        "userrolename": "admin",
-        "canChangeProperties": true,
-        "canViewAdvancedData": true
-      },
-      {
         "userrolename": "guest",
         "canChangeProperties": false,
         "canViewAdvancedData": false
+      },
+      {
+        "userrolename": "admin",
+        "canEditUserrole": ["guest"],
+        "canChangeProperties": true,
+        "canViewAdvancedData": true
       }
     ],
     "user": [
@@ -70,14 +71,15 @@
     },
     "userrole": [
       {
-        "userrolename": "admin",
-        "canChangeProperties": true,
-        "canViewAdvancedData": true
-      },
-      {
         "userrolename": "guest",
         "canChangeProperties": false,
         "canViewAdvancedData": false
+      },
+      {
+        "userrolename": "admin",
+        "canEditUserrole": ["guest"],
+        "canChangeProperties": true,
+        "canViewAdvancedData": true
       }
     ],
     "user": [
@@ -128,14 +130,15 @@
     },
     "userrole": [
       {
-        "userrolename": "admin",
-        "canChangeProperties": true,
-        "canViewAdvancedData": true
-      },
-      {
         "userrolename": "guest",
         "canChangeProperties": false,
         "canViewAdvancedData": false
+      },
+      {
+        "userrolename": "admin",
+        "canEditUserrole": ["guest"],
+        "canChangeProperties": true,
+        "canViewAdvancedData": true
       }
     ],
     "user": [
