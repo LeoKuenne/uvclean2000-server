@@ -4,13 +4,11 @@ global.config = {
 
 /* eslint-disable no-await-in-loop */
 /* eslint-disable no-underscore-dangle */
-const bcrypt = require('bcrypt');
 const supertest = require('supertest');
 const { EventEmitter } = require('events');
 const jwt = require('jsonwebtoken');
 const ExpressServer = require('../../../../server/ExpressServer/ExpressServer');
 const MongoDBAdapter = require('../../../../server/databaseAdapters/mongoDB/MongoDBAdapter.js');
-const User = require('../../../../server/dataModels/User');
 const Userrole = require('../../../../server/dataModels/Userrole');
 const CreateUserCommand = require('../../../../server/commands/UserCommand/CreateUserCommand');
 const ChangeUserPasswordCommand = require('../../../../server/commands/UserCommand/ChangeUserPasswordCommand');
@@ -289,7 +287,7 @@ describe('Userrole api routes', () => {
     });
   });
 
-  it.only('GET userroles returns all userroles', async () => {
+  it('GET userroles returns all userroles', async () => {
     const allRights = Userrole.getUserroleRights();
     const rightsObject = {};
     allRights.forEach((right) => {

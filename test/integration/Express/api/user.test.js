@@ -66,14 +66,15 @@ describe('Express Route testing', () => {
       await database.clearCollection('userroles');
     });
 
-    it('GET /api/user returns the requested user', async () => {
+    it.only('GET /api/user returns the requested user', async () => {
       const allRights = Userrole.getUserroleRights();
       const rightsObject = {};
       allRights.forEach((right) => {
         rightsObject[right.propertie] = true;
       });
 
-      const userrole = new Userrole('Admin', rightsObject);
+      await database.addUserrole(new Userrole('Guest', rightsObject));
+      const userrole = new Userrole('Admin', rightsObject, ['Guest']);
       await database.addUserrole(userrole);
       const user = await database.addUser(new User('admin', 'TestPassword', 'Admin'));
 
@@ -82,14 +83,16 @@ describe('Express Route testing', () => {
 
       expect(res.status).toBe(200);
       expect(res.body).toEqual({
-        user: {
-          id: user._id.toString(),
-          username: user.username,
-          userrole: {
-            rules: userrole.rules,
-            canEditUserrole: userrole.canEditUserrole,
-            name: userrole.name,
-          },
+        id: user._id.toString(),
+        username: user.username,
+        userrole: {
+          rules: userrole.rules,
+          name: userrole.name,
+          canEditUserrole: expect.arrayContaining([
+            expect.objectContaining({
+              name: 'Guest',
+            }),
+          ]),
         },
       });
     });

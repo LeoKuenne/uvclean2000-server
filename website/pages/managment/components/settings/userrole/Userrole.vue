@@ -14,7 +14,7 @@
       <div class="flex items-center justify-between">
         <h1 class="font-bold text-lg">Userrole: {{ userrole.name }}</h1>
         <div class="flex space-x-2 m-2">
-          <button
+          <button v-if="canLoggedInUserEdit"
            @click="$emit('editUserrole', userrole)">
             <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" class="w-5 h-5 text-black" viewBox="0 0 16 16">
               <path d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707
@@ -68,6 +68,14 @@ export default {
   name: 'Userrole',
   props: {
     userrole: Object,
+  },
+  computed: {
+    canLoggedInUserEdit() {
+      return (this.$dataStore.user.userrole.name === this.userrole.name) ? true
+        : this.$dataStore.user.userrole.canEditUserrole.filter(
+          (userroleCanEdit) => userroleCanEdit.name === this.userrole.name,
+        ).length === 1;
+    },
   },
   methods: {
     isInCanEditUserrole(role) {

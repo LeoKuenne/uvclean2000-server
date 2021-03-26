@@ -50,7 +50,9 @@
           </div>
         </div>
         <div class="w-1/2">
-          <h2 class="font-bold text-lg whitespace-normal">Can edit</h2>
+          <h2 class="font-bold text-lg whitespace-normal">
+            Can edit{{formUserrole.newCanEditUserrole}}
+          </h2>
           <div class="flex flex-col space-y-2 m-2">
             <div class="space-x-2 text-sm flex items-center"
               v-for="role in $dataStore.userroles.filter((r) => r.name !== formUserrole.name)"
@@ -242,7 +244,7 @@ export default {
               + '${userrole.name.match(/[^0-9A-Za-z+ ]/gm).join(',')}`;
         }
         fetchObject.userrole = userrole.name;
-        fetchObject.canEditUserrole = userrole.canEditUserrole;
+        fetchObject.canEditUserrole = userrole.newCanEditUserrole;
         this.$dataStore.userroleRights.forEach((role) => {
           fetchObject[role.propertie] = userrole.rules[role.propertie];
         });
@@ -266,6 +268,7 @@ export default {
       }
 
       this.$dataStore.userroles = await this.$root.getUserroles();
+      this.$dataStore.user = await this.$root.getUser();
       this.showUserForm = false;
 
       // this.errorMessage = '';

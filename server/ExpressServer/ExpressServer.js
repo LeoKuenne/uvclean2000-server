@@ -204,6 +204,7 @@ module.exports = class ExpressServer {
 
     this.app.get('/logout', (req, res) => res.clearCookie('UVCleanSID').send({ url: '/ui/login' }));
 
+    // User routes
     apiRouter.post('/addUser', userMiddleware.isLoggedIn, userMiddleware.validateRegister, async (req, res, next) => {
       logger.info('Got request on addUser route. Request: %o', req.body);
 
@@ -267,6 +268,44 @@ module.exports = class ExpressServer {
       }
     });
 
+    apiRouter.get('/user', async (req, res) => {
+      const { username } = req.query;
+
+      logger.info(`Got GET request on /user with username=${username}`);
+
+      if (username === undefined || typeof username !== 'string') return res.status(401).send({ msg: 'Username has to be defined and type of string' });
+
+      try {
+        const db = await this.database.getUser(username);
+        return res.json(db);
+      } catch (error) {
+        server.emit('error', { service: 'ExpressServer', error });
+        return res.sendStatus(500);
+      }
+    });
+
+    apiRouter.get('/users', async (req, res) => {
+      logger.info('Got GET request on /users');
+
+      try {
+        const db = await this.database.getUsers();
+        const users = [];
+        db.map((user) => {
+          users.push({
+            username: user.username,
+            userrole: user.userrole,
+            id: user.id,
+          });
+          return user;
+        });
+        return res.json(users);
+      } catch (error) {
+        server.emit('error', { service: 'ExpressServer', error });
+        return res.sendStatus(500);
+      }
+    });
+
+    // Settings routes
     apiRouter.get('/settings', async (req, res) => {
       logger.info('Got GET request on /settings');
 
@@ -299,43 +338,7 @@ module.exports = class ExpressServer {
       }
     });
 
-    apiRouter.get('/user', async (req, res) => {
-      const { username } = req.query;
-
-      logger.info(`Got GET request on /user with username=${username}`);
-
-      if (username === undefined || typeof username !== 'string') return res.status(401).send({ msg: 'Username has to be defined and type of string' });
-
-      try {
-        const db = await this.database.getUser(username);
-        return res.json({ user: { id: db.id, username: db.username, userrole: db.userrole } });
-      } catch (error) {
-        server.emit('error', { service: 'ExpressServer', error });
-        return res.sendStatus(500);
-      }
-    });
-
-    apiRouter.get('/users', async (req, res) => {
-      logger.info('Got GET request on /users');
-
-      try {
-        const db = await this.database.getUsers();
-        const users = [];
-        db.map((user) => {
-          users.push({
-            username: user.username,
-            userrole: user.userrole,
-            id: user.id,
-          });
-          return user;
-        });
-        return res.json(users);
-      } catch (error) {
-        server.emit('error', { service: 'ExpressServer', error });
-        return res.sendStatus(500);
-      }
-    });
-
+    // Device routes
     apiRouter.get('/devices', async (req, res) => {
       logger.info('Got GET request on /devices');
       try {

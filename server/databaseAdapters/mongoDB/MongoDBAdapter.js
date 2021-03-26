@@ -1689,8 +1689,10 @@ module.exports = class MongoDBAdapter extends EventEmitter {
 
     const docUser = await UserModel.findOne({
       username,
-    }).populate('userrole')
-      .lean()
+    }).populate({
+      path: 'userrole',
+      populate: { path: 'canEditUserrole' },
+    }).lean()
       .exec();
 
     if (docUser === null) {
@@ -1706,8 +1708,7 @@ module.exports = class MongoDBAdapter extends EventEmitter {
     return {
       id: docUser._id,
       username: docUser.username,
-      password: docUser.password,
-      userrole: new Userrole(docUser.userrole.name, rightsObject),
+      userrole: new Userrole(docUser.userrole.name, rightsObject, docUser.userrole.canEditUserrole),
     };
   }
 

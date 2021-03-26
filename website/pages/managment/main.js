@@ -11,7 +11,11 @@ Vue.config.productionTip = false;
 const store = Vue.observable({
   devices: [],
   groups: [],
-  user: {},
+  user: {
+    userrole: {
+      canEditUserroles: [],
+    },
+  },
   userroles: [],
   userroleRights: [],
   settings: {},
@@ -32,7 +36,7 @@ fetch(`/api/user?username=${paramUser}`)
     return response.json();
   })
   .then((response) => {
-    store.user = response.user;
+    store.user = response;
     console.log(store);
   }).then(() => {
     // eslint-disable-next-line no-undef
@@ -340,6 +344,18 @@ fetch(`/api/user?username=${paramUser}`)
             .then((data) => {
               this.$dataStore.groups = data;
             });
+        },
+        async getUser() {
+          try {
+            const response = await fetch(`/api/user?username=${this.$dataStore.user.username}`);
+            if (response.status !== 200) {
+              throw new Error(response.msg);
+            }
+            return response.json();
+          } catch (error) {
+            console.error(error);
+          }
+          return [];
         },
         async getUsers() {
           try {
