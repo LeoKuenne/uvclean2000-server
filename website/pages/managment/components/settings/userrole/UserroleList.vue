@@ -152,7 +152,7 @@ export default {
       this.showUserForm = false;
     },
     async deleteUserrole(user) {
-      const response = await fetch(`/api/deleteUserrole?user=${this.$dataStore.user.username}`, {
+      const response = await fetch('/api/deleteUserrole', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -195,7 +195,7 @@ export default {
 
       console.log(fetchObject);
 
-      const response = await fetch(`/api/createUserrole?user=${this.$dataStore.user.username}`, {
+      const response = await fetch('/api/createUserrole', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -246,7 +246,7 @@ export default {
 
       console.log(fetchObject);
 
-      const response = await fetch(`/api/updateUserrole?action=${action}&user=${this.$dataStore.user.username}`, {
+      const response = await fetch(`/api/updateUserrole?action=${action}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

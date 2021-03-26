@@ -172,7 +172,7 @@ export default {
       this.showChangePasswordForm = false;
     },
     async deleteUser(user) {
-      const response = await fetch(`/api/deleteUser?user=${this.$dataStore.user.username}`, {
+      const response = await fetch('/api/deleteUser', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -214,7 +214,7 @@ export default {
         return;
       }
 
-      const response = await fetch(`/api/addUser?user=${this.$dataStore.user.username}`, {
+      const response = await fetch('/api/addUser', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -241,7 +241,7 @@ export default {
       this.errorMessage = '';
       this.showUserForm = false;
 
-      const response = await fetch(`/api/updateUser?action=changeUserrole&user=${this.$dataStore.user.username}`, {
+      const response = await fetch('/api/updateUser?action=changeUserrole', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -287,7 +287,7 @@ export default {
         return;
       }
 
-      const response = await fetch(`/api/updateUser?action=changePassword&user=${this.$dataStore.user.username}`, {
+      const response = await fetch('/api/updateUser?action=changePassword', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

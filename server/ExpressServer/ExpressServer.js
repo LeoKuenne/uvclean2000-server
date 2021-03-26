@@ -68,7 +68,7 @@ module.exports = class ExpressServer {
         server.emit('error', { service: 'ExpressServer', error });
 
         if (error instanceof AuthenticationError) {
-          return res.status(403).send(error.message);
+          return res.status(403).send({ msg: error.message });
         }
 
         return res.status(401).send({
@@ -118,7 +118,7 @@ module.exports = class ExpressServer {
         server.emit('error', { service: 'ExpressServer', error });
 
         if (error instanceof AuthenticationError) {
-          return res.status(403).send(error.message);
+          return res.status(403).send({ msg: error.message });
         }
 
         return res.status(401).send({
@@ -140,7 +140,7 @@ module.exports = class ExpressServer {
         server.emit('error', { service: 'ExpressServer', error });
 
         if (error instanceof AuthenticationError) {
-          return res.status(403).send(error.message);
+          return res.status(403).send({ msg: error.message });
         }
 
         return res.status(401).send({

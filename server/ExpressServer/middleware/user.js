@@ -70,8 +70,8 @@ module.exports = {
         }
         break;
       default:
-        return res.status(404).send('No valid route.');
+        return res.status(404).send({ msg: 'No valid route.' });
     }
-    return res.status(403).send('You do not have the userrights for that action');
+    return res.status(403).send({ msg: 'You do not have the userrights for that action' });
   },
 };
