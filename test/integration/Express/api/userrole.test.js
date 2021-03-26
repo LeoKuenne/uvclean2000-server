@@ -126,7 +126,7 @@ describe('Userrole api routes', () => {
       });
     });
 
-    it('Creates an userrole with canEditUserroles and returns it', async () => {
+    it('Creates an userrole with canBeEditedByUserroles and returns it', async () => {
       const allRights = Userrole.getUserroleRights();
 
       const rightsObject = {};
@@ -141,7 +141,7 @@ describe('Userrole api routes', () => {
       const res = await request.post('/api/createUserrole?user=Test')
         .set('Content-Type', 'application/json')
         .set('cookie', [`UVCleanSID=${token}`])
-        .send(`{"userrole":"Guest", ${createString.substring(0, createString.length - 1)},"canEditUserrole":["Test1"]}`);
+        .send(`{"userrole":"Guest", ${createString.substring(0, createString.length - 1)},"canBeEditedByUserrole":["Test1"]}`);
 
       expect(res.status).toBe(201);
       expect(res.body.name).toMatch('Guest');
@@ -150,7 +150,7 @@ describe('Userrole api routes', () => {
         expect(res.body.rules[right.propertie].desciption).toBe(right.desciption);
       });
 
-      expect(res.body.canEditUserrole).toEqual(
+      expect(res.body.canBeEditedByUserrole).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
             name: 'Test1',
@@ -159,28 +159,22 @@ describe('Userrole api routes', () => {
       );
     });
 
-    it('returns 401 if not userrolename and rightproperties are passed', async (done) => {
+    it('returns 401 if no userrolename is passed', async (done) => {
       const allRights = Userrole.getUserroleRights();
       if (allRights.length === 0) throw new Error('Route can not return 401 because there is no rule to set');
 
-      let createString = '';
+      const res = await request.post('/api/createUserrole?user=Test')
+        .set('Content-Type', 'application/json')
+        .set('cookie', [`UVCleanSID=${token}`])
+        .send('{}');
 
-      await allRights.reduce(async (memo, right) => {
-        await memo;
-        const res = await request.post('/api/createUserrole?user=Test')
-          .set('Content-Type', 'application/json')
-          .set('cookie', [`UVCleanSID=${token}`])
-          .send(`{"userrole":"Guest"${createString}}`);
-
-        try {
-          expect(res.status).toBe(401);
-          expect(res.body.msg).toMatch(`${right.propertie} for the Userrole must be defined and of type boolean`);
-          done();
-        } catch (error) {
-          done(error);
-        }
-        createString += `,"${right.propertie}": "true"`;
-      }, undefined);
+      try {
+        expect(res.status).toBe(401);
+        expect(res.body.msg).toMatch('Name for the Userrole must be defined and of type string');
+        done();
+      } catch (error) {
+        done(error);
+      }
     });
   });
 
@@ -250,7 +244,7 @@ describe('Userrole api routes', () => {
       });
     });
 
-    it('Updates the userrole with canEditUserroles and returns it', async () => {
+    it('Updates the userrole with canBeEditedByUserroles and returns it', async () => {
       const allRights = Userrole.getUserroleRights();
       const rightsObject = {};
       allRights.forEach((right) => {
@@ -270,7 +264,7 @@ describe('Userrole api routes', () => {
       const res = await request.post('/api/updateUserrole?action=changeRights&user=Test')
         .set('Content-Type', 'application/json')
         .set('cookie', [`UVCleanSID=${token}`])
-        .send(`{"userrole":"Admin",${createString.substring(0, createString.length - 1)},"canEditUserrole":["Test1","Test2"]}`);
+        .send(`{"userrole":"Admin",${createString.substring(0, createString.length - 1)},"canBeEditedByUserrole":["Test1","Test2"]}`);
 
       const newUserrole = await database.getUserrole('Admin');
 
@@ -317,7 +311,7 @@ describe('Userrole api routes', () => {
           expect.objectContaining({
             name: userroles[i].name,
             rules: userroles[i].rules,
-            canEditUserrole: (i > 1) ? expect.arrayContaining([
+            canBeEditedByUserrole: (i > 1) ? expect.arrayContaining([
               expect.objectContaining({
                 name: `Admin${i - 1}`,
               }),

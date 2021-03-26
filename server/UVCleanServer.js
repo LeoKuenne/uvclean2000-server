@@ -129,7 +129,8 @@ class UVCleanServer extends EventEmitter {
 
         this.io.emit('databaseConnected');
 
-        await Promise.all(config.userrole.map(async (userrole) => {
+        await config.userrole.reduce(async (memo, userrole) => {
+          await memo;
           logger.info(`Checking Userrole ${userrole.userrolename} to exists in database.`);
           try {
             await this.database.getUserrole(userrole.userrolename);
@@ -146,13 +147,13 @@ class UVCleanServer extends EventEmitter {
               });
 
               await this.database.addUserrole(
-                new Userrole(userrole.userrolename, rightsObject, userrole.canEditUserrole),
+                new Userrole(userrole.userrolename, rightsObject, userrole.canBeEditedByUserrole),
               );
               return;
             }
             throw error;
           }
-        }));
+        }, undefined);
 
         await Promise.all(config.user.map(async (user) => {
           logger.info(`Checking User ${user.username} to exists in database.`);

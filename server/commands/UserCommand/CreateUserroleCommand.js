@@ -15,10 +15,10 @@ module.exports = {
   register(db) {
     database = db;
   },
-  async execute(userrolename, rightsObject, canEditUserrole) {
-    logger.info('Executing CreateUserroleCommand with userrolename: %s, rights: %o, canEditUserrole: %o', userrolename, rightsObject, canEditUserrole);
+  async execute(userrolename, rightsObject, canBeEditedByUserrole) {
+    logger.info('Executing CreateUserroleCommand with userrolename: %s, rights: %o, canBeEditedByUserrole: %o', userrolename, rightsObject, canBeEditedByUserrole);
 
-    const userrole = new Userrole(userrolename, rightsObject, canEditUserrole);
+    const userrole = new Userrole(userrolename, rightsObject, canBeEditedByUserrole);
 
     await database.addUserrole(userrole);
     return database.getUserrole(userrole.name);

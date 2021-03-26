@@ -66,7 +66,7 @@ describe('Express Route testing', () => {
       await database.clearCollection('userroles');
     });
 
-    it.only('GET /api/user returns the requested user', async () => {
+    it('GET /api/user returns the requested user', async () => {
       const allRights = Userrole.getUserroleRights();
       const rightsObject = {};
       allRights.forEach((right) => {
@@ -88,7 +88,7 @@ describe('Express Route testing', () => {
         userrole: {
           rules: userrole.rules,
           name: userrole.name,
-          canEditUserrole: expect.arrayContaining([
+          canBeEditedByUserrole: expect.arrayContaining([
             expect.objectContaining({
               name: 'Guest',
             }),
@@ -138,7 +138,7 @@ describe('Express Route testing', () => {
               userrole: {
                 name: userrole.name,
                 rules: userrole.rules,
-                canEditUserrole: userrole.canEditUserrole,
+                canBeEditedByUserrole: userrole.canBeEditedByUserrole,
               },
             }),
           ]),

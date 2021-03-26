@@ -48,13 +48,13 @@
           </div>
         </div>
         <div>
-          <h2 class="font-bold text-base">Can edit:</h2>
+          <h2 class="font-bold text-base">Can be edited by:</h2>
           <div class="flex flex-col space-y-2 m-2">
             <div class=" space-x-2 text-sm flex items-center"
               v-for="role in $dataStore.userroles.filter((r) => r.name !== userrole.name)"
                 :key="role.name">
               <input type="checkbox" :id="'cbxuserrole' + role.name"
-                disabled :checked="isInCanEditUserrole(role)">
+                disabled :checked="isIncanBeEditedByUserrole(role)">
               <label :for="'cbxuserrole' + role.name">{{role.name}}</label>
             </div>
           </div>
@@ -72,14 +72,15 @@ export default {
   computed: {
     canLoggedInUserEdit() {
       return (this.$dataStore.user.userrole.name === this.userrole.name) ? true
-        : this.$dataStore.user.userrole.canEditUserrole.filter(
-          (userroleCanEdit) => userroleCanEdit.name === this.userrole.name,
+        : this.userrole.canBeEditedByUserrole.filter(
+          (userroleCanBeEditedBy) => userroleCanBeEditedBy.name
+            === this.$dataStore.user.userrole.name,
         ).length === 1;
     },
   },
   methods: {
-    isInCanEditUserrole(role) {
-      return this.userrole.canEditUserrole.filter(
+    isIncanBeEditedByUserrole(role) {
+      return this.userrole.canBeEditedByUserrole.filter(
         (userroleCanEdit) => userroleCanEdit.name === role.name,
       ).length === 1;
     },

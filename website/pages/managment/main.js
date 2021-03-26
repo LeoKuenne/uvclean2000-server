@@ -13,7 +13,7 @@ const store = Vue.observable({
   groups: [],
   user: {
     userrole: {
-      canEditUserroles: [],
+      canBeEditedByUserroles: [],
     },
   },
   userroles: [],

@@ -5,7 +5,7 @@ const allRights = Userrole.getUserroleRights();
 
 const userroleObject = {
   name: { type: String, required: true },
-  canEditUserrole: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Userrole' }],
+  canBeEditedByUserrole: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Userrole' }],
 };
 
 allRights.forEach((right) => {

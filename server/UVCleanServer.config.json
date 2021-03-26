@@ -12,15 +12,15 @@
     },
     "userrole": [
       {
-        "userrolename": "guest",
-        "canChangeProperties": false,
-        "canViewAdvancedData": false
-      },
-      {
         "userrolename": "admin",
-        "canEditUserrole": ["guest"],
         "canChangeProperties": true,
         "canViewAdvancedData": true
+      },
+      {
+        "userrolename": "guest",
+        "canBeEditedByUserrole": ["admin"],
+        "canChangeProperties": false,
+        "canViewAdvancedData": false
       }
     ],
     "user": [
@@ -71,15 +71,15 @@
     },
     "userrole": [
       {
-        "userrolename": "guest",
-        "canChangeProperties": false,
-        "canViewAdvancedData": false
-      },
-      {
         "userrolename": "admin",
-        "canEditUserrole": ["guest"],
         "canChangeProperties": true,
         "canViewAdvancedData": true
+      },
+      {
+        "userrolename": "guest",
+        "canBeEditedByUserrole": ["admin"],
+        "canChangeProperties": false,
+        "canViewAdvancedData": false
       }
     ],
     "user": [
@@ -130,15 +130,15 @@
     },
     "userrole": [
       {
-        "userrolename": "guest",
-        "canChangeProperties": false,
-        "canViewAdvancedData": false
-      },
-      {
         "userrolename": "admin",
-        "canEditUserrole": ["guest"],
         "canChangeProperties": true,
         "canViewAdvancedData": true
+      },
+      {
+        "userrolename": "guest",
+        "canBeEditedByUserrole": ["admin"],
+        "canChangeProperties": false,
+        "canViewAdvancedData": false
       }
     ],
     "user": [

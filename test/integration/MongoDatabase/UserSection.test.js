@@ -37,7 +37,7 @@ describe('MongoDBAdapter User Functions', () => {
       const docUserrole = await UserroleModel.findOne({ name: userrole.name }).lean();
       expect(docUserrole._id).toEqual(newUserrole._id);
       expect(docUserrole.userrolename).toEqual(newUserrole.userrolename);
-      expect(docUserrole.canEditUserrole).toStrictEqual([]);
+      expect(docUserrole.canBeEditedByUserrole).toStrictEqual([]);
 
       allRights.forEach((right) => {
         expect(docUserrole[right.propertie]).toEqual(newUserrole[right.propertie]);
@@ -66,7 +66,7 @@ describe('MongoDBAdapter User Functions', () => {
       }
     });
 
-    it('AddUserrole adds an userrole to the database and adds userrole ids to canEditUserrole', async (done) => {
+    it('AddUserrole adds an userrole to the database and adds userrole ids to canBeEditedByUserrole', async (done) => {
       const allRights = Userrole.getUserroleRights();
       const rightsObject = {};
       allRights.forEach((right) => {
@@ -81,7 +81,7 @@ describe('MongoDBAdapter User Functions', () => {
       const docUserrole1 = await database.getUserrole('Test1');
       const docUserrole2 = await database.getUserrole('Test2');
 
-      expect(docUserrole.canEditUserrole).toEqual(
+      expect(docUserrole.canBeEditedByUserrole).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
             name: docUserrole1.name,
@@ -89,7 +89,7 @@ describe('MongoDBAdapter User Functions', () => {
         ]),
       );
 
-      expect(docUserrole.canEditUserrole).toEqual(
+      expect(docUserrole.canBeEditedByUserrole).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
             name: docUserrole2.name,
@@ -99,7 +99,7 @@ describe('MongoDBAdapter User Functions', () => {
       done();
     });
 
-    it('AddUserrole throws an error if an userrole is passed to canEditUserrole that not exists', async (done) => {
+    it('AddUserrole throws an error if an userrole is passed to canBeEditedByUserrole that not exists', async (done) => {
       const allRights = Userrole.getUserroleRights();
       const rightsObject = {};
       allRights.forEach((right) => {
@@ -148,7 +148,7 @@ describe('MongoDBAdapter User Functions', () => {
       });
     });
 
-    it('updateUserrole updates an userrole canEditUserrole in the database', async () => {
+    it('updateUserrole updates an userrole canBeEditedByUserrole in the database', async () => {
       const allRights = Userrole.getUserroleRights();
       const rightsObject1 = {};
       allRights.forEach((right) => {
@@ -167,7 +167,7 @@ describe('MongoDBAdapter User Functions', () => {
 
       expect(newUserrole.name).toMatch('Admin');
 
-      expect(newUserrole.canEditUserrole).toEqual(
+      expect(newUserrole.canBeEditedByUserrole).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
             name: userrole2.name,
@@ -175,7 +175,7 @@ describe('MongoDBAdapter User Functions', () => {
         ]),
       );
 
-      expect(newUserrole.canEditUserrole).toEqual(
+      expect(newUserrole.canBeEditedByUserrole).toEqual(
         expect.not.arrayContaining([
           expect.objectContaining({
             name: userrole3.name,
@@ -263,7 +263,7 @@ describe('MongoDBAdapter User Functions', () => {
 
       expect(docUserrole._id).toEqual(newUserrole._id);
       expect(docUserrole.name).toEqual(newUserrole.name);
-      expect(userrole.canEditUserrole).toEqual(docUserrole.canEditUserrole);
+      expect(userrole.canBeEditedByUserrole).toEqual(docUserrole.canBeEditedByUserrole);
 
       allRights.forEach((right) => {
         expect(userrole.rules[right.propertie].allowed).toEqual(docUserrole[right.propertie]);
@@ -282,7 +282,7 @@ describe('MongoDBAdapter User Functions', () => {
       }
     });
 
-    it('DeleteUserrole deletes userrole from other canEditUserrole dependencies', async (done) => {
+    it('DeleteUserrole deletes userrole from other canBeEditedByUserrole dependencies', async (done) => {
       const allRights = Userrole.getUserroleRights();
       const rightsObject = {};
       allRights.forEach((right) => {
@@ -303,8 +303,8 @@ describe('MongoDBAdapter User Functions', () => {
         name: 'Admin',
       }).lean().exec();
 
-      expect(userrole.canEditUserrole).toEqual([]);
-      expect(dbUserrole.canEditUserrole).toEqual([]);
+      expect(userrole.canBeEditedByUserrole).toEqual([]);
+      expect(dbUserrole.canBeEditedByUserrole).toEqual([]);
       done();
     });
 
@@ -321,14 +321,14 @@ describe('MongoDBAdapter User Functions', () => {
       const newUserrole = await database.getUserrole('Admin');
 
       expect(userrole.name).toEqual(newUserrole.name);
-      expect(userrole.canEditUserrole).toEqual(newUserrole.canEditUserrole);
+      expect(userrole.canBeEditedByUserrole).toEqual(newUserrole.canBeEditedByUserrole);
 
       allRights.forEach((right) => {
         expect(userrole.rules[right.propertie].allowed)
           .toEqual(newUserrole.rules[right.propertie].allowed);
       });
 
-      expect(userrole.canEditUserrole).toEqual([]);
+      expect(userrole.canBeEditedByUserrole).toEqual([]);
     });
 
     it('GetUserrole throws error if userrolename is not defined', async (done) => {
@@ -397,7 +397,7 @@ describe('MongoDBAdapter User Functions', () => {
           expect.arrayContaining([
             expect.objectContaining({
               name: userrole.name,
-              canEditUserrole: [],
+              canBeEditedByUserrole: [],
             }),
           ]),
         );
@@ -753,7 +753,7 @@ describe('MongoDBAdapter User Functions', () => {
       const newUser = await database.getUser(dbUser.username);
 
       expect(dbUser.username).toEqual(newUser.username);
-      expect(newUser.userrole.canEditUserrole).toEqual(dbUserrole.canEditUserrole.toObject());
+      expect(newUser.userrole.canBeEditedByUserrole).toEqual(dbUserrole.canBeEditedByUserrole.toObject());
 
       allRights.forEach((right) => {
         expect(newUser.userrole.rules[right.propertie].allowed)
@@ -823,7 +823,7 @@ describe('MongoDBAdapter User Functions', () => {
         const user = dbUsers[i];
 
         expect(user.username).toEqual(users[i].username);
-        expect(user.userrole.canEditUserrole).toEqual(userrole.canEditUserrole.toObject());
+        expect(user.userrole.canBeEditedByUserrole).toEqual(userrole.canBeEditedByUserrole.toObject());
         expect(user.userrole.name).toEqual(userrole.name);
 
         allRights.forEach((right) => {

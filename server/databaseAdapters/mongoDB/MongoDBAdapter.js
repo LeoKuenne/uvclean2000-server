@@ -1411,19 +1411,19 @@ module.exports = class MongoDBAdapter extends EventEmitter {
 
     const userroleModelobject = {
       name: userrole.name,
-      canEditUserrole: [],
+      canBeEditedByUserrole: [],
     };
 
     Object.keys(userrole.rules).forEach((key) => {
       userroleModelobject[key] = userrole.rules[key].allowed;
     });
 
-    await Promise.all(userrole.canEditUserrole.map(async (u) => {
+    await Promise.all(userrole.canBeEditedByUserrole.map(async (u) => {
       const userroleToEdit = await UserroleModel.findOne({
         name: u,
       }).lean().exec();
       if (userroleToEdit !== null) {
-        userroleModelobject.canEditUserrole.push(userroleToEdit._id.toString());
+        userroleModelobject.canBeEditedByUserrole.push(userroleToEdit._id.toString());
         return u;
       }
       throw new Error(`Userrole ${u} does not exists`);
@@ -1449,7 +1449,7 @@ module.exports = class MongoDBAdapter extends EventEmitter {
 
     const docUserrole = await UserroleModel.findOne({
       name: userrolename,
-    }).populate('canEditUserrole').lean();
+    }).populate('canBeEditedByUserrole').lean();
 
     if (docUserrole === null) {
       throw new Error('Userrole does not exists');
@@ -1461,7 +1461,7 @@ module.exports = class MongoDBAdapter extends EventEmitter {
       rightsObject[right.propertie] = docUserrole[right.propertie];
     });
 
-    return new Userrole(docUserrole.name, rightsObject, docUserrole.canEditUserrole);
+    return new Userrole(docUserrole.name, rightsObject, docUserrole.canBeEditedByUserrole);
   }
 
   /**
@@ -1478,19 +1478,19 @@ module.exports = class MongoDBAdapter extends EventEmitter {
 
     const userroleModelobject = {
       name: userrole.name,
-      canEditUserrole: [],
+      canBeEditedByUserrole: [],
     };
 
     Object.keys(userrole.rules).forEach((key) => {
       userroleModelobject[key] = userrole.rules[key].allowed;
     });
 
-    await Promise.all(userrole.canEditUserrole.map(async (u) => {
+    await Promise.all(userrole.canBeEditedByUserrole.map(async (u) => {
       const userroleToEdit = await UserroleModel.findOne({
         name: u,
       }).lean().exec();
       if (userroleToEdit !== null) {
-        userroleModelobject.canEditUserrole.push(userroleToEdit._id.toString());
+        userroleModelobject.canBeEditedByUserrole.push(userroleToEdit._id.toString());
       }
     }));
 
@@ -1522,11 +1522,11 @@ module.exports = class MongoDBAdapter extends EventEmitter {
     const assignedUser = await UserModel.find({ userrole: userrole._id }).select('username').lean().exec();
     if (assignedUser.length > 0) throw new Error('Userrole is still assigned to a user. Please remove the assignment');
 
-    // Getting all userroles that have the userrole assigned in their canEditUserrole
+    // Getting all userroles that have the userrole assigned in their canBeEditedByUserrole
     const dbUserrole = await UserroleModel.findOne({ name: userrolename }).lean().exec();
 
     const userrolesWithDependencies = await UserroleModel.find({
-      canEditUserrole: {
+      canBeEditedByUserrole: {
         $in: ObjectId(dbUserrole._id),
       },
     });
@@ -1535,7 +1535,7 @@ module.exports = class MongoDBAdapter extends EventEmitter {
       await UserroleModel.findOneAndUpdate({
         name: userrole.name,
       }, {
-        $pull: { canEditUserrole: dbUserrole._id },
+        $pull: { canBeEditedByUserrole: dbUserrole._id },
       }).exec();
     }));
 
@@ -1549,7 +1549,7 @@ module.exports = class MongoDBAdapter extends EventEmitter {
     if (this.db === undefined) throw new Error('Database is not connected');
 
     const docUserroles = await UserroleModel.find()
-      .populate('canEditUserrole').lean().exec();
+      .populate('canBeEditedByUserrole').lean().exec();
     logger.debug('Getting all userroles');
 
     const userroles = [];
@@ -1561,7 +1561,7 @@ module.exports = class MongoDBAdapter extends EventEmitter {
         rightsObject[right.propertie] = userrole[right.propertie];
       });
 
-      userroles.push(new Userrole(userrole.name, rightsObject, userrole.canEditUserrole));
+      userroles.push(new Userrole(userrole.name, rightsObject, userrole.canBeEditedByUserrole));
     });
 
     return userroles;
@@ -1691,7 +1691,7 @@ module.exports = class MongoDBAdapter extends EventEmitter {
       username,
     }).populate({
       path: 'userrole',
-      populate: { path: 'canEditUserrole' },
+      populate: { path: 'canBeEditedByUserrole' },
     }).lean()
       .exec();
 
@@ -1708,7 +1708,8 @@ module.exports = class MongoDBAdapter extends EventEmitter {
     return {
       id: docUser._id,
       username: docUser.username,
-      userrole: new Userrole(docUser.userrole.name, rightsObject, docUser.userrole.canEditUserrole),
+      password: docUser.password,
+      userrole: new Userrole(docUser.userrole.name, rightsObject, docUser.userrole.canBeEditedByUserrole),
     };
   }
 

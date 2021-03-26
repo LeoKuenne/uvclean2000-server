@@ -43,7 +43,9 @@ module.exports = {
         token,
         'SECRETKEY',
       );
-      if (!req.query.user || req.query.user !== decoded.username) throw new Error('Query username does not match with cookie');
+      // if (!req.query.user || req.query.user !== decoded.username)
+      // throw new Error('Query username does not match with cookie');
+
       logger.debug('User is logged in. %o', decoded);
       req.userData = decoded;
       next();

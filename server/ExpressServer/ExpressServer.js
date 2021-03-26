@@ -59,7 +59,7 @@ module.exports = class ExpressServer {
         });
 
         newUserrole = await CreateUserroleCommand.execute(req.body.userrole, rightsObject,
-          req.body.canEditUserrole);
+          req.body.canBeEditedByUserrole);
 
         return res.status(201).send(newUserrole);
       } catch (error) {
@@ -97,7 +97,7 @@ module.exports = class ExpressServer {
               if (typeof req.body[right.propertie] === 'string') rightsObject[right.propertie] = req.body[right.propertie] === 'true';
               else rightsObject[right.propertie] = req.body[right.propertie];
             });
-            newUser = await UpdateUserroleRightsCommand.execute(req.body.userrole, rightsObject, req.body.canEditUserrole);
+            newUser = await UpdateUserroleRightsCommand.execute(req.body.userrole, rightsObject, req.body.canBeEditedByUserrole);
             break;
 
           default:
@@ -277,7 +277,11 @@ module.exports = class ExpressServer {
 
       try {
         const db = await this.database.getUser(username);
-        return res.json(db);
+        return res.json({
+          id: db.id,
+          username: db.username,
+          userrole: db.userrole,
+        });
       } catch (error) {
         server.emit('error', { service: 'ExpressServer', error });
         return res.sendStatus(500);

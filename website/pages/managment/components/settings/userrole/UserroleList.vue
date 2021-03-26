@@ -51,14 +51,14 @@
         </div>
         <div class="w-1/2">
           <h2 class="font-bold text-lg whitespace-normal">
-            Can edit{{formUserrole.newCanEditUserrole}}
+            Can be edited by {{formUserrole.newcanBeEditedByUserrole}}
           </h2>
           <div class="flex flex-col space-y-2 m-2">
             <div class="space-x-2 text-sm flex items-center"
               v-for="role in $dataStore.userroles.filter((r) => r.name !== formUserrole.name)"
                 :key="role.name">
               <input type="checkbox" :id="'cbxuserrole' + role.name" :value="role.name"
-                v-model="formUserrole.newCanEditUserrole">
+                v-model="formUserrole.newcanBeEditedByUserrole">
               <label :for="'cbxuserrole' + role.name">{{role.name}}</label>
             </div>
           </div>
@@ -103,7 +103,7 @@ export default {
       formUserrole: {
         name: '',
         rules: {},
-        canEditUserrole: [],
+        canBeEditedByUserrole: [],
       },
       isFormEdit: false,
       showUserForm: false,
@@ -111,9 +111,9 @@ export default {
     };
   },
   methods: {
-    isInCanEditUserrole(isRole, inRole) {
+    isIncanBeEditedByUserrole(isRole, inRole) {
       return (isRole.name === inRole.name) ? true
-        : inRole.canEditUserrole.filter(
+        : inRole.canBeEditedByUserrole.filter(
           (userroleCanEdit) => userroleCanEdit.name === isRole.name,
         ).length === 1;
     },
@@ -123,14 +123,14 @@ export default {
       this.formUserrole = {
         name: userrole.name,
         rules: {},
-        canEditUserrole: [],
-        newCanEditUserrole: [],
+        canBeEditedByUserrole: [],
+        newcanBeEditedByUserrole: [],
       };
       this.$dataStore.userroleRights.forEach((rule) => {
         this.formUserrole.rules[rule.propertie] = userrole.rules[rule.propertie].allowed;
       });
-      userrole.canEditUserrole.forEach((role) => {
-        this.formUserrole.newCanEditUserrole.push(role.name);
+      userrole.canBeEditedByUserrole.forEach((role) => {
+        this.formUserrole.newcanBeEditedByUserrole.push(role.name);
       });
       this.isFormEdit = true;
       this.showUserForm = true;
@@ -140,7 +140,7 @@ export default {
       this.formUserrole = {
         name: '',
         rules: {},
-        newCanEditUserrole: [],
+        newcanBeEditedByUserrole: [],
       };
       this.$dataStore.userroleRights.forEach((role) => {
         this.formUserrole.rules[role.propertie] = true;
@@ -187,7 +187,7 @@ export default {
 
       const fetchObject = {
         userrole: userrole.name,
-        canEditUserrole: userrole.newCanEditUserrole,
+        canBeEditedByUserrole: userrole.newcanBeEditedByUserrole,
       };
       this.$dataStore.userroleRights.forEach((role) => {
         fetchObject[role.propertie] = userrole.rules[role.propertie];
@@ -237,14 +237,8 @@ export default {
         fetchObject.name = userrole.newName;
         action = 'changeName';
       } else {
-        this.errorMessage = 'Username has to be vaild. Only numbers and letters are allowed.'
-            + 'Provide at least 3 characters.\n';
-        if (userrole.name.match(/[^0-9A-Za-z+#-.!&]/gm) !== null) {
-          this.errorMessage += ` Invalid characters: '
-              + '${userrole.name.match(/[^0-9A-Za-z+ ]/gm).join(',')}`;
-        }
         fetchObject.userrole = userrole.name;
-        fetchObject.canEditUserrole = userrole.newCanEditUserrole;
+        fetchObject.canBeEditedByUserrole = userrole.newcanBeEditedByUserrole;
         this.$dataStore.userroleRights.forEach((role) => {
           fetchObject[role.propertie] = userrole.rules[role.propertie];
         });
