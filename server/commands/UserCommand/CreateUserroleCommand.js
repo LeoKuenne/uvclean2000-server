@@ -1,7 +1,7 @@
 const MongoDBAdapter = require('../../databaseAdapters/mongoDB/MongoDBAdapter');
-const User = require('../../dataModels/User');
-const MainLogger = require('../../Logger.js').logger;
+const AuthenticationError = require('../../errors/AuthenticationError');
 const Userrole = require('../../dataModels/Userrole');
+const MainLogger = require('../../Logger.js').logger;
 
 const logger = MainLogger.child({ service: 'CreateUserroleCommand' });
 
@@ -15,7 +15,7 @@ module.exports = {
   register(db) {
     database = db;
   },
-  async execute(userrolename, rightsObject, canBeEditedByUserrole) {
+  async execute(usernameActionPerformedBy, userrolename, rightsObject, canBeEditedByUserrole) {
     logger.info('Executing CreateUserroleCommand with userrolename: %s, rights: %o, canBeEditedByUserrole: %o', userrolename, rightsObject, canBeEditedByUserrole);
 
     const userrole = new Userrole(userrolename, rightsObject, canBeEditedByUserrole);

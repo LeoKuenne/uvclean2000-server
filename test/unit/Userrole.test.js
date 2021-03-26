@@ -49,16 +49,3 @@ it('Throws an error if canChangeProperties is not defined and not a string', () 
     expect(error.message).toMatch('canChangeProperties for the Userrole must be defined and of type boolean');
   }
 });
-
-it('Throws an error if canViewAdvancedData is not defined and not a string', () => {
-  try {
-    new Userrole('Name', { canChangeProperties: true });
-  } catch (error) {
-    expect(error.message).toMatch('canViewAdvancedData for the Userrole must be defined and of type boolean');
-  }
-  try {
-    new Userrole('Name', { canChangeProperties: true, canViewAdvancedData: 'true' });
-  } catch (error) {
-    expect(error.message).toMatch('canViewAdvancedData for the Userrole must be defined and of type boolean');
-  }
-});

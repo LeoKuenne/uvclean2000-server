@@ -43,4 +43,19 @@ module.exports = class Userrole {
       },
     ];
   }
+
+  static getUserroleRightsObject(value) {
+    const rightsObject = {};
+    this.getUserroleRights().forEach((right) => {
+      rightsObject[right.propertie] = value;
+    });
+    return rightsObject;
+  }
+
+  static async canUserroleEditUserrole(userroleNameEdit, userroleNameToEdit, database) {
+    if (userroleNameEdit === userroleNameToEdit) return true;
+    const userrole = await database.getUserrole(userroleNameToEdit);
+    return userrole.canBeEditedByUserrole.filter((role) => role.name === userroleNameEdit)
+      .length === 1;
+  }
 };

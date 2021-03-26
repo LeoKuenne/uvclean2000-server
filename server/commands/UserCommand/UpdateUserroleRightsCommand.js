@@ -1,4 +1,5 @@
 const MongoDBAdapter = require('../../databaseAdapters/mongoDB/MongoDBAdapter');
+const AuthenticationError = require('../../errors/AuthenticationError');
 const Userrole = require('../../dataModels/Userrole');
 const MainLogger = require('../../Logger.js').logger;
 
@@ -14,8 +15,14 @@ module.exports = {
   register(db) {
     database = db;
   },
-  async execute(userrolename, rightObject, canBeEditedByUserrole) {
+  async execute(usernameActionPerformedBy, userrolename, rightObject, canBeEditedByUserrole) {
     logger.info('Executing UpdateUserroleRightsCommand with name: %s, rightsobject: %o, canBeEditedByUserrole: %o', userrolename, rightObject, canBeEditedByUserrole);
+
+    const user = await database.getUser(usernameActionPerformedBy);
+
+    if (!await Userrole.canUserroleEditUserrole(user.userrole.name, userrolename, database)) {
+      throw new AuthenticationError(user.userrole.name, `Userrole ${user.userrole.name} can not change userrole ${userrolename}`);
+    }
 
     await database.updateUserrole(userrolename, new Userrole(userrolename, rightObject,
       canBeEditedByUserrole));
