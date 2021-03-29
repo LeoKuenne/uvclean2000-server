@@ -132,9 +132,21 @@
                 @click="menuItemClicked('Group'); showBurgerMenu = false;"
                 class="text-xl">Group</button>
             </div>
-            <button class="w-full text-center mb-4 p-2 text-2xl border-b border-gray-300">
-              Settings
-            </button>
+            <div class="flex flex-col items-center">
+              <h1 class="w-full text-center mb-4 p-2 text-2xl border-b border-gray-300">
+                Settings
+              </h1>
+              <button
+                class="text-xl"
+                @click="$router.push({name: 'settingsGeneral' }); showBurgerMenu = false;">
+                General
+              </button>
+              <button
+                class="text-xl"
+                @click="$router.push({name: 'settingsUser' }); showBurgerMenu = false;">
+                User
+              </button>
+            </div>
           </div>
       </div>
     </transition>

@@ -15,15 +15,15 @@ module.exports = {
   register(db) {
     database = db;
   },
-  async execute(usernameActionPerformedBy, userrolename) {
-    logger.info('Executing DeleteUserroleCommand with userrolename: %s', userrolename);
+  async execute(usernameActionPerformedBy, userrole) {
+    logger.info('Executing DeleteUserroleCommand with userrole: %s', userrole);
 
     const user = await database.getUser(usernameActionPerformedBy);
 
-    if (!await Userrole.canUserroleEditUserrole(user.userrole.name, userrolename, database)) {
-      throw new AuthenticationError(user.userrole.name, `Userrole ${user.userrole.name} can not delete userrole ${userrolename}`);
+    if (!await Userrole.canUserroleEditUserrole(user.userrole.name, userrole, database)) {
+      throw new AuthenticationError(user.userrole.name, `Userrole ${user.userrole.name} can not delete userrole ${userrole}`);
     }
 
-    return database.deleteUserrole(userrolename);
+    return database.deleteUserrole(userrole);
   },
 };

@@ -140,7 +140,7 @@ export default {
       this.formUserrole = {
         name: '',
         rules: {},
-        newcanBeEditedByUserrole: [],
+        newcanBeEditedByUserrole: [this.$dataStore.user.userrole.name],
       };
       this.$dataStore.userroleRights.forEach((role) => {
         this.formUserrole.rules[role.propertie] = true;
@@ -157,7 +157,7 @@ export default {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ userrolename: user.name }),
+        body: JSON.stringify({ userrole: user.name }),
       });
 
       const json = await response.json();

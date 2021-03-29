@@ -3,7 +3,6 @@ import VueRouter from 'vue-router';
 import DashboardView from '../views/Dashboard.vue';
 import ChartView from '../views/Chart.vue';
 import SettingsView from '../views/Settings.vue';
-// import Login from '../views/Login.vue';
 import DeviceChart from '../components/diagram/DeviceChart.vue';
 import GroupChart from '../components/diagram/GroupChart.vue';
 import UVCDeviceList from '../components/dashboard/UVCDeviceList.vue';
