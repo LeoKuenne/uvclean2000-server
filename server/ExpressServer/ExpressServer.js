@@ -214,7 +214,7 @@ module.exports = class ExpressServer {
         logger.info('Password does not match with database entry');
 
         return res.status(401).send({
-          msg: 'Username or password is incorrect!',
+          msg: 'Username or password are incorrect!',
         });
       } catch (error) {
         res.status(500).send({
