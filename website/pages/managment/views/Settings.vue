@@ -7,7 +7,7 @@
       <div class="flex md:flex-col space-x-2 md:space-x-0 md:space-y-2">
         <h1 class="hidden md:flex text-xl text-secondary font-bold">Overview</h1>
         <router-link
-          :to="{ name: 'settingsUserList' }"
+          :to="{ name: 'settingsUser' }"
           :class="[this.$route.path === '/settings/user' ?
             'text-gray-600 transform scale-105 font-bold border-l-4 border-secondary' : '']"
           @click="$emit('showUser')"
@@ -42,7 +42,7 @@
     </div>
     <transition name="fade" mode="out-in">
       <router-view
-        class="w-full h-full p-10">
+        class="w-full h-full p-4 md:p-10">
       </router-view>
     </transition>
   </div>

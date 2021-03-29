@@ -47,9 +47,10 @@
           Charts
           </dropdown-menu>
         </div>
+        <!-- v-if="$dataStore.user.userrole.rules.canChangeProperties.allowed === true" -->
         <router-link :to="{ name: 'settings' }"
           class="hidden md:flex text-color px-5 text-base align-baseline"
-          v-if="$dataStore.user.canEdit === true">
+          >
           Settings
         </router-link>
         <button class="flex items-center space-x-1"
