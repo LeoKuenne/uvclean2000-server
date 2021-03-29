@@ -118,7 +118,7 @@ describe('MongoDBAdapter User Functions', () => {
         done(new Error('User was added but it should not'));
       } catch (err) {
         try {
-          expect(err.toString()).toMatch('Userrole does not exists');
+          expect(err.toString()).toMatch('Userrole Admin does not exists');
           done();
         } catch (e) {
           done(e);
@@ -274,7 +274,7 @@ describe('MongoDBAdapter User Functions', () => {
         done(new Error('getUserrole did not throw'));
       } catch (err) {
         try {
-          expect(err.toString()).toMatch('Userrole does not exists');
+          expect(err.toString()).toMatch('Userrole Admin does not exists');
           done();
         } catch (e) {
           done(e);
@@ -362,7 +362,7 @@ describe('MongoDBAdapter User Functions', () => {
         await database.getUserrole('Admin');
       } catch (e) {
         try {
-          expect(e.toString()).toMatch('Userrole does not exists');
+          expect(e.toString()).toMatch('Userrole Admin does not exists');
           done();
         } catch (err) {
           done(err);
@@ -655,7 +655,7 @@ describe('MongoDBAdapter User Functions', () => {
         await database.changeUserPassword('admin', 'Test Falsch', 'NewTest');
       } catch (e) {
         try {
-          expect(e.toString()).toMatch('User does not exists');
+          expect(e.toString()).toMatch('User admin does not exists');
           done();
         } catch (err) {
           done(err);
@@ -792,7 +792,7 @@ describe('MongoDBAdapter User Functions', () => {
         await database.getUser('602e5dde6a51ff41b0625057');
       } catch (e) {
         try {
-          expect(e.toString()).toMatch('User does not exists');
+          expect(e.toString()).toMatch('User 602e5dde6a51ff41b0625057 does not exists');
           done();
         } catch (err) {
           done(err);

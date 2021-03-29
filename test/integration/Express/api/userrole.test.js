@@ -6,13 +6,10 @@ global.config = {
 /* eslint-disable no-underscore-dangle */
 const supertest = require('supertest');
 const { EventEmitter } = require('events');
-const jwt = require('jsonwebtoken');
 const ExpressServer = require('../../../../server/ExpressServer/ExpressServer');
 const MongoDBAdapter = require('../../../../server/databaseAdapters/mongoDB/MongoDBAdapter.js');
 const Userrole = require('../../../../server/dataModels/Userrole');
-const CreateUserCommand = require('../../../../server/commands/UserCommand/CreateUserCommand');
-const ChangeUserPasswordCommand = require('../../../../server/commands/UserCommand/ChangeUserPasswordCommand');
-const ChangeUserroleCommand = require('../../../../server/commands/UserCommand/ChangeUserroleOfUserCommand');
+const UpdateUserroleOfUserCommand = require('../../../../server/commands/UserCommand/UpdateUserroleOfUserCommand');
 const CreateUserroleCommand = require('../../../../server/commands/UserCommand/CreateUserroleCommand');
 const DeleteUserroleCommand = require('../../../../server/commands/UserCommand/DeleteUserroleCommand');
 const UpdateUserroleNameCommand = require('../../../../server/commands/UserCommand/UpdateUserroleNameCommand');
@@ -27,7 +24,7 @@ let server = null;
 
 beforeAll(async () => {
   server = new EventEmitter();
-  server.on('error', (e) => { });
+  server.on('error', (e) => { console.error(e); });
   database = new MongoDBAdapter(global.__MONGO_URI__.replace('mongodb://', ''), '');
   await database.connect();
   expressServer = new ExpressServer(
@@ -37,9 +34,7 @@ beforeAll(async () => {
   expressServer.startExpressServer();
   request = supertest(expressServer.app);
 
-  CreateUserCommand.register(database);
-  ChangeUserPasswordCommand.register(database);
-  ChangeUserroleCommand.register(database);
+  UpdateUserroleOfUserCommand.register(database);
   CreateUserroleCommand.register(database);
   DeleteUserroleCommand.register(database);
   UpdateUserroleNameCommand.register(database);
@@ -61,15 +56,27 @@ describe('Userrole api routes', () => {
     });
 
     it('Returns 403 if the user has not the userrights', async () => {
-      await TestUtitities.createUserUserroleGuest(database);
+      await TestUtitities.createUserroleGuest(database);
 
-      const res = await request.post('/api/deleteUserrole?user=Guest')
+      const res = await request.post('/api/deleteUserrole')
         .set('Content-Type', 'application/json')
-        .set('cookie', [`UVCleanSID=${TestUtitities.createJWTToken('Guest')}`])
+        .set('cookie', [`UVCleanSID=${TestUtitities.createJWTToken('Admin')}`])
         .send('{"userrole":"Guest"}');
 
       expect(res.status).toBe(403);
-      expect(res.text).toMatch('You do not have the userrights for that action');
+      expect(res.text).toMatch('Userrole Admin can not delete userrole Guest');
+    });
+
+    it('Returns 403 if the user has not the userrights', async () => {
+      await TestUtitities.createUserUserroleGuest(database);
+
+      const res = await request.post('/api/deleteUserrole')
+        .set('Content-Type', 'application/json')
+        .set('cookie', [`UVCleanSID=${TestUtitities.createJWTToken('Guest')}`])
+        .send('{"userrole":"Admin"}');
+
+      expect(res.status).toBe(403);
+      expect(res.text).toMatch('Userrole Guest can not delete userrole Admin');
     });
 
     it('Deletes an other userrole and returns it', async () => {
@@ -82,10 +89,10 @@ describe('Userrole api routes', () => {
       const userrole = new Userrole('Guest', rightsObject, ['Admin']);
       await database.addUserrole(userrole);
 
-      const res = await request.post('/api/deleteUserrole?user=Admin')
+      const res = await request.post('/api/deleteUserrole')
         .set('Content-Type', 'application/json')
         .set('cookie', [`UVCleanSID=${TestUtitities.createJWTToken('Admin')}`])
-        .send('{"userrolename":"Guest"}');
+        .send('{"userrole":"Guest"}');
 
       expect(res.status).toBe(201);
       expect(res.body.name).toMatch('Guest');
@@ -95,7 +102,7 @@ describe('Userrole api routes', () => {
     });
 
     it('returns 401 if no userrolename is passed', async () => {
-      const res = await request.post('/api/deleteUserrole?user=Admin')
+      const res = await request.post('/api/deleteUserrole')
         .set('Content-Type', 'application/json')
         .set('cookie', [`UVCleanSID=${TestUtitities.createJWTToken('Admin')}`])
         .send('{}');
@@ -113,16 +120,16 @@ describe('Userrole api routes', () => {
       await TestUtitities.createUserUserroleAdmin(database);
     });
 
-    it('Returns 403 if the user has not the userrights', async () => {
+    it('Returns 403 if the user can not edit userroles', async () => {
       await TestUtitities.createUserUserroleGuest(database);
 
-      const res = await request.post('/api/createUserrole?user=Guest')
+      const res = await request.post('/api/createUserrole')
         .set('Content-Type', 'application/json')
         .set('cookie', [`UVCleanSID=${TestUtitities.createJWTToken('Guest')}`])
-        .send('{"userrole":"Guest"}');
+        .send('{"userrole":"Test"}');
 
       expect(res.status).toBe(403);
-      expect(res.text).toMatch('You do not have the userrights for that action');
+      expect(res.text).toMatch('Userrole Guest can not create userrole Test');
     });
 
     it('Creates an userrole and returns it', async () => {
@@ -133,7 +140,7 @@ describe('Userrole api routes', () => {
         createString += `"${right.propertie}":"true",`;
       });
 
-      const res = await request.post('/api/createUserrole?user=Admin')
+      const res = await request.post('/api/createUserrole')
         .set('Content-Type', 'application/json')
         .set('cookie', [`UVCleanSID=${TestUtitities.createJWTToken('Admin')}`])
         .send(`{"userrole":"Guest", ${createString.substring(0, createString.length - 1)}}`);
@@ -158,7 +165,7 @@ describe('Userrole api routes', () => {
 
       database.addUserrole(new Userrole('Test1', rightsObject));
 
-      const res = await request.post('/api/createUserrole?user=Admin')
+      const res = await request.post('/api/createUserrole')
         .set('Content-Type', 'application/json')
         .set('cookie', [`UVCleanSID=${TestUtitities.createJWTToken('Admin')}`])
         .send(`{"userrole":"Guest", ${createString.substring(0, createString.length - 1)},"canBeEditedByUserrole":["Test1"]}`);
@@ -183,7 +190,7 @@ describe('Userrole api routes', () => {
       const allRights = Userrole.getUserroleRights();
       if (allRights.length === 0) throw new Error('Route can not return 401 because there is no rule to set');
 
-      const res = await request.post('/api/createUserrole?user=Admin')
+      const res = await request.post('/api/createUserrole')
         .set('Content-Type', 'application/json')
         .set('cookie', [`UVCleanSID=${TestUtitities.createJWTToken('Admin')}`])
         .send('{}');
@@ -219,7 +226,7 @@ describe('Userrole api routes', () => {
         .set('cookie', [`UVCleanSID=${TestUtitities.createJWTToken('Guest')}`])
         .send('{"oldUsername":"Admin", "newUsername":"TestUser"}');
       expect(res.status).toBe(403);
-      expect(res.text).toMatch('You do not have the userrights for that action');
+      expect(res.text).toMatch('Userrole Guest can not change userrole Admin');
     });
 
     it('returns 403 if the user can not edit that userrole with action changeName', async () => {
@@ -384,7 +391,7 @@ describe('Userrole api routes', () => {
       await database.addUserrole(user);
     }, undefined);
 
-    const res = await request.get('/api/userroles?user=Admin')
+    const res = await request.get('/api/userroles')
       .set('Content-Type', 'application/json')
       .set('cookie', [`UVCleanSID=${TestUtitities.createJWTToken('Admin')}`]);
 

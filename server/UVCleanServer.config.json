@@ -111,7 +111,7 @@
     },
     "database": {
       "databaseType": "mongoDB",
-      "uri": "192.168.178.66",
+      "uri": "127.0.0.1",
       "port": 27017,
       "database": "uvclean-server"
     },

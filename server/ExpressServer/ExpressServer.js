@@ -11,8 +11,8 @@ const Userrole = require('../dataModels/Userrole.js');
 const Settings = require('../dataModels/Settings.js');
 const CreateUserCommand = require('../commands/UserCommand/CreateUserCommand.js');
 const DeleteUserCommand = require('../commands/UserCommand/DeleteUserCommand.js');
-const ChangeUserPasswordCommand = require('../commands/UserCommand/ChangeUserPasswordCommand.js');
-const ChangeUserroleCommand = require('../commands/UserCommand/ChangeUserroleOfUserCommand.js');
+const UpdateUserPasswordCommand = require('../commands/UserCommand/UpdateUserPasswordCommand.js');
+const UpdateUserroleOfUserCommand = require('../commands/UserCommand/UpdateUserroleOfUserCommand.js');
 const CreateUserroleCommand = require('../commands/UserCommand/CreateUserroleCommand.js');
 const DeleteUserroleCommand = require('../commands/UserCommand/DeleteUserroleCommand.js');
 const UpdateUserroleNameCommand = require('../commands/UserCommand/UpdateUserroleNameCommand.js');
@@ -48,7 +48,7 @@ module.exports = class ExpressServer {
     userMiddleware.register(database);
 
     // Userrole Routes
-    apiRouter.post('/createUserrole', userMiddleware.isLoggedIn, userMiddleware.canPerformAction, async (req, res, next) => {
+    apiRouter.post('/createUserrole', userMiddleware.isLoggedIn, async (req, res, next) => {
       logger.info('Got request on createUserrole route. Request: %o', req.body);
 
       let newUserrole = null;
@@ -77,7 +77,7 @@ module.exports = class ExpressServer {
       }
     });
 
-    apiRouter.post('/updateUserrole', userMiddleware.isLoggedIn, userMiddleware.canPerformAction, async (req, res, next) => {
+    apiRouter.post('/updateUserrole', userMiddleware.isLoggedIn, async (req, res, next) => {
       logger.info('Got request on updateUser route. Request: %o', req.body);
 
       const { action } = req.query;
@@ -127,13 +127,13 @@ module.exports = class ExpressServer {
       }
     });
 
-    apiRouter.post('/deleteUserrole', userMiddleware.isLoggedIn, userMiddleware.canPerformAction, async (req, res, next) => {
+    apiRouter.post('/deleteUserrole', userMiddleware.isLoggedIn, async (req, res, next) => {
       logger.info('Got request on deleteUserrole route. Request: %o', req.body);
 
       let newUserrole = null;
       try {
         newUserrole = await DeleteUserroleCommand.execute(req.userData.username,
-          req.body.userrolename);
+          req.body.userrole);
 
         return res.status(201).send(newUserrole);
       } catch (error) {
@@ -225,15 +225,20 @@ module.exports = class ExpressServer {
     this.app.get('/logout', (req, res) => res.clearCookie('UVCleanSID').send({ url: '/ui/login' }));
 
     // User routes
-    apiRouter.post('/addUser', userMiddleware.isLoggedIn, userMiddleware.validateRegister, async (req, res, next) => {
-      logger.info('Got request on addUser route. Request: %o', req.body);
+    apiRouter.post('/createUser', userMiddleware.isLoggedIn, userMiddleware.validateRegister, async (req, res, next) => {
+      logger.info('Got request on createUser route. Request: %o', req.body);
 
       try {
-        const newUser = await CreateUserCommand.execute(req.body.username, req.body.password,
-          req.body.userrole);
+        const newUser = await CreateUserCommand.execute(req.userData.username, req.body.username,
+          req.body.password, req.body.userrole);
         return res.status(201).send(newUser);
       } catch (error) {
         server.emit('error', { service: 'ExpressServer', error });
+
+        if (error instanceof AuthenticationError) {
+          return res.status(403).send({ msg: error.message });
+        }
+
         return res.status(401).send({
           msg: error.message,
         });
@@ -244,10 +249,15 @@ module.exports = class ExpressServer {
       logger.info('Got request on deleteUser route. Request: %o', req.body);
 
       try {
-        const oldUser = await DeleteUserCommand.execute(req.body.username);
-        return res.status(201).send(oldUser);
+        const oldUser = await DeleteUserCommand.execute(req.userData.username, req.body.username);
+        return res.status(201).send({ username: oldUser.username });
       } catch (error) {
         server.emit('error', { service: 'ExpressServer', error });
+
+        if (error instanceof AuthenticationError) {
+          return res.status(403).send({ msg: error.message });
+        }
+
         return res.status(401).send({
           msg: error.message,
         });
@@ -268,11 +278,13 @@ module.exports = class ExpressServer {
 
         switch (action) {
           case 'changePassword':
-            newUser = await ChangeUserPasswordCommand.execute(req.body.username,
-              req.body.oldPassword, req.body.newPassword, req.body.newPasswordRepeated);
+            newUser = await UpdateUserPasswordCommand.execute(req.userData.username,
+              req.body.username, req.body.oldPassword, req.body.newPassword,
+              req.body.newPasswordRepeated);
             break;
           case 'changeUserrole':
-            newUser = await ChangeUserroleCommand.execute(req.body.username, req.body.newUserrole);
+            newUser = await UpdateUserroleOfUserCommand.execute(req.userData.username, req.body.username,
+              req.body.newUserrole);
             break;
 
           default:
@@ -282,6 +294,11 @@ module.exports = class ExpressServer {
         return res.status(201).send(newUser);
       } catch (error) {
         server.emit('error', { service: 'ExpressServer', error });
+
+        if (error instanceof AuthenticationError) {
+          return res.status(403).send({ msg: error.message });
+        }
+
         return res.status(401).send({
           msg: error.message,
         });

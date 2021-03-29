@@ -13,8 +13,8 @@ const MongoDBAdapter = require('../../server/databaseAdapters/mongoDB/MongoDBAda
 const User = require('../../server/dataModels/User');
 const Userrole = require('../../server/dataModels/Userrole');
 const CreateUserCommand = require('../../server/commands/UserCommand/CreateUserCommand');
-const ChangeUserPasswordCommand = require('../../server/commands/UserCommand/ChangeUserPasswordCommand');
-const ChangeUserroleCommand = require('../../server/commands/UserCommand/ChangeUserroleOfUserCommand');
+const UpdateUserPasswordCommand = require('../../server/commands/UserCommand/UpdateUserPasswordCommand');
+const UpdateUserroleOfUserCommand = require('../../server/commands/UserCommand/UpdateUserroleOfUserCommand');
 const CreateUserroleCommand = require('../../server/commands/UserCommand/CreateUserroleCommand');
 const DeleteUserroleCommand = require('../../server/commands/UserCommand/DeleteUserroleCommand');
 const UpdateUserroleNameCommand = require('../../server/commands/UserCommand/UpdateUserroleNameCommand');
@@ -46,8 +46,8 @@ beforeAll(async () => {
   request = supertest(expressServer.app);
 
   CreateUserCommand.register(database);
-  ChangeUserPasswordCommand.register(database);
-  ChangeUserroleCommand.register(database);
+  UpdateUserPasswordCommand.register(database);
+  UpdateUserroleOfUserCommand.register(database);
   CreateUserroleCommand.register(database);
   DeleteUserroleCommand.register(database);
   UpdateUserroleNameCommand.register(database);

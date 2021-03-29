@@ -1404,7 +1404,7 @@ module.exports = class MongoDBAdapter extends EventEmitter {
       await this.getUserrole(userrole.name);
       throw new Error('Userrole already exists');
     } catch (error) {
-      if (error.message !== 'Userrole does not exists') throw error;
+      if (error.message !== `Userrole ${userrole.name} does not exists`) throw error;
     }
 
     logger.info('Adding userrole %o', userrole);
@@ -1452,7 +1452,7 @@ module.exports = class MongoDBAdapter extends EventEmitter {
     }).populate('canBeEditedByUserrole').lean();
 
     if (docUserrole === null) {
-      throw new Error('Userrole does not exists');
+      throw new Error(`Userrole ${userrolename} does not exists`);
     }
 
     const allRights = Userrole.getUserroleRights();
@@ -1581,7 +1581,7 @@ module.exports = class MongoDBAdapter extends EventEmitter {
       await this.getUser(user.username);
       throw new Error('User already exists');
     } catch (error) {
-      if (error.message !== 'User does not exists') throw error;
+      if (error.message !== `User ${user.username} does not exists`) throw error;
     }
 
     const userrole = await UserroleModel.findOne({ name: user.userrole }).lean().exec();
@@ -1696,7 +1696,7 @@ module.exports = class MongoDBAdapter extends EventEmitter {
       .exec();
 
     if (docUser === null) {
-      throw new Error('User does not exists');
+      throw new Error(`User ${username} does not exists`);
     }
 
     const allRights = Userrole.getUserroleRights();

@@ -2,7 +2,6 @@ const jwt = require('jsonwebtoken');
 const MainLogger = require('../../Logger.js').logger;
 
 const logger = MainLogger.child({ service: 'UserMiddleware' });
-let database = null;
 
 module.exports = {
   register: (databaseAdapter) => { database = databaseAdapter; },
@@ -56,22 +55,5 @@ module.exports = {
       logger.error(err);
       return res.status(401).send('<p>Your session is not valid</p>');
     }
-  },
-  canPerformAction: async (req, res, next) => {
-    logger.debug('Checking wether user can perform action %s with cookie %o and query %o', req.cookies, req.query);
-
-    const user = await database.getUser(req.userData.username);
-    switch (req.route.path) {
-      case '/createUserrole':
-      case '/deleteUserrole':
-      case '/updateUserrole':
-        if (user.userrole.rules.canEditUserrole.allowed) {
-          return next();
-        }
-        break;
-      default:
-        return res.status(404).send({ msg: 'No valid route.' });
-    }
-    return res.status(403).send({ msg: 'You do not have the userrights for that action' });
   },
 };

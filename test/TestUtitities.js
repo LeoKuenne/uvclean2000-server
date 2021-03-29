@@ -35,6 +35,16 @@ module.exports = {
     const userrole = new Userrole('Guest', rightsObject);
     await database.addUserrole(userrole);
   },
+  createUserroleAdmin: async (database) => {
+    const allRights = Userrole.getUserroleRights();
+    const rightsObject = {};
+    allRights.forEach((right) => {
+      rightsObject[right.propertie] = true;
+    });
+
+    const userrole = new Userrole('Admin', rightsObject);
+    await database.addUserrole(userrole);
+  },
   createJWTToken: (username) => jwt.sign({
     username,
     userId: '123',
