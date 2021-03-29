@@ -58,7 +58,7 @@ export default {
         }),
         // redirect: 'follow',
       }).then(async (response) => {
-        if (response.status === 401) {
+        if (response.status !== 201) {
           const error = await response.json();
           throw new Error(error.msg);
         }
@@ -84,7 +84,7 @@ export default {
             password: this.password,
           }),
         }).then((response) => response.json()).then((response) => {
-          if (response.status === 401) {
+          if (response.status !== 201) {
             throw new Error(response.msg);
           }
           console.log('Test', response);
