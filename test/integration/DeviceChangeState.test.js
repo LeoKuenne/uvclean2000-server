@@ -9,6 +9,7 @@ global.config = {
   mqtt: {
     useEncryption: false,
     secret: 'C:/workspace_nodejs/uvclean2000-server/server/ssl/fernetSecret',
+    sendEngineLevelWhenOn: true,
   },
 };
 
@@ -124,7 +125,8 @@ describe('DeviceChangeState Module', () => {
   it.each([
     [true],
     [false],
-  ])('changeState with prop engineState and value %s, true emits a second mqtt message for setting the current engineLevel, false does not', async (value, done) => {
+  ])('changeState with prop engineState and value %s, emits a second mqtt message for setting the current engineLevel if sendEndingeLevenWhenOn is true', async (value, done) => {
+    config.mqtt.sendEngineLevelWhenOn = true;
     const io = new EventEmitter();
     const ioSocket = new EventEmitter();
     const mqtt = {
@@ -152,6 +154,53 @@ describe('DeviceChangeState Module', () => {
         expect(mqtt.publish.mock.calls).toEqual((value) ? [
           ['UVClean/1/changeState/engineState', prop.newValue],
           ['UVClean/1/changeState/engineLevel', '1'],
+        ] : [
+          ['UVClean/1/changeState/engineState', prop.newValue],
+        ]);
+        done();
+      } catch (error) {
+        done(error);
+      }
+    });
+
+    server.on('error', (e) => {
+      done(e.error);
+    });
+
+    ioSocket.emit('device_changeState', prop);
+  });
+
+  it.each([
+    [true],
+    [false],
+  ])('changeState with prop engineState and value %s, does not emit an engineLevel event if the sendEngineLevelWhenOn in the config is false', async (value, done) => {
+    config.mqtt.sendEngineLevelWhenOn = false;
+    const io = new EventEmitter();
+    const ioSocket = new EventEmitter();
+    const mqtt = {
+      publish: jest.fn(),
+    };
+    const server = new EventEmitter();
+
+    const device1 = await database.addDevice({ name: 'Device 1', serialnumber: '1' });
+
+    await database.updateDevice({
+      serialnumber: '1',
+      engineLevel: 1,
+    });
+
+    register(server, database, io, mqtt, ioSocket);
+
+    const prop = {
+      serialnumber: device1.serialnumber,
+      prop: 'engineState',
+      newValue: value.toString(),
+    };
+
+    io.on('info', () => {
+      try {
+        expect(mqtt.publish.mock.calls).toEqual((value) ? [
+          ['UVClean/1/changeState/engineState', prop.newValue],
         ] : [
           ['UVClean/1/changeState/engineState', prop.newValue],
         ]);
