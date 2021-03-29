@@ -3,7 +3,7 @@
     <div class="flex items-center space-x-5">
       <h2 class="text-lg font-bold">Users</h2>
       <button
-        v-if="$dataStore.user.userrole.rules.canChangeProperties.allowed"
+        v-if="$dataStore.user.userrole.rules.canEditUser.allowed"
         @click="showUserAddForm()"
         class="flex text-left text-primary bg-white shadow items-center p-2
         hover:text-gray-500 hover:transform hover:scale-105
@@ -196,7 +196,6 @@ export default {
       // });
     },
     async addUser(user) {
-      console.log(user);
       if (user.username.length <= 3 || user.username.match(/[^0-9A-Za-z+ ]/gm) !== null) {
         this.errorMessage = 'Username has to be vaild. Only numbers and letters are allowed. Provide at least 3 characters.\n';
         if (user.username.match(/[^0-9A-Za-z+#-.!&]/gm) !== null) this.errorMessage += ` Invalid characters: ${user.username.match(/[^0-9A-Za-z+ ]/gm).join(',')}`;
@@ -239,7 +238,6 @@ export default {
     },
     async updateUser(user) {
       this.errorMessage = '';
-      this.showUserForm = false;
 
       const response = await fetch('/api/updateUser?action=changeUserrole', {
         method: 'POST',
@@ -252,6 +250,7 @@ export default {
         }),
       });
 
+      console.log(response);
       const json = await response.json();
       if (response.status !== 201) {
         this.errorMessage = json.msg;
@@ -302,7 +301,7 @@ export default {
 
       const json = await response.json();
       if (response.status !== 201) {
-        this.errorMessage = json;
+        this.errorMessage = json.msg;
         return;
       }
 

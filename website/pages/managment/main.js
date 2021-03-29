@@ -22,13 +22,7 @@ const store = Vue.observable({
   users: [],
 });
 
-const urlParams = new URLSearchParams(window.location.search);
-if (!urlParams.has('user')) {
-  throw new Error('No user provided');
-}
-
-const paramUser = urlParams.get('user');
-fetch(`/api/user?username=${paramUser}`)
+fetch('/api/loggedinUser')
   .then((response) => {
     if (response.status !== 200) {
       throw new Error(response.msg);

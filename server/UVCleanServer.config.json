@@ -71,18 +71,31 @@
     },
     "userrole": [
       {
+        "userrolename": "feedback",
+        "canChangeProperties": true,
+        "canViewAdvancedData": true,
+        "canEditUserrole": true,
+        "canEditUser": true
+      },
+      {
         "userrolename": "admin",
         "canChangeProperties": true,
-        "canViewAdvancedData": true
+        "canViewAdvancedData": false,
+        "canEditUserrole": true,
+        "canEditUser": true,
+        "canBeEditedByUserrole": ["feedback"]
       },
       {
         "userrolename": "guest",
-        "canBeEditedByUserrole": ["admin"],
-        "canChangeProperties": false,
-        "canViewAdvancedData": false
+        "canBeEditedByUserrole": ["admin", "feedback"]
       }
     ],
     "user": [
+      {
+        "username": "feedback",
+        "password": "feedbackPassword",
+        "userrole": "feedback"
+      },
       {
         "username": "admin",
         "password": "adminPassword",
@@ -111,7 +124,7 @@
     },
     "database": {
       "databaseType": "mongoDB",
-      "uri": "127.0.0.1",
+      "uri": "192.168.178.66",
       "port": 27017,
       "database": "uvclean-server"
     },

@@ -218,7 +218,7 @@ describe('Userrole api routes', () => {
       await database.clearCollection('users');
     });
 
-    it('returns 403 if the user has not the userrights', async () => {
+    it('returns 403 if the user can not edit userroles', async () => {
       await TestUtitities.createUserUserroleGuest(database);
 
       const res = await request.post('/api/updateUserrole?action=changeName')

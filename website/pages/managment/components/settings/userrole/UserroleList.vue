@@ -3,7 +3,7 @@
     <div class="flex items-center space-x-5">
       <h2 class="text-lg font-bold">Userroles</h2>
       <button
-        v-if="$dataStore.user.userrole.rules.canChangeProperties.allowed"
+        v-if="$dataStore.user.userrole.rules.canEditUserrole.allowed"
         @click="showUserroleAddForm"
         class="flex text-left text-primary bg-white shadow items-center p-2
         hover:text-gray-500 hover:transform hover:scale-105
@@ -25,7 +25,7 @@
     </userrole>
     <UVCForm
       :title="heading"
-      :show="showUserForm"
+      :show="showUserListForm"
       :errorMessage="errorMessage"
       @close="closeUserForm">
       <label for="form_userrolename">Userrole</label>
@@ -51,7 +51,7 @@
         </div>
         <div class="w-1/2">
           <h2 class="font-bold text-lg whitespace-normal">
-            Can be edited by {{formUserrole.newcanBeEditedByUserrole}}
+            Can be edited by
           </h2>
           <div class="flex flex-col space-y-2 m-2">
             <div class="space-x-2 text-sm flex items-center"
@@ -106,7 +106,7 @@ export default {
         canBeEditedByUserrole: [],
       },
       isFormEdit: false,
-      showUserForm: false,
+      showUserListForm: false,
       errorMessage: '',
     };
   },
@@ -133,7 +133,7 @@ export default {
         this.formUserrole.newcanBeEditedByUserrole.push(role.name);
       });
       this.isFormEdit = true;
-      this.showUserForm = true;
+      this.showUserListForm = true;
     },
     showUserroleAddForm() {
       this.errorMessage = '';
@@ -146,10 +146,10 @@ export default {
         this.formUserrole.rules[role.propertie] = true;
       });
       this.isFormEdit = false;
-      this.showUserForm = true;
+      this.showUserListForm = true;
     },
     closeUserForm() {
-      this.showUserForm = false;
+      this.showUserListForm = false;
     },
     async deleteUserrole(user) {
       const response = await fetch('/api/deleteUserrole', {
@@ -167,7 +167,7 @@ export default {
       }
 
       this.$dataStore.userroles = await this.$root.getUserroles();
-      this.showUserForm = false;
+      this.showUserListForm = false;
       // if (this.$root.$data.socket === null) return;
       // this.$root.$data.socket.emit('user_delete', {
       //   name: this.formUserrole.name,
@@ -210,7 +210,7 @@ export default {
       }
 
       this.$dataStore.userroles = await this.$root.getUserroles();
-      this.showUserForm = false;
+      this.showUserListForm = false;
 
       // if (this.$root.$data.socket === null) return;
       // this.$root.$data.socket.emit('user_add', {
@@ -263,10 +263,10 @@ export default {
 
       this.$dataStore.userroles = await this.$root.getUserroles();
       this.$dataStore.user = await this.$root.getUser();
-      this.showUserForm = false;
+      this.showUserListForm = false;
 
       // this.errorMessage = '';
-      // this.showUserForm = false;
+      // this.showUserListForm = false;
 
       // if (this.$root.$data.socket === null) return;
       // this.$root.$data.socket.emit('user_update', {

@@ -71,11 +71,12 @@ export default {
   },
   computed: {
     canLoggedInUserEdit() {
-      return (this.$dataStore.user.userrole.name === this.userrole.name) ? true
-        : this.userrole.canBeEditedByUserrole.filter(
-          (userroleCanBeEditedBy) => userroleCanBeEditedBy.name
-            === this.$dataStore.user.userrole.name,
-        ).length === 1;
+      if (!this.$dataStore.user.userrole.rules.canEditUserrole.allowed) return false;
+      if (this.userrole.canBeEditedByUserrole.filter(
+        (userroleCanBeEditedBy) => userroleCanBeEditedBy.name
+          === this.$dataStore.user.userrole.name,
+      ).length === 1 || this.$dataStore.user.userrole.name === this.userrole.name) return true;
+      return false;
     },
   },
   methods: {

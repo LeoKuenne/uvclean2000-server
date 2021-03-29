@@ -26,8 +26,8 @@ const UpdateUserPassword = require('./commands/SocketIOCommands/UpdateUserPasswo
 const IdentifyDevice = require('./commands/SocketIOCommands/IdentifyDevice');
 const Settings = require('./dataModels/Settings');
 const CreateUserCommand = require('./commands/UserCommand/CreateUserCommand');
-const ChangeUserPasswordCommand = require('./commands/UserCommand/UpdateUserPasswordCommand');
-const ChangeUserroleOfUserCommand = require('./commands/UserCommand/ChangeUserroleOfUserCommand');
+const UpdateUserPasswordCommand = require('./commands/UserCommand/UpdateUserPasswordCommand');
+const UpdateUserroleOfUserCommand = require('./commands/UserCommand/UpdateUserroleOfUserCommand');
 const CreateUserroleCommand = require('./commands/UserCommand/CreateUserroleCommand');
 const DeleteUserroleCommand = require('./commands/UserCommand/DeleteUserroleCommand');
 const UpdateUserroleNameCommand = require('./commands/UserCommand/UpdateUserroleNameCommand');
@@ -50,8 +50,8 @@ class UVCleanServer extends EventEmitter {
 
     CreateUserCommand.register(this.database);
     DeleteUserCommand.register(this.database);
-    ChangeUserPasswordCommand.register(this.database);
-    ChangeUserroleOfUserCommand.register(this.database);
+    UpdateUserPasswordCommand.register(this.database);
+    UpdateUserroleOfUserCommand.register(this.database);
     CreateUserroleCommand.register(this.database);
     DeleteUserroleCommand.register(this.database);
     UpdateUserroleNameCommand.register(this.database);
@@ -136,7 +136,7 @@ class UVCleanServer extends EventEmitter {
             await this.database.getUserrole(userrole.userrolename);
             logger.info(`Userrole ${userrole.userrolename} exists in database.`);
           } catch (error) {
-            if (error.message === 'Userrole does not exists') {
+            if (error.message === `Userrole ${userrole.userrolename} does not exists`) {
               logger.info(`Adding Userrole ${userrole.userrolename} to database with object %o`, userrole);
 
               const allRights = Userrole.getUserroleRights();
@@ -161,7 +161,7 @@ class UVCleanServer extends EventEmitter {
             await this.database.getUser(user.username);
             logger.info(`Checking User ${user.username} exists in database.`);
           } catch (error) {
-            if (error.message === 'User does not exists') {
+            if (error.message === `User ${user.username} does not exists`) {
               logger.info(`Adding User ${user.username} to database with object %o`, user);
               this.database.addUser(new User(user.username, user.password, user.userrole));
               return;

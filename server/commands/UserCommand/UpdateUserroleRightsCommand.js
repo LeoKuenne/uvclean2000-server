@@ -18,10 +18,11 @@ module.exports = {
   async execute(usernameActionPerformedBy, userrolename, rightObject, canBeEditedByUserrole) {
     logger.info('Executing UpdateUserroleRightsCommand with name: %s, rightsobject: %o, canBeEditedByUserrole: %o', userrolename, rightObject, canBeEditedByUserrole);
 
-    const user = await database.getUser(usernameActionPerformedBy);
+    const dbUserActionPerfomedBy = await database.getUser(usernameActionPerformedBy);
 
-    if (!await Userrole.canUserroleEditUserrole(user.userrole.name, userrolename, database)) {
-      throw new AuthenticationError(user.userrole.name, `Userrole ${user.userrole.name} can not change userrole ${userrolename}`);
+    if (!dbUserActionPerfomedBy.userrole.rules.canEditUser.allowed
+      || !await Userrole.canUserroleEditUserrole(dbUserActionPerfomedBy.userrole.name, userrolename, database)) {
+      throw new AuthenticationError(dbUserActionPerfomedBy.userrole.name, `Userrole ${dbUserActionPerfomedBy.userrole.name} can not change userrole ${userrolename}`);
     }
 
     await database.updateUserrole(userrolename, new Userrole(userrolename, rightObject,

@@ -187,6 +187,8 @@ module.exports = class ExpressServer {
       logger.info('Got request on login route. Request: %o', req.body);
 
       try {
+        if (req.cookies.UVCleanSID !== undefined) throw new Error('Session already exists. Please leave one session before entering another one');
+
         const user = await this.database.getUser(req.body.username);
         logger.debug('User exists in database');
         const match = await bcrypt.compare(req.body.password, user.password);
@@ -205,7 +207,7 @@ module.exports = class ExpressServer {
           logger.debug('Responding with cookie "UVCleanSID", token, %o with user %o', { httpOnly: true }, user);
           return res.status(201).send({
             user,
-            url: `/ui/managment?user=${user.username}`,
+            url: '/ui/managment',
           });
         }
 
@@ -302,6 +304,29 @@ module.exports = class ExpressServer {
         return res.status(401).send({
           msg: error.message,
         });
+      }
+    });
+
+    apiRouter.get('/loggedinUser', async (req, res) => {
+      logger.info('Got GET request on /loggedinUser');
+
+      try {
+        const token = req.cookies.UVCleanSID;
+        const decoded = jwt.verify(
+          token,
+          'SECRETKEY',
+        );
+
+        const user = await database.getUser(decoded.username);
+
+        return res.json({
+          id: user.id,
+          username: user.username,
+          userrole: user.userrole,
+        });
+      } catch (error) {
+        server.emit('error', { service: 'ExpressServer', error });
+        return res.status(401).send({ msg: 'Your session is not valid' });
       }
     });
 
