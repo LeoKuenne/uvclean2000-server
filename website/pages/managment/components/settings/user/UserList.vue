@@ -160,9 +160,6 @@ export default {
       this.errorMessage = '';
       this.formUser = {
         username: '',
-        userrole: {
-          canChangeProperties: false,
-        },
       };
       this.isFormEdit = false;
       this.showUserForm = true;
@@ -213,7 +210,12 @@ export default {
         return;
       }
 
-      const response = await fetch('/api/addUser', {
+      if (user.userrole === undefined) {
+        this.errorMessage = 'Please choose an userrole';
+        return;
+      }
+
+      const response = await fetch('/api/createUser', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

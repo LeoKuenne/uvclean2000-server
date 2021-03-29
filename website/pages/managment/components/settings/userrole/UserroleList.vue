@@ -28,7 +28,7 @@
       :show="showUserListForm"
       :errorMessage="errorMessage"
       @close="closeUserForm">
-      <label for="form_userrolename">Userrole</label>
+      <label for="form_userrolename">Name</label>
       <input id="form_userrolename"
         :value="formUserrole.name"
         @input="(isFormEdit) ?
@@ -174,15 +174,14 @@ export default {
       // });
     },
     async addUserrole(userrole) {
-      if (userrole.name !== undefined) {
-        if (userrole.name.length <= 3 || userrole.name.match(/[^0-9A-Za-z+ ]/gm) !== null) {
-          this.errorMessage = 'Username has to be vaild. Only numbers and letters are allowed.'
+      if (userrole.name.length <= 3 || userrole.name.match(/[^0-9A-Za-z+ ]/gm) !== null) {
+        this.errorMessage = 'Username has to be vaild. Only numbers and letters are allowed.'
             + 'Provide at least 3 characters.\n';
-          if (userrole.name.match(/[^0-9A-Za-z+#-.!&]/gm) !== null) {
-            this.errorMessage += ` Invalid characters: '
+        if (userrole.name.match(/[^0-9A-Za-z+#-.!&]/gm) !== null) {
+          this.errorMessage += ` Invalid characters: '
               + '${userrole.name.match(/[^0-9A-Za-z+ ]/gm).join(',')}`;
-          }
         }
+        return;
       }
 
       const fetchObject = {
@@ -232,6 +231,7 @@ export default {
             this.errorMessage += ` Invalid characters: '
               + '${userrole.newName.match(/[^0-9A-Za-z+ ]/gm).join(',')}`;
           }
+          return;
         }
 
         fetchObject.name = userrole.newName;

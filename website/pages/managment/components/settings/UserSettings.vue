@@ -1,5 +1,5 @@
 <template>
-  <div class="flex flex-col xl:flex-row h-full w-full">
+  <div class="flex flex-col xl:flex-row h-full w-full overflow-scroll">
     <user-list class="w-full xl:w-1/2"></user-list>
     <userrole-list class="w-full xl:w-1/2"></userrole-list>
   </div>

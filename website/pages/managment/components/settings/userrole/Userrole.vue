@@ -1,5 +1,5 @@
 <template>
-  <div class="m-2 flex border border-gray-300 rounded overflow-hidden">
+  <div class="m-2 flex border border-gray-300 rounded overflow-hidden shadow-sm">
     <div class="w-24 flex items-center justify-center bg-primary text-white">
       <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" class="h-16 w-16" viewBox="0 0 16 16">
         <path d="M6.5 2a.5.5 0 0 0 0 1h3a.5.5 0 0 0 0-1h-3zM11 8a3 3 0 1 1-6 0 3 3 0 0 1
@@ -10,8 +10,8 @@
           0-.776.492V2.5z"/>
       </svg>
     </div>
-    <div class="w-full pl-2">
-      <div class="flex items-center justify-between">
+    <div class="w-full p-2">
+      <div class="flex items-center justify-between pb-4">
         <h1 class="font-bold text-lg">Userrole: {{ userrole.name }}</h1>
         <div class="flex space-x-2 m-2">
           <button v-if="canLoggedInUserEdit"
@@ -35,7 +35,7 @@
           </svg> -->
         </div>
       </div>
-      <div class="flex">
+      <div class="flex flex-col sm:flex-row">
         <div>
           <h2 class="font-bold text-base">Rights:</h2>
           <div class="flex flex-col space-y-2 m-2">

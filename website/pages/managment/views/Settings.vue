@@ -42,7 +42,7 @@
     </div>
     <transition name="fade" mode="out-in">
       <router-view
-        class="w-full h-full p-10">
+        class="w-full h-full p-4 md:p-10">
       </router-view>
     </transition>
   </div>
