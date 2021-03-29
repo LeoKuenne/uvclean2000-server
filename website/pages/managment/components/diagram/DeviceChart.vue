@@ -84,10 +84,16 @@
             @change="getDateDuration"
           >
             <option value="airVolume">Air Volume</option>
-            <option value="lampValues">Lamp Values</option>
             <option value="tacho">Tachos</option>
-            <option value="fanVoltage">Fan Voltage</option>
             <option value="co2">CO2</option>
+            <option value="lampValues"
+              v-if="$dataStore.user.userrole.rules.canViewAdvancedData.allowed">
+              Lamp Values
+            </option>
+            <option value="fanVoltage"
+              v-if="$dataStore.user.userrole.rules.canViewAdvancedData.allowed">
+              Fan Voltage
+            </option>
           </select>
         </div>
         <div>

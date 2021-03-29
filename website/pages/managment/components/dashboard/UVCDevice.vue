@@ -160,12 +160,14 @@
               propertie: 'tacho',
               }
             }"
-            class="col-span-2 flex justify-between cursor-pointer">
+            class="col-span-2 flex justify-between cursor-pointer"
+            v-if="$dataStore.user.userrole.rules.canViewAdvancedData.allowed">
             <span class="font-semibold">Rotation speed</span>
             <span class="text-right" v-if="device.tacho">{{device.tacho.tacho}} R/min</span>
           </router-link>
 
-          <div class="col-span-2">
+          <div class="col-span-2"
+            v-if="$dataStore.user.userrole.rules.canViewAdvancedData.allowed">
             <div class="flex justify-between">
               <span class="font-semibold">Lamp values (V)</span>
               <button
