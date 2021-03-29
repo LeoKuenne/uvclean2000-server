@@ -25,7 +25,16 @@ const UpdateUser = require('./commands/SocketIOCommands/UpdateUser');
 const UpdateUserPassword = require('./commands/SocketIOCommands/UpdateUserPassword');
 const IdentifyDevice = require('./commands/SocketIOCommands/IdentifyDevice');
 const Settings = require('./dataModels/Settings');
-const AddUserCommand = require('./commands/UserCommand/AddUserCommand');
+const CreateUserCommand = require('./commands/UserCommand/CreateUserCommand');
+const UpdateUserPasswordCommand = require('./commands/UserCommand/UpdateUserPasswordCommand');
+const UpdateUserroleOfUserCommand = require('./commands/UserCommand/UpdateUserroleOfUserCommand');
+const CreateUserroleCommand = require('./commands/UserCommand/CreateUserroleCommand');
+const DeleteUserroleCommand = require('./commands/UserCommand/DeleteUserroleCommand');
+const UpdateUserroleNameCommand = require('./commands/UserCommand/UpdateUserroleNameCommand');
+const User = require('./dataModels/User');
+const Userrole = require('./dataModels/Userrole');
+const DeleteUserCommand = require('./commands/UserCommand/DeleteUserCommand');
+const UpdateUserroleRightsCommand = require('./commands/UserCommand/UpdateUserroleRightsCommand');
 
 const logger = MainLogger.child({ service: 'UVCleanServer' });
 
@@ -39,7 +48,14 @@ class UVCleanServer extends EventEmitter {
     this.express = new ExpressServer(this, this.database);
     fs.writeFileSync(config.mqtt.secret, 'NQCNtEul3sEuOwMSRExMeh_RQ0iYD0USEemo00G4pCg=', { encoding: 'base64' });
 
-    AddUserCommand.register(this.database);
+    CreateUserCommand.register(this.database);
+    DeleteUserCommand.register(this.database);
+    UpdateUserPasswordCommand.register(this.database);
+    UpdateUserroleOfUserCommand.register(this.database);
+    CreateUserroleCommand.register(this.database);
+    DeleteUserroleCommand.register(this.database);
+    UpdateUserroleNameCommand.register(this.database);
+    UpdateUserroleRightsCommand.register(this.database);
   }
 
   async stopServer() {
@@ -113,24 +129,47 @@ class UVCleanServer extends EventEmitter {
 
         this.io.emit('databaseConnected');
 
+        await config.userrole.reduce(async (memo, userrole) => {
+          await memo;
+          logger.info(`Checking Userrole ${userrole.userrolename} to exists in database.`);
+          try {
+            await this.database.getUserrole(userrole.userrolename);
+            logger.info(`Userrole ${userrole.userrolename} exists in database.`);
+          } catch (error) {
+            if (error.message === `Userrole ${userrole.userrolename} does not exists`) {
+              logger.info(`Adding Userrole ${userrole.userrolename} to database with object %o`, userrole);
+
+              const allRights = Userrole.getUserroleRights();
+              const rightsObject = {};
+              allRights.forEach((right) => {
+                rightsObject[right.propertie] = (userrole[right.propertie])
+                  ? userrole[right.propertie] : false;
+              });
+
+              await this.database.addUserrole(
+                new Userrole(userrole.userrolename, rightsObject, userrole.canBeEditedByUserrole),
+              );
+              return;
+            }
+            throw error;
+          }
+        }, undefined);
+
         await Promise.all(config.user.map(async (user) => {
           logger.info(`Checking User ${user.username} to exists in database.`);
           try {
             await this.database.getUser(user.username);
             logger.info(`Checking User ${user.username} exists in database.`);
           } catch (error) {
-            if (error.message === 'User does not exists') {
+            if (error.message === `User ${user.username} does not exists`) {
               logger.info(`Adding User ${user.username} to database with object %o`, user);
-              this.database.addUser({
-                username: user.username,
-                password: user.username,
-                canEdit: (user.canEdit !== undefined) ? user.canEdit === 'true' : false,
-              });
+              this.database.addUser(new User(user.username, user.password, user.userrole));
               return;
             }
             throw error;
           }
         }));
+
         try {
           if (this.client.connected) {
             const db = await this.database.getDevices();

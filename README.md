@@ -25,7 +25,7 @@ A Client has properties and functions:
 ## Not used packages
 
 ## MongoDB Startup
-mongod.exe --serviceName MongoDB-UVCleanServer --serviceDisplayName MongoDB-UVCleanServer --serviceUser Leo --dbpath dbData/
+mongod.exe --serviceName MongoDB-UVCleanServer --serviceDisplayName MongoDB-UVCleanServer --serviceUser Leo --dbpath dbData/ --bind_ip 192.168.178.66
 
 ## Notes and thoughts about the actions
 

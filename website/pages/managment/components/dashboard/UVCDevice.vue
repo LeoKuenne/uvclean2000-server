@@ -18,12 +18,22 @@
             class="text-primary z-10"
             :showIcon="true"
             :menuItems="[
-              {text: 'Edit', disabled: this.$root.$dataStore.user.canEdit === false},
+              {text: 'Edit',
+                disabled: this.$root.$dataStore.user.userrole.rules.canChangeProperties
+                  .allowed === false},
               {text: 'View chart', disabled: false},
-              {text: 'Add to Group', disabled: this.$root.$dataStore.user.canEdit === false},
-              {text: 'Acknowledge', disabled: this.$root.$dataStore.user.canEdit === false},
-              {text: 'Identify', disabled: this.$root.$dataStore.user.canEdit === false},
-              {text: 'Reset',  disabled: this.$root.$dataStore.user.canEdit === false}
+              {text: 'Add to Group',
+                disabled: this.$root.$dataStore.user.userrole.rules.canChangeProperties
+                  .allowed === false},
+              {text: 'Acknowledge',
+                disabled: this.$root.$dataStore.user.userrole.rules.canChangeProperties
+                  .allowed === false},
+              {text: 'Identify',
+                disabled: this.$root.$dataStore.user.userrole.rules.canChangeProperties
+                  .allowed === false},
+              {text: 'Reset',
+                disabled: this.$root.$dataStore.user.userrole.rules.canChangeProperties
+                  .allowed === false}
             ]"
             @itemClicked="menuItemClicked($event)">
           </dropdownMenu>
@@ -81,7 +91,7 @@
               prop: 'engineState',
               newValue: !device.engineState
             })"
-            :disabled="$dataStore.user.canEdit === false">
+            :disabled="$dataStore.user.userrole.rules.canChangeProperties.allowed === false">
             {{state}}
           </button>
           <label :for="'b_eventmode' + device.serialnumber">Eventmode</label>
@@ -93,7 +103,7 @@
               prop: 'eventMode',
               newValue: !device.eventMode
             })"
-            :disabled="$dataStore.user.canEdit === false">
+            :disabled="$dataStore.user.userrole.rules.canChangeProperties.allowed === false">
             {{eventMode}}
           </button>
 
@@ -106,7 +116,7 @@
               prop: 'identifyMode',
               newValue: !device.identifyMode
             })"
-            :disabled="$dataStore.user.canEdit === false">
+            :disabled="$dataStore.user.userrole.rules.canChangeProperties.allowed === false">
             {{identifyMode}}
           </button> -->
           <label :for="'s_engine_level' + device.serialnumber">Engine Level</label>
@@ -119,7 +129,7 @@
               prop: 'engineLevel',
               newValue: $event.target.value
             })"
-            :disabled="$dataStore.user.canEdit === false">
+            :disabled="$dataStore.user.userrole.rules.canChangeProperties.allowed === false">
             <option value="1">1</option>
             <option value="2">2</option>
             <option value="3">3</option>
@@ -150,12 +160,14 @@
               propertie: 'tacho',
               }
             }"
-            class="col-span-2 flex justify-between cursor-pointer">
+            class="col-span-2 flex justify-between cursor-pointer"
+            v-if="$dataStore.user.userrole.rules.canViewAdvancedData.allowed">
             <span class="font-semibold">Rotation speed</span>
             <span class="text-right" v-if="device.tacho">{{device.tacho.tacho}} R/min</span>
           </router-link>
 
-          <div class="col-span-2">
+          <div class="col-span-2"
+            v-if="$dataStore.user.userrole.rules.canViewAdvancedData.allowed">
             <div class="flex justify-between">
               <span class="font-semibold">Lamp values (V)</span>
               <button

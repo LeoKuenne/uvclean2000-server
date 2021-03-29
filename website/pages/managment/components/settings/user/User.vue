@@ -1,18 +1,19 @@
 <template>
-  <div class="h-24 m-2 flex border border-gray-300 rounded overflow-hidden">
-    <div class="h-24 w-24 flex items-center justify-center bg-primary text-white">
+  <div class="m-2 flex border border-gray-300 rounded overflow-hidden shadow-sm">
+    <div class="w-24 p-2 flex items-center justify-center bg-primary text-white">
       <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" class="h-16 w-16" viewBox="0 0 16 16">
         <path d="M11 6a3 3 0 1 1-6 0 3 3 0 0 1 6 0z"/>
         <path fill-rule="evenodd" d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8zm8-7a7 7 0 0 0-5.468
           11.37C3.242 11.226 4.805 10 8 10s4.757 1.225 5.468 2.37A7 7 0 0 0 8 1z"/>
       </svg>
     </div>
-    <div class="w-full pl-2">
+    <div class="w-full p-2">
       <div class="flex items-center justify-between">
         <h1 class="font-bold text-lg">{{ user.username }}</h1>
-        <div class="flex space-x-2 m-2">
+        <div class="flex items-center space-x-2">
           <button
-           @click="$emit('editUser', user)">
+            v-if="this.$dataStore.user.userrole.rules.canEditUser.allowed"
+            @click="$emit('editUser', user)">
             <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" class="w-5 h-5 text-black" viewBox="0 0 16 16">
               <path d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707
                 0l1.293 1.293zm-1.75 2.456l-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25
@@ -32,13 +33,15 @@
           </svg> -->
         </div>
       </div>
-      <div class="pl-2">
-        <h2 class="font-bold text-base">Userrights</h2>
-        <div class="space-x-2 text-sm flex items-center">
-          <label for="cbxCanEdit">Can edit:</label>
-          <input type="checkbox" id="cbxCanEdit" disabled :checked="user.canEdit">
+      <h2 class="text-sm">Userrole: {{user.userrole.name}}</h2>
+      <!-- <div class="flex flex-col space-y-2 m-2">
+        <div class="space-x-2 text-sm flex items-center"
+          v-for="rule in user.userrole.rules" :key="rule.description">
+          <input type="checkbox" :id="'cbxuserrole' + rule.description"
+            disabled :checked="rule.allowed">
+          <label :for="'cbxuserrole' + rule.description">{{rule.description}}</label>
         </div>
-      </div>
+      </div> -->
     </div>
   </div>
 </template>
