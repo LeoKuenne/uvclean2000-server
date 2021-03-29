@@ -21,11 +21,11 @@
         @click="handleSubmit">
         Login
       </button>
-      <button
+      <!-- <button
         class="transform duration-75 hover:scale-105"
         @click="handleSubmitAsGuest">
         Login as guest
-      </button>
+      </button> -->
     </form>
     <h1 class="p-2 font-bold text-lg text-center text-red-500" key="message"
       :class="[message === '' ? 'hidden' : 'visible']">
@@ -45,31 +45,6 @@ export default {
     };
   },
   methods: {
-    handleSubmitAsGuest() {
-      fetch('/login/', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-        body: JSON.stringify({
-          username: 'guest',
-          password: 'guest',
-        }),
-        // redirect: 'follow',
-      }).then(async (response) => {
-        if (response.status !== 201) {
-          const error = await response.json();
-          throw new Error(error.msg);
-        }
-        if (response.redirected) {
-          window.location.href = response.url;
-        }
-        return response;
-      }).catch((error) => {
-        this.message = error;
-      });
-    },
     async handleSubmit(e) {
       e.preventDefault();
       if (this.username.length > 0 && this.password.length > 0) {
@@ -83,10 +58,14 @@ export default {
             username: this.username,
             password: this.password,
           }),
-        }).then((response) => response.json()).then((response) => {
+        }).then(async (response) => {
+          console.log(response);
           if (response.status !== 201) {
-            throw new Error(response.msg);
+            const msg = await response.json();
+            throw new Error(msg.msg);
           }
+          return response.json();
+        }).then((response) => {
           console.log('Test', response);
           if (response.url) {
             window.location.href = response.url;
