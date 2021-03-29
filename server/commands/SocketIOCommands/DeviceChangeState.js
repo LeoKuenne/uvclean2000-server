@@ -63,7 +63,7 @@ module.exports = function register(server, db, io, mqtt, ioSocket) {
       await ChangeState.execute(setting, mqtt, newState.serialnumber, newState.prop,
         newState.newValue);
 
-      if (newState.prop === 'engineState' && newState.newValue === 'true') {
+      if (config.mqtt.sendEngineLevelWhenOn && newState.prop === 'engineState' && newState.newValue === 'true') {
         logger.debug('Device is turning on, sending change engineLevel state to with value %s', device.serialnumber, device.engineLevel);
         await ChangeState.execute(setting, mqtt, newState.serialnumber, 'engineLevel', device.engineLevel.toString());
       }
