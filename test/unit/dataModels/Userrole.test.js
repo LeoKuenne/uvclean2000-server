@@ -1,5 +1,5 @@
 /* eslint-disable no-new */
-const Userrole = require('../../server/dataModels/Userrole');
+const Userrole = require('../../../server/dataModels/Userrole');
 
 it('Creates an userrole', () => {
   const allRights = Userrole.getUserroleRights();
