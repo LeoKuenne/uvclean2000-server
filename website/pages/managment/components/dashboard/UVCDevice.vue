@@ -318,49 +318,35 @@ export default {
           break;
       }
     },
-  },
-  watch: {
-    device: {
-      deep: true,
-      handler() {
-        this.showCurrentBodyStateSection = this.device.currentBodyState.state.toLowerCase() !== 'ok';
-        this.showCurrentFanStateSection = this.device.currentFanState.state.toLowerCase() !== 'ok';
-        this.currentLampStates = this.device.currentLampState.filter((lampState) => lampState.state.toLowerCase() !== 'ok');
+    setAlarmPopUp() {
+      console.log('Setting alarm popup..');
+      this.showCurrentBodyStateSection = this.device.currentBodyState.state.toLowerCase() !== 'ok';
+      this.showCurrentFanStateSection = this.device.currentFanState.state.toLowerCase() !== 'ok';
+      this.currentLampStates = this.device.currentLampState.filter((lampState) => lampState.state.toLowerCase() !== 'ok');
 
-        this.alarmPropertie = [];
-        this.currentLampStates.forEach((states) => {
-          this.alarmPropertie.push(`Lamp: ${states.lamp}, State: ${states.state}`);
-        });
-        if (this.showCurrentFanStateSection) this.alarmPropertie.push('Fan States: Alarm');
-        if (this.showCurrentBodyStateSection) this.alarmPropertie.push('Body States: Alarm');
+      this.alarmPropertie = [];
+      this.currentLampStates.forEach((states) => {
+        this.alarmPropertie.push(`Lamp: ${states.lamp}, State: ${states.state}`);
+      });
 
-        if (this.showAlarmPopup === false && this.device.alarmState === true) {
-          this.showAlarmPopup = true;
-        }
-        if (this.showAlarmPopup === true && this.device.alarmState === false) {
-          this.showAlarmPopup = false;
-        }
-      },
+      if (this.showCurrentFanStateSection) this.alarmPropertie.push('Fan States: Alarm');
+      if (this.showCurrentBodyStateSection) this.alarmPropertie.push('Body States: Alarm');
+
+      if (this.showAlarmPopup === false && this.device.alarmState === true) {
+        this.showAlarmPopup = true;
+      }
+      if (this.showAlarmPopup === true && this.device.alarmState === false) {
+        this.showAlarmPopup = false;
+      }
     },
   },
   created() {
-    this.showCurrentBodyStateSection = this.device.currentBodyState.state.toLowerCase() !== 'ok';
-    this.showCurrentFanStateSection = this.device.currentFanState.state.toLowerCase() !== 'ok';
-    this.currentLampStates = this.device.currentLampState.filter((lampState) => lampState.state.toLowerCase() !== 'ok');
+    this.setAlarmPopUp();
 
-    this.alarmPropertie = [];
-    this.currentLampStates.forEach((states) => {
-      this.alarmPropertie.push(`Lamp: ${states.lamp}, State: ${states.state}`);
+    this.$root.$on('deviceAlarmChanged', (serialnumber) => {
+      if (serialnumber !== this.device.serialnumber) return;
+      this.setAlarmPopUp();
     });
-    if (this.showCurrentFanStateSection) this.alarmPropertie.push('Fan States: Alarm');
-    if (this.showCurrentBodyStateSection) this.alarmPropertie.push('Body States: Alarm');
-
-    if (this.showAlarmPopup === false && this.device.alarmState === true) {
-      this.showAlarmPopup = true;
-    }
-    if (this.showAlarmPopup === true && this.device.alarmState === false) {
-      this.showAlarmPopup = false;
-    }
   },
   data() {
     return {

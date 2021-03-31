@@ -195,9 +195,11 @@ fetch('/api/loggedinUser')
                   break;
                 case 'currentFanState':
                   dev[props.prop] = { state: `${props.newValue}` };
+                  this.$emit('deviceAlarmChanged', props.serialnumber);
                   break;
                 case 'currentBodyState':
                   dev[props.prop] = { state: `${props.newValue}` };
+                  this.$emit('deviceAlarmChanged', props.serialnumber);
                   break;
                 case 'engineState':
                 case 'eventMode':
@@ -227,6 +229,7 @@ fetch('/api/loggedinUser')
                   } else {
                     propertie[props.lamp - 1].state = props.newValue;
                   }
+                  this.$emit('deviceAlarmChanged', props.serialnumber);
                   break;
                 case 'currentLampValue':
                   propertie = dev[props.prop];
