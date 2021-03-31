@@ -1,5 +1,5 @@
 const MainLogger = require('../../Logger.js').logger;
-const { encrypt } = require('../MQTTCommands/middleware/encrypt');
+const MQTTCommand = require('../MQTTCommands/MQTTCommand');
 
 const logger = MainLogger.child({ service: 'AcknowledgeDeviceAlarmCommand' });
 
@@ -9,17 +9,13 @@ async function execute(db, io, mqtt, message) {
   if (message.serialnumber !== undefined && typeof message.serialnumber !== 'string') {
     throw new Error('Serialnumber must be defined and of type string');
   }
-  const encryptedValue = await encrypt('true');
 
-  await db.getDevice(message.serialnumber)
-    .catch((e) => {
-      throw e;
-    }).then((databaseDevice) => {
-      logger.debug('Sending device acknowledge alarm mqtt message');
+  const dbDevice = await db.getDevice(message.serialnumber);
+  logger.debug('Sending device acknowledge alarm mqtt message');
 
-      mqtt.publish(`UVClean/${databaseDevice.serialnumber}/acknowledge `, (config.mqtt.useEncryption) ? encryptedValue : 'true');
-      io.emit('info', { message: `Acknowledgement send to device ${databaseDevice.serialnumber}` });
-    });
+  await MQTTCommand.execute(undefined, mqtt, dbDevice.serialnumber, 'acknowledge', undefined, true);
+
+  io.emit('info', { message: `Acknowledgement send to device ${dbDevice.serialnumber}` });
 }
 
 module.exports = function register(server, db, io, mqtt, ioSocket) {
