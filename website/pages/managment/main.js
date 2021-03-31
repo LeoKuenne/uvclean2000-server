@@ -106,10 +106,8 @@ fetch('/api/loggedinUser')
               grou.alarmState = `${alarmProp.alarmValue}` !== 'false';
               group.devices.filter((dev) => {
                 if (dev.serialnumber === alarmProp.serialnumber) {
-                  console.log(dev);
                   // eslint-disable-next-line no-param-reassign
                   dev.alarmState = `${alarmProp.alarmValue}` !== 'false';
-                  console.log(dev);
                 }
                 return dev;
               });
@@ -195,9 +193,11 @@ fetch('/api/loggedinUser')
                   break;
                 case 'currentFanState':
                   dev[props.prop] = { state: `${props.newValue}` };
+                  this.$emit('deviceAlarmChanged', props.serialnumber);
                   break;
                 case 'currentBodyState':
                   dev[props.prop] = { state: `${props.newValue}` };
+                  this.$emit('deviceAlarmChanged', props.serialnumber);
                   break;
                 case 'engineState':
                 case 'eventMode':
@@ -227,6 +227,7 @@ fetch('/api/loggedinUser')
                   } else {
                     propertie[props.lamp - 1].state = props.newValue;
                   }
+                  this.$emit('deviceAlarmChanged', props.serialnumber);
                   break;
                 case 'currentLampValue':
                   propertie = dev[props.prop];

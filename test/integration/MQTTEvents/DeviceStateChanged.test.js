@@ -310,7 +310,7 @@ describe('DeviceStateChanged MQTT Module', () => {
   });
 });
 
-describe('Iterating over different states', () => {
+describe('Iterating over different alarm states', () => {
   const mqtt = new EventEmitter();
   const io = new EventEmitter();
   const server = new EventEmitter();
