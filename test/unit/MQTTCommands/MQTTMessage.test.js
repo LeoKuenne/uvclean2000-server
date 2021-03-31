@@ -1,4 +1,4 @@
-const MQTTCommand = require('../../../server/commands/MQTTCommands/MQTTCommand');
+const MQTTMessage = require('../../../server/commands/MQTTCommands/MQTTMessage');
 const { decodeFernetToken } = require('../../TestUtitities');
 
 global.config = {
@@ -11,7 +11,7 @@ global.config = {
 };
 
 const mqtt = {
-  publish: {},
+  publish: jest.fn(),
 };
 
 beforeAll(async () => {
@@ -23,28 +23,29 @@ afterAll(async () => {
 describe.each([
   true,
   false,
-])('MQTT Command unit', (encryption) => {
+])('MQTT Message unit', (encryption) => {
   describe((encryption) ? 'With encryption' : 'Without encryption', () => {
     beforeAll(() => {
       config.mqtt.useEncryption = encryption;
     });
 
     it.each([
-      'acknowledge',
-      'reset',
-      'test/ 123 ',
-    ])('Sends an mqtt message with command %s', async (path, done) => {
+      ['acknowledge', 'false'],
+      ['changeState', 'false'],
+      ['changeState/engineState', 'false'],
+      ['changeState/alarm/1', 'Alarm'],
+    ])('Sends an mqtt message with command %s and value %s', async (path, value, done) => {
       mqtt.publish = async (topic, message) => {
         expect(topic).toEqual(`UVClean/1/${path}`);
         if (encryption) {
           const decode = await decodeFernetToken(message, config.mqtt.secret);
-          expect(decode).toEqual('false');
+          expect(decode).toEqual(value);
         } else {
-          expect(message).toEqual('false');
+          expect(message).toEqual(value);
         }
         done();
       };
-      await MQTTCommand.execute(undefined, mqtt, '1', path, false);
+      await MQTTMessage.execute(undefined, mqtt, '1', path, value);
     });
   });
 });
