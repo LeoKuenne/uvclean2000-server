@@ -46,6 +46,11 @@ module.exports = class MongoDBAdapter extends EventEmitter {
     return mongoose.connection.readyState === 1;
   }
 
+  // eslint-disable-next-line class-methods-use-this
+  getConnection() {
+    return mongoose.connection;
+  }
+
   async connect() {
     logger.info(`Trying to connect to: mongodb://${this.uri}${(this.databaseName !== '') ? `/${this.databaseName}` : ''}`);
     await mongoose.connect(`mongodb://${this.uri}${(this.databaseName !== '') ? `/${this.databaseName}` : ''}`, {
@@ -91,6 +96,8 @@ module.exports = class MongoDBAdapter extends EventEmitter {
   /**
    * Adds a Device to the MongoDB 'devices' database. Throws an error if the validation fails.
    * @param {Object} device Deviceobject that must have the properties serialnumber and name
+   * @param {string} device.serialnumber The serialnumber of the device
+   * @param {string} device.name The name of the device
    * @returns {Promise<mongoose.Document<any>>} The saved mongoose document
    */
   async addDevice(device) {
