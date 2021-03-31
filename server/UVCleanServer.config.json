@@ -62,7 +62,8 @@
       "ttl": 60,
       "broker": "192.168.4.10",
       "port": 1883,
-      "sendEngineLevelWhenOn": false
+      "sendEngineLevelWhenOn": false,
+      "sendEngineLevelWhenOnDelay": 2
     },
     "database": {
       "databaseType": "mongoDB",
@@ -135,7 +136,8 @@
       "ttl": 60,
       "broker": "127.0.0.1",
       "port": 1883,
-      "sendEngineLevelWhenOn": false
+      "sendEngineLevelWhenOn": false,
+      "sendEngineLevelWhenOnDelay": 2
     },
     "database": {
       "databaseType": "mongoDB",
@@ -207,7 +209,8 @@
       "useTTL": true,
       "broker": "192.168.178.66",
       "port": 1883,
-      "sendEngineLevelWhenOn": false
+      "sendEngineLevelWhenOn": false,
+      "sendEngineLevelWhenOnDelay": 2
     },
     "database": {
       "databaseType": "mongoDB",

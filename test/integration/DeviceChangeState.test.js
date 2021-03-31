@@ -10,6 +10,7 @@ global.config = {
     useEncryption: false,
     secret: 'C:/workspace_nodejs/uvclean2000-server/server/ssl/fernetSecret',
     sendEngineLevelWhenOn: true,
+    sendEngineLevelWhenOnDelay: 1,
   },
 };
 
@@ -125,7 +126,7 @@ describe('DeviceChangeState Module', () => {
   it.each([
     [true],
     [false],
-  ])('changeState with prop engineState and value %s, emits a second mqtt message for setting the current engineLevel if sendEndingeLevenWhenOn is true', async (value, done) => {
+  ])('changeState emits a second mqtt message after sendEndingeLevenWhenOnDelay for engineLevel if sendEndingeLevenWhenOn is true when device is turning on, device state is %s', async (value, done) => {
     config.mqtt.sendEngineLevelWhenOn = true;
     const io = new EventEmitter();
     const ioSocket = new EventEmitter();
@@ -150,17 +151,19 @@ describe('DeviceChangeState Module', () => {
     };
 
     io.on('info', () => {
-      try {
-        expect(mqtt.publish.mock.calls).toEqual((value) ? [
-          ['UVClean/1/changeState/engineState', prop.newValue],
-          ['UVClean/1/changeState/engineLevel', '1'],
-        ] : [
-          ['UVClean/1/changeState/engineState', prop.newValue],
-        ]);
-        done();
-      } catch (error) {
-        done(error);
-      }
+      setTimeout(() => {
+        try {
+          expect(mqtt.publish.mock.calls).toEqual((value) ? [
+            ['UVClean/1/changeState/engineState', prop.newValue],
+            ['UVClean/1/changeState/engineLevel', '1'],
+          ] : [
+            ['UVClean/1/changeState/engineState', prop.newValue],
+          ]);
+          done();
+        } catch (error) {
+          done(error);
+        }
+      }, config.mqtt.sendEngineLevelWhenOnDelay * 1000);
     });
 
     server.on('error', (e) => {
@@ -173,7 +176,7 @@ describe('DeviceChangeState Module', () => {
   it.each([
     [true],
     [false],
-  ])('changeState with prop engineState and value %s, does not emit an engineLevel event if the sendEngineLevelWhenOn in the config is false', async (value, done) => {
+  ])('changeState does not emit an engineLevel message if sendEngineLevelWhenOn is false and device is turning on, device state is %s', async (value, done) => {
     config.mqtt.sendEngineLevelWhenOn = false;
     const io = new EventEmitter();
     const ioSocket = new EventEmitter();

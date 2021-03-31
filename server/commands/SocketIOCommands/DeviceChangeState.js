@@ -65,7 +65,9 @@ module.exports = function register(server, db, io, mqtt, ioSocket) {
 
       if (config.mqtt.sendEngineLevelWhenOn && newState.prop === 'engineState' && newState.newValue === 'true') {
         logger.debug('Device is turning on, sending change engineLevel state to with value %s', device.serialnumber, device.engineLevel);
-        await ChangeState.execute(setting, mqtt, newState.serialnumber, 'engineLevel', device.engineLevel.toString());
+        setTimeout(async () => {
+          await ChangeState.execute(setting, mqtt, newState.serialnumber, 'engineLevel', device.engineLevel.toString());
+        }, config.mqtt.sendEngineLevelWhenOnDelay * 1000);
       }
 
       io.emit('info', { service: 'DeviceChangeStateCommand', message: `Sended changeState (${newState.prop}) MQTT message to device ${newState.serialnumber}` });
