@@ -106,10 +106,8 @@ fetch('/api/loggedinUser')
               grou.alarmState = `${alarmProp.alarmValue}` !== 'false';
               group.devices.filter((dev) => {
                 if (dev.serialnumber === alarmProp.serialnumber) {
-                  console.log(dev);
                   // eslint-disable-next-line no-param-reassign
                   dev.alarmState = `${alarmProp.alarmValue}` !== 'false';
-                  console.log(dev);
                 }
                 return dev;
               });

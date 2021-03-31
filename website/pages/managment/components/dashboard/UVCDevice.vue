@@ -289,10 +289,7 @@ export default {
           this.$emit('edit', this.device);
           break;
         case 'View chart':
-          await this.$router.push({ name: 'DeviceChart', query: { device: this.device.serialnumber } })
-            .catch((failure) => {
-              console.log(failure);
-            });
+          await this.$router.push({ name: 'DeviceChart', query: { device: this.device.serialnumber } });
           break;
         case 'Add to Group':
           this.$emit('assignGroup', this.device);
@@ -319,7 +316,6 @@ export default {
       }
     },
     setAlarmPopUp() {
-      console.log('Setting alarm popup..');
       this.showCurrentBodyStateSection = this.device.currentBodyState.state.toLowerCase() !== 'ok';
       this.showCurrentFanStateSection = this.device.currentFanState.state.toLowerCase() !== 'ok';
       this.currentLampStates = this.device.currentLampState.filter((lampState) => lampState.state.toLowerCase() !== 'ok');
