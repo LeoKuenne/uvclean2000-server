@@ -1,5 +1,5 @@
-const MongoDBAdapter = require('../../server/databaseAdapters/mongoDB/MongoDBAdapter.js');
-const Userrole = require('../../server/dataModels/Userrole.js');
+const MongoDBAdapter = require('../../../server/databaseAdapters/mongoDB/MongoDBAdapter.js');
+const Userrole = require('../../../server/dataModels/Userrole.js');
 
 let database = null;
 

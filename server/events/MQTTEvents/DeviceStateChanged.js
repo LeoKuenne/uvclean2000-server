@@ -6,32 +6,44 @@ const logger = MainLogger.child({ service: 'DeviceStateChangedEvent' });
 
 const stack = [];
 
-function hasDeviceAlarm(databaseDevice, hasAlarm) {
-  if (hasAlarm === true && databaseDevice.alarmState === false) {
+/**
+ * Checks the given devices alarmState against the properties to have an alarm
+ * @param {Object} databaseDevice Device object from database
+ * @param {boolean} propertiesHaveAlarm wether the given devices properties have an alarm
+ * @returns {boolean} wether the current device has an alarm or not
+ */
+function hasDeviceAlarm(databaseDevice, propertiesHaveAlarm) {
+  if (propertiesHaveAlarm === true && databaseDevice.alarmState === false) {
     return true;
   }
-  if (hasAlarm === false && databaseDevice.alarmState === true) {
+  if (propertiesHaveAlarm === false && databaseDevice.alarmState === true) {
     return false;
   }
   return undefined;
 }
 
+/**
+ * Checks wether an alarm has occured with the current change
+ * @param {MongoDBAdapter} db Database adapter
+ * @param {Object} device Device Object from database
+ * @param {Object} io Socket io server
+ * @param {Object} newState the typical newState object
+ */
 async function checkAlarm(db, device, io, newState) {
-  // Alarm Checking
-  const deviceShouldHaveAlarm = UVCDevice.checkAlarmState(device);
+  const devicePropertiesAlarmState = UVCDevice.checkAlarmState(device);
   const deviceGroup = (device.group._id !== undefined)
     ? await db.getGroup(device.group._id.toString()) : undefined;
 
-  const alarmStateChangedToAlarm = hasDeviceAlarm(device, deviceShouldHaveAlarm);
+  const alarmStateChangedToAlarm = hasDeviceAlarm(device, devicePropertiesAlarmState);
 
-  if (alarmStateChangedToAlarm === true && alarmStateChangedToAlarm !== undefined) {
+  if (alarmStateChangedToAlarm === true) {
     logger.warn(`Device ${newState.serialnumber} has a alarm`);
     await db.setDeviceAlarm(newState.serialnumber, true);
     io.emit('device_alarm', {
       serialnumber: newState.serialnumber,
       alarmValue: true,
     });
-  } else if (alarmStateChangedToAlarm === false && alarmStateChangedToAlarm !== undefined) {
+  } else if (alarmStateChangedToAlarm === false) {
     logger.info(`Device ${newState.serialnumber} has no alarm anymore`);
     await db.setDeviceAlarm(newState.serialnumber, false);
     io.emit('device_alarm', {
@@ -44,7 +56,7 @@ async function checkAlarm(db, device, io, newState) {
     const group = await db.getGroup(device.group._id.toString());
 
     if (deviceGroup.alarmState !== group.alarmState) {
-      logger.warn(`Group ${group.id} has ${group.alarmState ? 'a alarm' : 'no alarm anymore'}`);
+      logger.info(`Group ${group.id} has ${group.alarmState ? 'a alarm' : 'no alarm anymore'}`);
       io.emit('group_deviceAlarm', {
         serialnumber: newState.serialnumber,
         group: group.id.toString(),

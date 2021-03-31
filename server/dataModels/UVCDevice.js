@@ -32,6 +32,11 @@ const uvcDeviceSchema = new mongoose.Schema({
 });
 const uvcDeviceModel = mongoose.model('UVCDevice', uvcDeviceSchema);
 
+/**
+ * Checks wether the current device' properties for an alarm
+ * @param {Object} device database device object
+ * @returns {Boolean} Wether the device has an alarm
+ */
 function checkAlarmState(device) {
   const lampStates = device.currentLampState.filter((state) => state.state.toLowerCase() === 'alarm');
   if (lampStates.length !== 0

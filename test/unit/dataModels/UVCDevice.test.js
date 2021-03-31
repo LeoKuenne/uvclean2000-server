@@ -1,4 +1,4 @@
-const UVCDevice = require('../../server/dataModels/UVCDevice');
+const UVCDevice = require('../../../server/dataModels/UVCDevice');
 
 describe('parseStates function', () => {
   it('Parses engingeState correctly', () => {

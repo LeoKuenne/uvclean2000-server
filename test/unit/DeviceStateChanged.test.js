@@ -86,7 +86,7 @@ describe('function hasDeviceAlarm', () => {
     [false, false, undefined],
     [false, true, true],
     [true, false, false],
-  ])('databaseDevice has alarm state %s, hasAlarm is %s, should be %s', (databaseDeviceState, hasAlarmState, result) => {
+  ])('devices alarmState is %s, devices properties alarm is %s, should be %s', (databaseDeviceState, hasAlarmState, result) => {
     expect(hasDeviceAlarm({ alarmState: databaseDeviceState }, hasAlarmState)).toBe(result);
   });
 });

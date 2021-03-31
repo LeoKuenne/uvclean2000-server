@@ -1,6 +1,6 @@
 const EventEmitter = require('events');
-const { register, updateGroup } = require('../../server/events/MQTTEvents/DeviceStateChanged');
-const MongoDBAdapter = require('../../server/databaseAdapters/mongoDB/MongoDBAdapter.js');
+const { register, updateGroup } = require('../../../server/events/MQTTEvents/DeviceStateChanged');
+const MongoDBAdapter = require('../../../server/databaseAdapters/mongoDB/MongoDBAdapter.js');
 
 let database;
 
@@ -310,7 +310,7 @@ describe('DeviceStateChanged MQTT Module', () => {
   });
 });
 
-describe('Iterating over different states', () => {
+describe('Iterating over different alarm states', () => {
   const mqtt = new EventEmitter();
   const io = new EventEmitter();
   const server = new EventEmitter();

@@ -1,6 +1,6 @@
 const EventEmitter = require('events');
-const Module = require('../../server/commands/SocketIOCommands/SetDevicesInGroup');
-const MongoDBAdapter = require('../../server/databaseAdapters/mongoDB/MongoDBAdapter.js');
+const SetDevicesInGroup = require('../../../server/commands/SocketIOCommands/SetDevicesInGroup');
+const MongoDBAdapter = require('../../../server/databaseAdapters/mongoDB/MongoDBAdapter.js');
 
 let database;
 
@@ -34,10 +34,11 @@ afterAll(async () => {
 });
 
 describe('SetDevicesInGroup SocketIO Module', () => {
-  afterEach(async () => {
+  beforeEach(async () => {
     await database.clearCollection('uvcdevices');
     await database.clearCollection('uvcgroups');
-    // jest.resetAllMocks();
+    jest.resetAllMocks();
+    jest.clearAllMocks();
   });
 
   it.each([
@@ -89,7 +90,7 @@ describe('SetDevicesInGroup SocketIO Module', () => {
     const spyAddDeviceToGroup = jest.spyOn(database, 'addDeviceToGroup');
     const spyDeleteDeviceFromGroup = jest.spyOn(database, 'deleteDeviceFromGroup');
 
-    Module(server, database, io, mqtt, ioSocket);
+    SetDevicesInGroup(server, database, io, mqtt, ioSocket);
 
     io.on('group_deviceAdded', async () => {
       try {

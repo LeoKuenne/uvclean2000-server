@@ -1,4 +1,6 @@
 const jwt = require('jsonwebtoken');
+const fernet = require('fernet');
+const fs = require('fs');
 const User = require('../server/dataModels/User');
 const Userrole = require('../server/dataModels/Userrole');
 
@@ -51,4 +53,23 @@ module.exports = {
   }, 'SECRETKEY', {
     expiresIn: '1d',
   }),
+  decodeFernetToken(text, secretPath) {
+    const secret = fernet.setSecret(fs.readFileSync(secretPath, { encoding: 'base64' }));
+    const token = new fernet.Token({
+      secret,
+      token: text,
+      ttl: 1,
+    });
+    const decoded = token.decode();
+    if (decoded === text) throw new Error(`Could not decode ${text}`);
+    return decoded;
+  },
+  async encodeFernetToken(text, secretPath) {
+    const secret = fernet.setSecret(fs.readFileSync(secretPath, { encoding: 'base64' }));
+    const token = new fernet.Token({
+      secret,
+    });
+    const encoded = await token.encode(text);
+    return encoded;
+  },
 };

@@ -1,6 +1,6 @@
 {
   "env": "production",
-  "version": "1.1.2b3",
+  "version": "1.1.2b4",
   "production": {
     "desc": "Production, frontend build completed and placed in dashboard/static, Backend is running on server. Cors is disabled",
     "logging": {
@@ -62,7 +62,8 @@
       "ttl": 60,
       "broker": "192.168.4.10",
       "port": 1883,
-      "sendEngineLevelWhenOn": false
+      "sendEngineLevelWhenOn": false,
+      "sendEngineLevelWhenOnDelay": 2
     },
     "database": {
       "databaseType": "mongoDB",
@@ -130,12 +131,13 @@
     },
     "mqtt": {
       "secret": "C:/workspace_nodejs/uvclean2000-server/server/ssl/fernetSecret",
-      "useEncryption": true,
+      "useEncryption": false,
       "useTTL": true,
       "ttl": 60,
       "broker": "127.0.0.1",
       "port": 1883,
-      "sendEngineLevelWhenOn": false
+      "sendEngineLevelWhenOn": false,
+      "sendEngineLevelWhenOnDelay": 2
     },
     "database": {
       "databaseType": "mongoDB",
@@ -207,7 +209,8 @@
       "useTTL": true,
       "broker": "192.168.178.66",
       "port": 1883,
-      "sendEngineLevelWhenOn": false
+      "sendEngineLevelWhenOn": false,
+      "sendEngineLevelWhenOnDelay": 2
     },
     "database": {
       "databaseType": "mongoDB",
