@@ -486,6 +486,15 @@ describe('MongoDBAdapter Functions', () => {
         expect(volumes.length - 2).toBe(airVolumes.length);
 
         for (let i = 0; i < airVolumes.length; i += 1) {
+          expect(airVolumes).toEqual(
+            expect.arrayContaining([
+              expect.objectContaining({
+                device: '1',
+                volume: volumes[i].volume,
+                date: volumes[i].date,
+              }),
+            ]),
+          );
           expect(airVolumes[i].device).toBe('1');
           expect(airVolumes[i].volume).toBe(volumes[i].volume);
         }

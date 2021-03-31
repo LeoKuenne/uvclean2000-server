@@ -240,9 +240,9 @@ describe('Express Route testing', () => {
         id: user._id.toString(),
         username: user.username,
         password: user.password,
-        userrole,
+        userrole: expect.objectContaining(userrole),
       },
-      url: `/ui/managment?user=${user.username}`,
+      url: '/ui/managment',
     });
     expect(res.header['set-cookie'][0]).toMatch(`UVCleanSID=${token}`);
 
