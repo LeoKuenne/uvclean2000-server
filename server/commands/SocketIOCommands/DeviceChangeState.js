@@ -60,12 +60,12 @@ module.exports = function register(server, db, io, mqtt, ioSocket) {
       const setting = await db.getSetting('UVCServerSetting');
       const device = await db.getDevice(newState.serialnumber);
 
-      await MQTTDeviceChangeState.execute(setting, mqtt, newState.serialnumber, newState.prop,
+      await MQTTDeviceChangeState.execute(mqtt, newState.serialnumber, newState.prop,
         newState.newValue);
 
       if (config.mqtt.sendEngineLevelWhenOn && newState.prop === 'engineState' && newState.newValue === 'true') {
         logger.debug('Device is turning on, sending change engineLevel state to with value %s', device.serialnumber, device.engineLevel);
-        await MQTTDeviceChangeState.execute(setting, mqtt, newState.serialnumber, 'engineLevel', device.engineLevel.toString());
+        await MQTTDeviceChangeState.execute(mqtt, newState.serialnumber, 'engineLevel', device.engineLevel.toString());
       }
 
       io.emit('info', { service: 'DeviceChangeStateCommand', message: `Sended changeState (${newState.prop}) MQTT message to device ${newState.serialnumber}` });

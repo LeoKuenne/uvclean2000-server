@@ -1,5 +1,5 @@
 const EventEmitter = require('events');
-const register = require('../../server/commands/SocketIOCommands/DeviceChangeState');
+const DeviceChangeState = require('../../server/commands/SocketIOCommands/DeviceChangeState');
 const MongoDBAdapter = require('../../server/databaseAdapters/mongoDB/MongoDBAdapter.js');
 const Settings = require('../../server/dataModels/Settings');
 
@@ -40,7 +40,7 @@ describe('DeviceChangeState Module', () => {
     const mqtt = new EventEmitter();
     const server = new EventEmitter();
 
-    register(server, database, io, mqtt, ioSocket);
+    DeviceChangeState(server, database, io, mqtt, ioSocket);
     server.on('error', (e) => {
       try {
         expect(e.error.message).toMatch(error);
@@ -61,7 +61,7 @@ describe('DeviceChangeState Module', () => {
     const server = new EventEmitter();
 
     const device1 = await database.addDevice({ name: 'Device 1', serialnumber: '1' });
-    register(server, database, io, mqtt, ioSocket);
+    DeviceChangeState(server, database, io, mqtt, ioSocket);
 
     const prop = {
       serialnumber: device1.serialnumber,
@@ -98,7 +98,7 @@ describe('DeviceChangeState Module', () => {
     const server = new EventEmitter();
 
     const device1 = await database.addDevice({ name: 'Device 1', serialnumber: '1' });
-    register(server, database, io, mqtt, ioSocket);
+    DeviceChangeState(server, database, io, mqtt, ioSocket);
 
     const prop = {
       serialnumber: device1.serialnumber,
@@ -141,7 +141,7 @@ describe('DeviceChangeState Module', () => {
       engineLevel: 1,
     });
 
-    register(server, database, io, mqtt, ioSocket);
+    DeviceChangeState(server, database, io, mqtt, ioSocket);
 
     const prop = {
       serialnumber: device1.serialnumber,
@@ -189,7 +189,7 @@ describe('DeviceChangeState Module', () => {
       engineLevel: 1,
     });
 
-    register(server, database, io, mqtt, ioSocket);
+    DeviceChangeState(server, database, io, mqtt, ioSocket);
 
     const prop = {
       serialnumber: device1.serialnumber,

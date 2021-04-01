@@ -21,7 +21,7 @@ beforeAll(async () => {
   database = new MongoDBAdapter(global.__MONGO_URI__.replace('mongodb://', ''), '');
   await database.connect();
   agenda = new AgendaScheduler(`${global.__MONGO_URI__}`, server, database, mqtt);
-  // agenda = new AgendaScheduler('mongodb://192.168.178.66/agenda', database, mqtt);
+  // agenda = new AgendaScheduler('mongodb://192.168.178.66/agenda', server, database, mqtt);
   await agenda.startScheduler();
 });
 

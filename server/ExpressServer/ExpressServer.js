@@ -18,12 +18,14 @@ const DeleteUserroleCommand = require('../commands/UserCommand/DeleteUserroleCom
 const UpdateUserroleNameCommand = require('../commands/UserCommand/UpdateUserroleNameCommand.js');
 const UpdateUserroleRightsCommand = require('../commands/UserCommand/UpdateUserroleRightsCommand.js');
 const AuthenticationError = require('../errors/AuthenticationError.js');
+const schedulerRoutes = require('./routes/scheduler');
 
 const logger = MainLogger.child({ service: 'ExpressServer' });
 
 module.exports = class ExpressServer {
-  constructor(server, database) {
+  constructor(server, database, scheduler) {
     this.database = database;
+    this.agenda = scheduler;
 
     const options = {};
     if (config.http.secure) {
@@ -43,9 +45,14 @@ module.exports = class ExpressServer {
       credentials: true,
     }));
     this.app.use(express.json());
+    this.app.use(cookieParser());
 
     const apiRouter = express.Router();
-    userMiddleware.register(database);
+
+    schedulerRoutes.register(this.agenda, server);
+
+    // Scheduler routes
+    apiRouter.use('/scheduler', userMiddleware.isLoggedIn, schedulerRoutes.router);
 
     // Userrole Routes
     apiRouter.post('/createUserrole', userMiddleware.isLoggedIn, async (req, res, next) => {
@@ -175,56 +182,6 @@ module.exports = class ExpressServer {
         });
       }
     });
-
-    this.app.use(cookieParser());
-
-    // Frontend Side
-    this.app.use('/ui/login', express.static(`${__dirname}/sites/login.html`));
-    this.app.use('/ui/managment', userMiddleware.isLoggedIn, express.static(`${__dirname}/sites/managment.html`));
-    this.app.use('/static/', express.static(`${__dirname}/sites/static/`));
-
-    this.app.post('/login', async (req, res, next) => {
-      logger.info('Got request on login route. Request: %o', req.body);
-
-      try {
-        if (req.cookies.UVCleanSID !== undefined) throw new Error('Session already exists. Please leave one session before entering another one');
-
-        const user = await this.database.getUser(req.body.username);
-        logger.debug('User exists in database');
-        const match = await bcrypt.compare(req.body.password, user.password);
-
-        if (match) {
-          logger.debug('Password matches with database entry');
-          const token = jwt.sign({
-            username: user.username,
-            userId: user.id,
-          },
-          'SECRETKEY', {
-            expiresIn: '1d',
-          });
-
-          res.cookie('UVCleanSID', token, { httpOnly: true });
-          logger.debug('Responding with cookie "UVCleanSID", token, %o with user %o', { httpOnly: true }, user);
-          return res.status(201).send({
-            user,
-            url: '/ui/managment',
-          });
-        }
-
-        logger.info('Password does not match with database entry');
-
-        return res.status(401).send({
-          msg: 'Username or password are incorrect!',
-        });
-      } catch (error) {
-        res.status(500).send({
-          msg: error.message,
-        });
-        server.emit('error', { service: 'ExpressServer', error });
-      }
-    });
-
-    this.app.get('/logout', (req, res) => res.clearCookie('UVCleanSID').send({ url: '/ui/login' }));
 
     // User routes
     apiRouter.post('/createUser', userMiddleware.isLoggedIn, userMiddleware.validateRegister, async (req, res, next) => {
@@ -620,6 +577,55 @@ module.exports = class ExpressServer {
       }
     });
 
+    // User log in, log out routes
+    this.app.post('/login', async (req, res, next) => {
+      logger.info('Got request on login route. Request: %o', req.body);
+
+      try {
+        if (req.cookies.UVCleanSID !== undefined) throw new Error('Session already exists. Please leave one session before entering another one');
+
+        const user = await this.database.getUser(req.body.username);
+        logger.debug('User exists in database');
+        const match = await bcrypt.compare(req.body.password, user.password);
+
+        if (match) {
+          logger.debug('Password matches with database entry');
+          const token = jwt.sign({
+            username: user.username,
+            userId: user.id,
+          },
+          'SECRETKEY', {
+            expiresIn: '1d',
+          });
+
+          res.cookie('UVCleanSID', token, { httpOnly: true });
+          logger.debug('Responding with cookie "UVCleanSID", token, %o with user %o', { httpOnly: true }, user);
+          return res.status(201).send({
+            user,
+            url: '/ui/managment',
+          });
+        }
+
+        logger.info('Password does not match with database entry');
+
+        return res.status(401).send({
+          msg: 'Username or password are incorrect!',
+        });
+      } catch (error) {
+        res.status(500).send({
+          msg: error.message,
+        });
+        server.emit('error', { service: 'ExpressServer', error });
+      }
+    });
+
+    this.app.get('/logout', (req, res) => res.clearCookie('UVCleanSID').send({ url: '/ui/login' }));
+
+    // Frontend Site
+    this.app.use('/ui/login', express.static(`${__dirname}/sites/login.html`));
+    this.app.use('/ui/managment', userMiddleware.isLoggedIn, express.static(`${__dirname}/sites/managment.html`));
+    this.app.use('/static/', express.static(`${__dirname}/sites/static/`));
+
     this.app.use('/api/', apiRouter);
 
     this.app.get('*', (req, res) => {
@@ -635,6 +641,7 @@ module.exports = class ExpressServer {
 
   stopExpressServer() {
     if (this.httpServer.listening) {
+      logger.info('Stopping Express Server');
       this.httpServer.close((err) => {
         if (err !== undefined) {
           logger.error(err);

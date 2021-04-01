@@ -89,7 +89,7 @@ module.exports = class AgendaScheduler {
     const jobsInDatabase = await this.agenda.jobs();
     const jobsWithCurrentName = jobsInDatabase.filter((job) => job.attrs.data.name === event.name);
     if (jobsWithCurrentName.length === 0) {
-      // Change time information to be taken from event
+      logger.info('Adding schedule event to database %o', event);
       const job = this.agenda.create('sendMQTTEvent', event).repeatEvery(event.time.toCron());
       await job.save();
       return event;

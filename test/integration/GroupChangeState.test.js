@@ -199,8 +199,8 @@ describe('GroupChangeState Module', () => {
     io.on('group_stateChanged', (options) => {
       expect(mqtt.publish.mock.calls).toEqual((value) ? [
         ['UVClean/1/changeState/engineState', 'true'],
-        ['UVClean/2/changeState/engineState', 'true'],
         ['UVClean/1/changeState/engineLevel', '1'],
+        ['UVClean/2/changeState/engineState', 'true'],
         ['UVClean/2/changeState/engineLevel', '1'],
       ] : [
         ['UVClean/1/changeState/engineState', 'false'],

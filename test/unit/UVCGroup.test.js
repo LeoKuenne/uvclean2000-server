@@ -1,4 +1,4 @@
-const { getDevicesWithWrongState, updateGroupDevicesWithOtherState } = require('../../server/dataModels/UVCGroup');
+const { updateDatabaseGroupDevicesWithOtherState } = require('../../server/dataModels/UVCGroup');
 const MongoDBAdapter = require('../../server/databaseAdapters/mongoDB/MongoDBAdapter.js');
 
 describe('Group update functions', () => {
@@ -22,12 +22,11 @@ describe('Group update functions', () => {
     'engineState',
     'eventMode',
     'engineLevel',
-  ])('updateGroupState updates the corret list for propertie %s in the group', async (prop) => {
+  ])('updateDatabaseGroupDevicesWithOtherState updates the corret list for propertie %s in the group', async (prop) => {
     const db = {
       updateGroupDevicesWithOtherState: jest.fn(),
     };
-
-    updateGroupDevicesWithOtherState(db, 'TestGroup', prop, ['1', '2']);
+    updateDatabaseGroupDevicesWithOtherState(db, 'TestGroup', prop, ['1', '2']);
     expect(db.updateGroupDevicesWithOtherState).toHaveBeenCalledWith('TestGroup', prop, ['1', '2']);
   });
 });

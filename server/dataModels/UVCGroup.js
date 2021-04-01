@@ -96,6 +96,7 @@ function checkAlarmState(group) {
 
 module.exports = {
   checkAlarmState,
+  updateDatabaseGroupDevicesWithOtherState,
   updateGroupDevicesWithOtherState,
   uvcGroupModel,
 };
