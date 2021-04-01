@@ -98,15 +98,25 @@ module.exports = class AgendaScheduler {
   }
 
   /**
-   *
-   * @param {ScheduleEvent} event
+   * Updates the event with the given name.
+   * @param {String} eventname The name of the event to be updated
+   * @param {ScheduleEvent} event The event to be updated with
    */
-  async updateEvent(event) {
-    const jobsInDatabase = await this.agenda.jobs({ name: event.name });
-    if (jobsInDatabase !== undefined) throw new Error('Event already exists');
+  async updateEvent(eventname, event) {
+    const jobsInDatabase = await this.agenda.jobs();
+    const jobsWithCurrentName = jobsInDatabase.filter((job) => job.attrs.data.name === eventname);
 
-    // Modify job
-    // Save job https://github.com/agenda/agenda#manually-working-with-a-job
+    if (jobsWithCurrentName.length !== 1) throw new Error('The event exists mulipletimes or does not exists');
+
+    jobsWithCurrentName[0].attrs.data.actions = event.actions;
+    await jobsWithCurrentName[0].save();
+    jobsWithCurrentName[0].attrs.data.time = event.time;
+    await jobsWithCurrentName[0].save();
+    jobsWithCurrentName[0].attrs.repeatInterval = event.time.toCron();
+    await jobsWithCurrentName[0].save();
+
+    // console.log(jobsWithCurrentName[0], event.actions);
+    return event;
   }
 
   /**

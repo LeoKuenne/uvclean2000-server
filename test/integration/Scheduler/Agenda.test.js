@@ -89,64 +89,7 @@ describe('Scheduling with agenda', () => {
       await database.clearCollection('groups');
     });
 
-    it('getEvent throws an error if the event does not exists', async () => {
-      try {
-        await agenda.getEvent('Test2');
-      } catch (error) {
-        expect(error.message).toMatch('The event exists mulipletimes or does not exists');
-      }
-    });
-
-    it('getEvent throws an error if the event exists multiple times', async () => {
-      const group = await database.addGroup({ name: 'Test Group' });
-
-      const scheduledEvents = [];
-      for (let i = 0; i < 10; i += 1) {
-        scheduledEvents.push(new ScheduleEvent(
-          `Test${i}`,
-          new Time([1, 2, 3, 4, 5, 6, 7], new Date(Date.now())),
-          [
-            new Action(group._id.toString(), 'engineState', 'true'),
-          ],
-        ));
-      }
-
-      await scheduledEvents.reduce(async (memo, event) => {
-        await memo;
-        await agenda.addEvent(event);
-      }, undefined);
-
-      try {
-        await agenda.getEvent('Test2');
-      } catch (error) {
-        expect(error.message).toMatch('The event exists mulipletimes or does not exists');
-      }
-    });
-
-    it('getEvent get a specific event from database', async () => {
-      const group = await database.addGroup({ name: 'Test Group' });
-
-      const scheduledEvents = [];
-      for (let i = 0; i < 10; i += 1) {
-        scheduledEvents.push(new ScheduleEvent(
-          `Test${i}`,
-          new Time([1, 2, 3, 4, 5, 6, 7], new Date(Date.now())),
-          [
-            new Action(group._id.toString(), 'engineState', 'true'),
-          ],
-        ));
-      }
-
-      await scheduledEvents.reduce(async (memo, event) => {
-        await memo;
-        await agenda.addEvent(event);
-      }, undefined);
-
-      const event = await agenda.getEvent('Test2');
-      expect(event).toEqual(scheduledEvents[2]);
-    });
-
-    it('getEvents gets all events from database', async () => {
+    it('gets all events from database', async () => {
       const group = await database.addGroup({ name: 'Test Group' });
 
       const scheduledEvents = [];
@@ -170,6 +113,70 @@ describe('Scheduling with agenda', () => {
     });
   });
 
+  describe('getEvent', () => {
+    beforeEach(async () => {
+      await agenda.deleteEvents();
+      await database.clearCollection('groups');
+    });
+
+    it('throws an error if the event does not exists', async () => {
+      try {
+        await agenda.getEvent('Test2');
+      } catch (error) {
+        expect(error.message).toMatch('The event exists mulipletimes or does not exists');
+      }
+    });
+
+    it('throws an error if the event exists multiple times', async () => {
+      const group = await database.addGroup({ name: 'Test Group' });
+
+      const scheduledEvents = [];
+      for (let i = 0; i < 10; i += 1) {
+        scheduledEvents.push(new ScheduleEvent(
+          `Test${i}`,
+          new Time([1, 2, 3, 4, 5, 6, 7], new Date(Date.now())),
+          [
+            new Action(group._id.toString(), 'engineState', 'true'),
+          ],
+        ));
+      }
+
+      await scheduledEvents.reduce(async (memo, event) => {
+        await memo;
+        await agenda.addEvent(event);
+      }, undefined);
+
+      try {
+        await agenda.getEvent('Test2');
+      } catch (error) {
+        expect(error.message).toMatch('The event exists mulipletimes or does not exists');
+      }
+    });
+
+    it('get a specific event from database', async () => {
+      const group = await database.addGroup({ name: 'Test Group' });
+
+      const scheduledEvents = [];
+      for (let i = 0; i < 10; i += 1) {
+        scheduledEvents.push(new ScheduleEvent(
+          `Test${i}`,
+          new Time([1, 2, 3, 4, 5, 6, 7], new Date(Date.now())),
+          [
+            new Action(group._id.toString(), 'engineState', 'true'),
+          ],
+        ));
+      }
+
+      await scheduledEvents.reduce(async (memo, event) => {
+        await memo;
+        await agenda.addEvent(event);
+      }, undefined);
+
+      const event = await agenda.getEvent('Test2');
+      expect(event).toEqual(scheduledEvents[2]);
+    });
+  });
+
   describe('deleteEvent', () => {
     beforeEach(async () => {
       await agenda.deleteEvents();
@@ -190,6 +197,65 @@ describe('Scheduling with agenda', () => {
       await agenda.deleteEvent(scheduleEvent);
       const events1 = await agenda.getEvents();
       expect(events1).toEqual([]);
+    });
+  });
+
+  describe('updateEvent', () => {
+    beforeEach(async () => {
+      await agenda.deleteEvents();
+      await database.clearCollection('groups');
+    });
+
+    it('throws an error if the event exists multiple times', async (done) => {
+      const group = await database.addGroup({ name: 'Test Group' });
+
+      await agenda.addEvent(new ScheduleEvent(
+        'Test1',
+        new Time([1, 2, 3, 4, 5, 6, 7], new Date(Date.now())),
+        [
+          new Action(group._id.toString(), 'engineState', 'true'),
+        ],
+      ));
+      const scheduledEvent = new ScheduleEvent(
+        'Test1',
+        new Time([1, 2, 3, 4, 5, 6, 7], new Date(Date.now())),
+        [
+          new Action(group._id.toString(), 'engineState', 'true'),
+        ],
+      );
+      const job = agenda.agenda.create('sendMQTTEvent', scheduledEvent).repeatEvery(scheduledEvent.time.toCron());
+      await job.save();
+
+      try {
+        await agenda.updateEvent('Test1', scheduledEvent);
+        done(new Error('addEvent did not throw'));
+      } catch (error) {
+        expect(error.message).toMatch('The event exists mulipletimes or does not exists');
+        done();
+      }
+    });
+
+    it('updates an event with the given object', async () => {
+      const group = await database.addGroup({ name: 'Test Group' });
+
+      const scheduledEvent = new ScheduleEvent(
+        'Test1',
+        new Time([1, 2, 3, 4, 5, 6, 7], new Date(Date.now())),
+        [
+          new Action(group._id.toString(), 'engineState', 'true'),
+        ],
+      );
+      await agenda.addEvent(scheduledEvent);
+
+      scheduledEvent.time = new Time([1, 2, 3, 6, 7], new Date(Date.now() + 1000 * 2 * 60));
+      scheduledEvent.actions.push(new Action(group._id.toString(), 'engineLevel', '1'));
+      await agenda.updateEvent('Test1', scheduledEvent);
+
+      const event = await agenda.getEvent('Test1');
+      expect(event).toEqual(scheduledEvent);
+
+      const jobsInDatabase = await agenda.agenda.jobs();
+      expect(jobsInDatabase[0].attrs.repeatInterval).toMatch(scheduledEvent.time.toCron());
     });
   });
 
