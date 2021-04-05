@@ -11,8 +11,8 @@
       <div class="grid grid-cols-3 p-2 bg-primary text-white">
         <h1 class="text-lg font-bold">{{scheduleEvent.name}}</h1>
         <h2 class="w-full text-center text-white">
-          at {{new Date(scheduleEvent.time.timeofday).getHours()}}:{{
-            new Date(scheduleEvent.time.timeofday).getMinutes()}}
+          at {{new Date(scheduleEvent.time.timeofday).toLocaleTimeString(undefined,
+            { hour: '2-digit', minute: '2-digit' })}}
         </h2>
         <dropdownMenu
           class="text-primary z-10 justify-self-end"
@@ -28,17 +28,14 @@
           @itemClicked="menuItemClicked($event)">
         </dropdownMenu>
       </div>
+      <div class="flex justify-center">
         <div class="flex">
-      <!-- <h2>Days to execute at:</h2> -->
-        <router-link tag="div"
-          class="cursor-default flex justify-center"
-          to="scheduler"
-          @click="$route.query.device=''">
+        <!-- <h2>Days to execute at:</h2> -->
           <execute-day v-for="index in 7" :key="index"
             :active="scheduleEvent.time.days.indexOf(index) >= 0" :day="index"
             :disabled="true">
           </execute-day>
-        </router-link>
+        </div>
       </div>
       <div class="px-2 text-sm">
         <h2>Actions to perform:</h2>

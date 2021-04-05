@@ -25,7 +25,7 @@
         :key="scheduledEvent.name" :scheduleEvent="scheduledEvent"
         :class="[(event === scheduledEvent.name) ? 'transform scale-105': '']"
         :ref="'event' + scheduledEvent.name"
-        class="duration-200 p-5"
+        class="duration-200 p-5 w-96"
         @editScheduleEvent="showEditForm($event)">
       </schedule-event>
     </router-link>
@@ -122,7 +122,8 @@ export default {
     },
   },
   watch: {
-    event() {
+    event(oldVal, newVal) {
+      console.log(oldVal, newVal);
       if (this.event !== undefined && this.event.match(/[0-9]/gm)) {
         this.scrollToElement(this.event);
       }
@@ -222,6 +223,7 @@ export default {
         },
         actions: [],
       };
+      this.isFormEdit = false;
       this.showForm = true;
     },
     showEditForm(event) {

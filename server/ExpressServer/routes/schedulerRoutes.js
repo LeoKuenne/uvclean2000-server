@@ -69,7 +69,7 @@ router.put('/event', async (req, res, next) => {
   logger.info('Got put on event route. Request: %o', req.body);
   const { name, scheduledEvent } = req.body;
   try {
-    if (name === undefined || scheduledEvent === undefined) throw new Error('Name and event have to been+ defined');
+    if (name === undefined || scheduledEvent === undefined) throw new Error('Name and event have to been defined');
     const scheduledEventInstance = new ScheduleEvent(scheduledEvent.name,
       new Time(scheduledEvent.time.days,
         new Date(scheduledEvent.time.timeofday)),
