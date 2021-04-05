@@ -48,6 +48,11 @@
           </dropdown-menu>
         </div>
         <!-- v-if="$dataStore.user.userrole.rules.canChangeProperties.allowed === true" -->
+        <router-link :to="{ name: 'scheduler' }"
+          class="hidden md:flex text-color px-5 text-base align-baseline"
+          >
+          Scheduler
+        </router-link>
         <router-link :to="{ name: 'settings' }"
           class="hidden md:flex text-color px-5 text-base align-baseline"
           >
@@ -85,7 +90,7 @@
         </button>
       </div>
     </header>
-    <transition name="slideTop">
+    <transition name="slideTop" class="absolute">
       <div v-show="showBurgerMenu"
         class="w-screen h-screen fixed z-10 top-0 left-0 p-5 bg-white flex flex-col
         items-center transform">
@@ -134,6 +139,14 @@
             </div>
             <div class="flex flex-col items-center">
               <h1 class="w-full text-center mb-4 p-2 text-2xl border-b border-gray-300">
+                Scheduler
+              </h1>
+              <button
+                @click="menuItemClicked('Scheduler'); showBurgerMenu = false;"
+                class="text-xl">Scheduled Events</button>
+            </div>
+            <div class="flex flex-col items-center">
+              <h1 class="w-full text-center mb-4 p-2 text-2xl border-b border-gray-300">
                 Settings
               </h1>
               <button
@@ -151,7 +164,7 @@
       </div>
     </transition>
     <transition name="fade" mode="out-in">
-      <router-view class="" style="height: 90%;"></router-view>
+      <router-view class="" style="height:92%;"></router-view>
     </transition>
   </div>
 </template>
@@ -201,6 +214,9 @@ export default {
           break;
         case 'Groups':
           this.$router.push({ name: 'groups' });
+          break;
+        case 'Scheduler':
+          this.$router.push({ name: 'scheduler' });
           break;
         default:
           break;

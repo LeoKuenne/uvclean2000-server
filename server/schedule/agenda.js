@@ -17,7 +17,7 @@ module.exports = class AgendaScheduler {
    */
   constructor(mongoURI, server, database, mqtt) {
     this.server = server;
-    this.mongoConnectionString = `${mongoURI}`;
+    this.mongoConnectionString = `${mongoURI}/uvclean-server`;
     this.database = database;
     this.mqtt = mqtt;
 
@@ -86,6 +86,7 @@ module.exports = class AgendaScheduler {
    * @param {ScheduleEvent} event
    */
   async addEvent(event) {
+    logger.debug('Adding event %o', event);
     const jobsInDatabase = await this.agenda.jobs();
     const jobsWithCurrentName = jobsInDatabase.filter((job) => job.attrs.data.name === event.name);
     if (jobsWithCurrentName.length === 0) {
@@ -103,6 +104,7 @@ module.exports = class AgendaScheduler {
    * @param {ScheduleEvent} event The event to be updated with
    */
   async updateEvent(eventname, event) {
+    logger.debug('Updating event %s with %o', eventname, event);
     const jobsInDatabase = await this.agenda.jobs();
     const jobsWithCurrentName = jobsInDatabase.filter((job) => job.attrs.data.name === eventname);
 
@@ -125,6 +127,7 @@ module.exports = class AgendaScheduler {
    * @returns {Array<ScheduleEvent>} Array of schedule events that are scheduled
    */
   async getEvent(eventname) {
+    logger.debug('Getting event %s', eventname);
     const jobsInDatabase = await this.agenda.jobs();
     const jobsWithCurrentName = jobsInDatabase.filter((job) => job.attrs.data.name === eventname);
 
@@ -151,9 +154,12 @@ module.exports = class AgendaScheduler {
    * @param {ScheduleEvent} scheduleEvent
    */
   async deleteEvent(scheduleEvent) {
+    logger.debug('Deleting event %o', scheduleEvent);
     const jobsInDatabase = await this.agenda.jobs();
     jobsInDatabase.map((job) => {
+      console.log(job.attrs.data.name, scheduleEvent.name);
       if (job.attrs.data.name === scheduleEvent.name) {
+        logger.debug('Found event %s, removing it', scheduleEvent.name);
         job.remove();
       }
       return job;
@@ -164,6 +170,7 @@ module.exports = class AgendaScheduler {
    * Deletes all Events in the database
    */
   async deleteEvents() {
+    logger.debug('Deleting all events');
     const jobsInDatabase = await this.agenda.jobs();
     jobsInDatabase.map((job) => {
       job.remove();

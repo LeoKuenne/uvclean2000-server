@@ -123,7 +123,6 @@
     <ConfirmPrompt
       ref="confirmPrompt">
     </ConfirmPrompt>
-
   </div>
 </template>
 <script>

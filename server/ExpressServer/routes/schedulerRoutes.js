@@ -57,7 +57,7 @@ router.post('/event', async (req, res, next) => {
   } catch (error) {
     eventBus.emit('error', { service: 'ExpressServer', error });
 
-    if (error.message === 'The event exists mulipletimes or does not exists') { return res.sendStatus(404); }
+    if (error.message === 'The event exists mulipletimes or does not exists') { return res.status(404).send({ msg: error.message }); }
 
     return res.status(401).send({
       msg: error.message,
@@ -69,7 +69,7 @@ router.delete('/event', async (req, res, next) => {
   logger.info('Got delete on event route. Request: %o', req.body);
 
   try {
-    await agenda.deleteEvent(req.body.name);
+    await agenda.deleteEvent(new ScheduleEvent(req.body.name, new Time([], new Date()), []));
 
     return res.sendStatus(201);
   } catch (error) {
