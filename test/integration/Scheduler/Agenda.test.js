@@ -259,6 +259,48 @@ describe('Scheduling with agenda', () => {
     });
   });
 
+  describe.only('testEvent', () => {
+    beforeEach(async () => {
+      await agenda.deleteEvents();
+      await database.clearCollection('groups');
+    });
+
+    it('throws an error if the event exists multiple times', async (done) => {
+      try {
+        await agenda.testEvent('Test1');
+        done(new Error('addEvent did not throw'));
+      } catch (error) {
+        expect(error.message).toMatch('The event exists mulipletimes or does not exists');
+        done();
+      }
+    });
+
+    it('runs an event of the given name', async () => {
+      await database.addDevice({
+        serialnumber: '1',
+        name: 'TestGeraet1',
+      });
+
+      const group = await database.addGroup({ name: 'Test Group' });
+      await database.addDeviceToGroup('1', group._id.toString());
+
+      const scheduledEvent = new ScheduleEvent(
+        'Test1',
+        new Time([1, 2, 3, 4, 5, 6, 7], new Date(Date.now())),
+        [
+          new Action(group._id.toString(), 'engineState', 'true'),
+        ],
+      );
+      await agenda.addEvent(scheduledEvent);
+
+      mqtt.publish = jest.fn();
+
+      await agenda.testEvent('Test1');
+      expect(mqtt.publish).toHaveBeenCalledTimes(1);
+      expect(mqtt.publish).toHaveBeenCalledWith('UVClean/1/changeState/engineState', 'true');
+    });
+  });
+
   describe('Runtime test', () => {
     beforeEach(async () => {
       await agenda.deleteEvents();
@@ -283,6 +325,8 @@ describe('Scheduling with agenda', () => {
         try {
           expect(new Date(Date.now()).getHours()).toEqual(triggerTime.getHours());
           expect(new Date(Date.now()).getMinutes()).toEqual(triggerTime.getMinutes());
+          expect(topic).toEqual('UVClean/1/changeState/engineState');
+          expect(message).toEqual('true');
           done();
         } catch (error) {
           done(error);

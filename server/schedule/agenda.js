@@ -183,4 +183,12 @@ module.exports = class AgendaScheduler {
       return job;
     });
   }
+
+  async testEvent(eventname) {
+    logger.debug('Testing event %s', eventname);
+    const jobsInDatabase = await this.agenda.jobs();
+    const jobsWithCurrentName = jobsInDatabase.filter((job) => job.attrs.data.name === eventname);
+    if (jobsWithCurrentName.length !== 1) throw new Error('The event exists mulipletimes or does not exists');
+    return jobsWithCurrentName[0].run();
+  }
 };
