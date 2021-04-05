@@ -26,7 +26,8 @@
         :class="[(event === scheduledEvent.name) ? 'transform scale-105': '']"
         :ref="'event' + scheduledEvent.name"
         class="duration-200 p-5 w-96"
-        @editScheduleEvent="showEditForm($event)">
+        @editScheduleEvent="showEditForm($event)"
+        @testScheduleEvent="testScheduleEvent($event)">
       </schedule-event>
     </router-link>
     <uvc-form
@@ -137,6 +138,17 @@ export default {
     });
   },
   methods: {
+    async testScheduleEvent(event) {
+      await fetch('/api/scheduler/testevent', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: event.name,
+        }),
+      });
+    },
     async updateScheduledEvent(event) {
       const response = await fetch('/api/scheduler/event', {
         method: 'PUT',

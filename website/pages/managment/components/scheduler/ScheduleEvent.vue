@@ -61,6 +61,9 @@ export default {
         case 'Edit':
           this.$emit('editScheduleEvent', this.scheduleEvent);
           break;
+        case 'Test execution':
+          this.$emit('testScheduleEvent', this.scheduleEvent);
+          break;
 
         default:
           break;
