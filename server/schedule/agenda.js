@@ -17,7 +17,7 @@ module.exports = class AgendaScheduler {
    */
   constructor(mongoURI, server, database, mqtt) {
     this.server = server;
-    this.mongoConnectionString = `${mongoURI}/uvclean-server`;
+    this.mongoConnectionString = `${mongoURI}`;
     this.database = database;
     this.mqtt = mqtt;
 
@@ -110,7 +110,11 @@ module.exports = class AgendaScheduler {
 
     if (jobsWithCurrentName.length !== 1) throw new Error('The event exists mulipletimes or does not exists');
 
+    jobsWithCurrentName[0].attrs.data.name = event.name;
+    await jobsWithCurrentName[0].save();
     jobsWithCurrentName[0].attrs.data.actions = event.actions;
+    await jobsWithCurrentName[0].save();
+    jobsWithCurrentName[0].repeatEvery(event.time.toCron());
     await jobsWithCurrentName[0].save();
     jobsWithCurrentName[0].attrs.data.time = event.time;
     await jobsWithCurrentName[0].save();
@@ -130,12 +134,14 @@ module.exports = class AgendaScheduler {
     logger.debug('Getting event %s', eventname);
     const jobsInDatabase = await this.agenda.jobs();
     const jobsWithCurrentName = jobsInDatabase.filter((job) => job.attrs.data.name === eventname);
-
     if (jobsWithCurrentName.length !== 1) throw new Error('The event exists mulipletimes or does not exists');
 
     return new ScheduleEvent(jobsWithCurrentName[0].attrs.data.name,
-      new Time(jobsWithCurrentName[0].attrs.data.time.days, jobsWithCurrentName[0].attrs.data.time.timeofday),
-      jobsWithCurrentName[0].attrs.data.actions.map((a) => new Action(a.group, a.propertie, a.newValue)));
+      new Time(jobsWithCurrentName[0].attrs.data.time.days,
+        jobsWithCurrentName[0].attrs.data.time.timeofday),
+      jobsWithCurrentName[0].attrs.data.actions.map(
+        (a) => new Action(a.group, a.propertie, a.newValue),
+      ));
   }
 
   /**

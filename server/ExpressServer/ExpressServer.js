@@ -50,7 +50,6 @@ module.exports = class ExpressServer {
     const apiRouter = express.Router();
 
     schedulerRoutes.register(this.agenda, server);
-    server.emit('error', { error: 'Test' });
 
     // Scheduler routes
     apiRouter.use('/scheduler', userMiddleware.isLoggedIn, schedulerRoutes.router);

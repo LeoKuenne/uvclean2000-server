@@ -65,6 +65,31 @@ router.post('/event', async (req, res, next) => {
   }
 });
 
+router.put('/event', async (req, res, next) => {
+  logger.info('Got put on event route. Request: %o', req.body);
+  const { name, scheduledEvent } = req.body;
+  try {
+    if (name === undefined || scheduledEvent === undefined) throw new Error('Name and event have to been+ defined');
+    const scheduledEventInstance = new ScheduleEvent(scheduledEvent.name,
+      new Time(scheduledEvent.time.days,
+        new Date(scheduledEvent.time.timeofday)),
+      scheduledEvent.actions.map(
+        (action) => new Action(action.group, action.propertie, action.newValue),
+      ));
+    await agenda.updateEvent(name, scheduledEventInstance);
+
+    return res.status(201).send(scheduledEventInstance);
+  } catch (error) {
+    eventBus.emit('error', { service: 'ExpressServer', error });
+
+    if (error.message === 'The event exists mulipletimes or does not exists') { return res.status(404).send({ msg: error.message }); }
+
+    return res.status(401).send({
+      msg: error.message,
+    });
+  }
+});
+
 router.delete('/event', async (req, res, next) => {
   logger.info('Got delete on event route. Request: %o', req.body);
 

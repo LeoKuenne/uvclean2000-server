@@ -35,7 +35,9 @@
       :title="formTitle">
       <label for="eventTitle">Name:</label>
       <input type="text" class="border border-gray-500 rounded p-2" placeholder="Turn on Stage"
-        v-model="formEvent.name">
+        :value="formEvent.name"
+        @input="(isFormEdit) ?
+          formEvent.newName = $event.target.value : formEvent.name = $event.target.value">
       <h2>Time to execute at:</h2>
       <div class="flex items-center">
         <datetime
@@ -136,11 +138,18 @@ export default {
   methods: {
     async updateScheduledEvent(event) {
       const response = await fetch('/api/scheduler/event', {
-        method: 'DELETE',
+        method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ name: event.name }),
+        body: JSON.stringify({
+          name: event.name,
+          scheduledEvent: {
+            name: event.newName,
+            actions: event.actions,
+            time: event.time,
+          },
+        }),
       });
 
       if (response.status !== 201) {
@@ -169,15 +178,6 @@ export default {
 
       this.$dataStore.scheduledEvents = await this.$root.getScheduledEvents();
       this.showForm = false;
-    },
-    /**
-     * Called if the device is selected in the query
-     */
-    scrollToElement(event) {
-      const element = this.$refs[`event${event}`];
-      if (element && element[0]) {
-        element[0].$el.scrollIntoView({ behavior: 'smooth' });
-      }
     },
     async addScheduledEvent(scheduledEvent) {
       const response = await fetch('/api/scheduler/event', {
@@ -227,10 +227,20 @@ export default {
     showEditForm(event) {
       this.isFormEdit = true;
       this.formEvent = event;
+      this.formEvent.newName = event.name;
       this.showForm = true;
     },
     closeUserForm() {
       this.showForm = false;
+    },
+    /**
+     * Called if the device is selected in the query
+     */
+    scrollToElement(event) {
+      const element = this.$refs[`event${event}`];
+      if (element && element[0]) {
+        element[0].$el.scrollIntoView({ behavior: 'smooth' });
+      }
     },
   },
   async created() {

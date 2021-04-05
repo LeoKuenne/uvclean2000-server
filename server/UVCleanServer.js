@@ -54,7 +54,7 @@ class UVCleanServer extends EventEmitter {
     this.database = new MongoDBAdapter(`${config.database.uri}:${config.database.port}`,
       config.database.database);
 
-    this.agenda = new AgendaScheduler(`mongodb://${config.database.uri}:${config.database.port}`, this, this.database, this.mqttClient);
+    this.agenda = new AgendaScheduler(`mongodb://${config.database.uri}:${config.database.port}/uvclean-server`, this, this.database, this.mqttClient);
 
     this.express = new ExpressServer(this, this.database, this.agenda);
     fs.writeFileSync(config.mqtt.secret, 'NQCNtEul3sEuOwMSRExMeh_RQ0iYD0USEemo00G4pCg=', { encoding: 'base64' });

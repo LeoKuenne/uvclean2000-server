@@ -32,7 +32,7 @@
       <input id="form_username"
         :value="formUser.username"
         @input="(isFormEdit) ?
-          formUser.newUsername = $event.target.value : formUser.username = $event.target.value "
+          formUser.newUsername = $event.target.value : formUser.username = $event.target.value"
         type="text"
         placeholder="Max Mustermann"
         class="rounded p-2 border border-gray-500 mb-4">
