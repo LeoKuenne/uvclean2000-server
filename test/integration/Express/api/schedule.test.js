@@ -258,7 +258,7 @@ describe('Express schedule route testing', () => {
     }, 1000 * 70);
   });
 
-  describe.only('PUT /api/event', () => {
+  describe('PUT /api/event', () => {
     beforeEach(async () => {
       await database.clearCollection('users');
       await database.clearCollection('userroles');
@@ -414,5 +414,60 @@ describe('Express schedule route testing', () => {
         expect(error.message).toMatch('The event exists mulipletimes or does not exists');
       }
     });
+  });
+
+  describe('POST /api/testevent', () => {
+    beforeEach(async () => {
+      await database.clearCollection('users');
+      await database.clearCollection('userroles');
+      await agenda.deleteEvents();
+    });
+
+    it('returns 404 if the event does not exists', async () => {
+      const res = await request.post('/api/scheduler/testevent')
+        .set('Content-Type', 'application/json')
+        .set('cookie', [`UVCleanSID=${TestUtitities.createJWTToken('Admin')}`])
+        .send();
+
+      expect(res.status).toBe(404);
+      expect(res.body.msg).toEqual('The event exists mulipletimes or does not exists');
+    });
+
+    it('updates event object that runs at the new time', async (done) => {
+      const group = await database.addGroup({ name: 'Test Group' });
+      await database.addDevice({
+        serialnumber: '1',
+        name: 'TestGeraet1',
+      });
+
+      await database.addDeviceToGroup('1', group._id.toString());
+
+      const scheduledEvent = new ScheduleEvent(
+        'Test1',
+        new Time([1, 2, 3, 4, 5, 6, 7], new Date(Date.now() - 1000 * 60)),
+        [
+          new Action(group._id.toString(), 'engineState', 'true'),
+        ],
+      );
+
+      await agenda.addEvent(scheduledEvent);
+
+      mqtt.publish = (topic, message) => {
+        try {
+          expect(topic).toMatch('UVClean/1/changeState/engineState');
+          expect(message).toMatch('true');
+          done();
+        } catch (error) {
+          done(error);
+        }
+      };
+
+      const res = await request.post('/api/scheduler/testevent')
+        .set('Content-Type', 'application/json')
+        .set('cookie', [`UVCleanSID=${TestUtitities.createJWTToken('Admin')}`])
+        .send({ name: 'Test1' });
+
+      expect(res.status).toBe(201);
+    }, 1000 * 70);
   });
 });

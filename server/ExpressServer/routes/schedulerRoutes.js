@@ -106,6 +106,24 @@ router.delete('/event', async (req, res, next) => {
   }
 });
 
+router.post('/testevent', async (req, res, next) => {
+  logger.info('Got post on test event route. Request: %o', req.body);
+
+  try {
+    await agenda.testEvent(req.body.name);
+
+    return res.status(201);
+  } catch (error) {
+    eventBus.emit('error', { service: 'ExpressServer', error });
+
+    if (error.message === 'The event exists mulipletimes or does not exists') { return res.status(404).send({ msg: error.message }); }
+
+    return res.status(401).send({
+      msg: error.message,
+    });
+  }
+});
+
 module.exports = {
   router,
   register(scheduler, server) {
