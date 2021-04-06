@@ -39,7 +39,42 @@ describe('Scheduling with agenda', () => {
       await database.clearCollection('groups');
     });
 
-    it('adds an event', async () => {
+    it('throws an error if event is not an instance of ScheduleEvent', async (done) => {
+      try {
+        await agenda.addEvent(true);
+        done('addEvent did not throw for not string');
+      } catch (error) {
+        expect(error.message).toMatch('event has to be defined and an instance of ScheduleEvent');
+      }
+      try {
+        await agenda.addEvent();
+        done('addEvent did not throw for not defined');
+      } catch (error) {
+        expect(error.message).toMatch('event has to be defined and an instance of ScheduleEvent');
+      }
+      done();
+    });
+
+    it('adds an event to database', async () => {
+      const group = await database.addGroup({ name: 'Test Group' });
+
+      const savedEvent = await agenda.addEvent(new ScheduleEvent(undefined,
+        'Test1',
+        new Time([1, 2, 3, 4, 5, 6, 7], new Date(Date.now())),
+        [
+          new Action(group._id.toString(), 'engineState', 'true'),
+        ]));
+
+      const event = await agenda.getEvent(savedEvent.id);
+      expect(event.id).toBeDefined();
+      expect(event).toEqual(expect.objectContaining({
+        name: savedEvent.name,
+        actions: savedEvent.actions,
+        time: savedEvent.time,
+      }));
+    });
+
+    it('adds an event and returns it', async () => {
       const group = await database.addGroup({ name: 'Test Group' });
 
       const scheduledEvent = new ScheduleEvent(undefined,
@@ -49,11 +84,10 @@ describe('Scheduling with agenda', () => {
           new Action(group._id.toString(), 'engineState', 'true'),
         ]);
 
-      await agenda.addEvent(scheduledEvent);
+      const returnedEvent = await agenda.addEvent(scheduledEvent);
 
-      const event = await agenda.getEvent('Test1');
-      expect(event.id).toBeDefined();
-      expect(event).toEqual(expect.objectContaining({
+      expect(returnedEvent.id).toBeDefined();
+      expect(returnedEvent).toEqual(expect.objectContaining({
         name: scheduledEvent.name,
         actions: scheduledEvent.actions,
         time: scheduledEvent.time,
@@ -107,33 +141,24 @@ describe('Scheduling with agenda', () => {
       try {
         await agenda.getEvent('Test2');
       } catch (error) {
-        expect(error.message).toMatch('The event exists mulipletimes or does not exists');
+        expect(error.message).toMatch('The event does not exists');
       }
     });
 
-    it('throws an error if the event exists multiple times', async () => {
-      const group = await database.addGroup({ name: 'Test Group' });
-
-      const scheduledEvents = [];
-      for (let i = 0; i < 10; i += 1) {
-        scheduledEvents.push(new ScheduleEvent(undefined,
-          `Test${i}`,
-          new Time([1, 2, 3, 4, 5, 6, 7], new Date(Date.now())),
-          [
-            new Action(group._id.toString(), 'engineState', 'true'),
-          ]));
-      }
-
-      await scheduledEvents.reduce(async (memo, event) => {
-        await memo;
-        await agenda.addEvent(event);
-      }, undefined);
-
+    it('throws an error if the id is not string', async (done) => {
       try {
-        await agenda.getEvent('Test2');
+        await agenda.getEvent(true);
+        done('getEvent did not throw for not string');
       } catch (error) {
-        expect(error.message).toMatch('The event exists mulipletimes or does not exists');
+        expect(error.message).toMatch('id has to be defined and of type string');
       }
+      try {
+        await agenda.getEvent();
+        done('getEvent did not throw for not defined');
+      } catch (error) {
+        expect(error.message).toMatch('id has to be defined and of type string');
+      }
+      done();
     });
 
     it('get a specific event from database', async () => {
@@ -149,12 +174,13 @@ describe('Scheduling with agenda', () => {
           ]));
       }
 
+      const savedEvents = [];
       await scheduledEvents.reduce(async (memo, event) => {
         await memo;
-        await agenda.addEvent(event);
+        savedEvents.push(await agenda.addEvent(event));
       }, undefined);
 
-      const event = await agenda.getEvent('Test2');
+      const event = await agenda.getEvent(savedEvents[2].id);
       expect(event.id).toBeDefined();
       expect(event).toEqual(
         expect.objectContaining({
@@ -172,7 +198,23 @@ describe('Scheduling with agenda', () => {
       await database.clearCollection('groups');
     });
 
-    it('deleteEvent deletes an event', async () => {
+    it('throws an error if the id is not string', async (done) => {
+      try {
+        await agenda.deleteEvent(true);
+        done('deleteEvent did not throw for not string');
+      } catch (error) {
+        expect(error.message).toMatch('id has to be defined and of type string');
+      }
+      try {
+        await agenda.deleteEvent();
+        done('deleteEvent did not throw for not defined');
+      } catch (error) {
+        expect(error.message).toMatch('id has to be defined and of type string');
+      }
+      done();
+    });
+
+    it('deletes an event', async () => {
       const group = await database.addGroup({ name: 'Test Group' });
       const scheduleEvent = new ScheduleEvent(undefined,
         'Test1',
@@ -181,8 +223,8 @@ describe('Scheduling with agenda', () => {
           new Action(group._id.toString(), 'engineState', 'true'),
         ]);
 
-      await agenda.addEvent(scheduleEvent);
-      await agenda.deleteEvent(scheduleEvent);
+      const savedEvent = await agenda.addEvent(scheduleEvent);
+      await agenda.deleteEvent(savedEvent.id);
       const events1 = await agenda.getEvents();
       expect(events1).toEqual([]);
     });
@@ -194,29 +236,28 @@ describe('Scheduling with agenda', () => {
       await database.clearCollection('groups');
     });
 
-    it('throws an error if the event exists multiple times', async (done) => {
-      const group = await database.addGroup({ name: 'Test Group' });
-
-      await agenda.addEvent(new ScheduleEvent(undefined,
-        'Test1',
-        new Time([1, 2, 3, 4, 5, 6, 7], new Date(Date.now())),
-        [
-          new Action(group._id.toString(), 'engineState', 'true'),
-        ]));
-      const scheduledEvent = new ScheduleEvent(undefined,
-        'Test1',
-        new Time([1, 2, 3, 4, 5, 6, 7], new Date(Date.now())),
-        [
-          new Action(group._id.toString(), 'engineState', 'true'),
-        ]);
-      const job = agenda.agenda.create('sendMQTTEvent', scheduledEvent).repeatEvery(scheduledEvent.time.toCron());
-      await job.save();
-
+    it('throws an error if event is not an instance of ScheduleEvent', async (done) => {
       try {
-        await agenda.updateEvent('Test1', scheduledEvent);
-        done(new Error('addEvent did not throw'));
+        await agenda.updateEvent(true);
+        done('updateEvent did not throw for not string');
       } catch (error) {
-        expect(error.message).toMatch('The event exists mulipletimes or does not exists');
+        expect(error.message).toMatch('event has to be defined and an instance of ScheduleEvent');
+      }
+      try {
+        await agenda.updateEvent();
+        done('updateEvent did not throw for not defined');
+      } catch (error) {
+        expect(error.message).toMatch('event has to be defined and an instance of ScheduleEvent');
+      }
+      done();
+    });
+
+    it('throws an error if the event does not exists', async (done) => {
+      try {
+        await agenda.updateEvent(new ScheduleEvent('123', 'test1', new Time([], new Date()), []));
+        done(new Error('updateEvent did not throw'));
+      } catch (error) {
+        expect(error.message).toMatch('The event does not exists');
         done();
       }
     });
@@ -224,30 +265,27 @@ describe('Scheduling with agenda', () => {
     it('updates an event with the given object', async () => {
       const group = await database.addGroup({ name: 'Test Group' });
 
-      const scheduledEvent = new ScheduleEvent(undefined,
+      const savedEvent = await agenda.addEvent(new ScheduleEvent(undefined,
         'Test1',
         new Time([1, 2, 3, 4, 5, 6, 7], new Date(Date.now())),
         [
           new Action(group._id.toString(), 'engineState', 'true'),
-        ]);
-      await agenda.addEvent(scheduledEvent);
+        ]));
 
-      scheduledEvent.time = new Time([1, 2, 3, 6, 7], new Date(Date.now() + 1000 * 2 * 60));
-      scheduledEvent.actions.push(new Action(group._id.toString(), 'engineLevel', '1'));
-      await agenda.updateEvent('Test1', scheduledEvent);
+      savedEvent.time = new Time([1, 2, 3, 6, 7], new Date(Date.now() + 1000 * 2 * 60));
+      savedEvent.actions.push(new Action(group._id.toString(), 'engineLevel', '1'));
+      const updatedEvent = await agenda.updateEvent(savedEvent);
 
-      const event = await agenda.getEvent('Test1');
-      expect(event.id).toBeDefined();
-      expect(event).toEqual(
+      expect(updatedEvent).toEqual(
         expect.objectContaining({
-          name: scheduledEvent.name,
-          actions: scheduledEvent.actions,
-          time: scheduledEvent.time,
+          name: savedEvent.name,
+          actions: savedEvent.actions,
+          time: savedEvent.time,
         }),
       );
 
       const jobsInDatabase = await agenda.agenda.jobs();
-      expect(jobsInDatabase[0].attrs.repeatInterval).toMatch(scheduledEvent.time.toCron());
+      expect(jobsInDatabase[0].attrs.repeatInterval).toMatch(savedEvent.time.toCron());
     });
   });
 
@@ -259,15 +297,15 @@ describe('Scheduling with agenda', () => {
 
     it('throws an error if the event exists multiple times', async (done) => {
       try {
-        await agenda.testEvent('Test1');
-        done(new Error('addEvent did not throw'));
+        await agenda.testEvent('123');
+        done(new Error('testEvent did not throw'));
       } catch (error) {
-        expect(error.message).toMatch('The event exists mulipletimes or does not exists');
+        expect(error.message).toMatch('The event does not exists');
         done();
       }
     });
 
-    it('runs an event of the given name', async () => {
+    it('runs an event of the given id', async () => {
       await database.addDevice({
         serialnumber: '1',
         name: 'TestGeraet1',
@@ -276,17 +314,16 @@ describe('Scheduling with agenda', () => {
       const group = await database.addGroup({ name: 'Test Group' });
       await database.addDeviceToGroup('1', group._id.toString());
 
-      const scheduledEvent = new ScheduleEvent(undefined,
+      const savedEvent = await agenda.addEvent(new ScheduleEvent(undefined,
         'Test1',
         new Time([1, 2, 3, 4, 5, 6, 7], new Date(Date.now())),
         [
           new Action(group._id.toString(), 'engineState', 'true'),
-        ]);
-      await agenda.addEvent(scheduledEvent);
+        ]));
 
       mqtt.publish = jest.fn();
 
-      await agenda.testEvent('Test1');
+      await agenda.testEvent(savedEvent.id);
       expect(mqtt.publish).toHaveBeenCalledTimes(1);
       expect(mqtt.publish).toHaveBeenCalledWith('UVClean/1/changeState/engineState', 'true');
     });

@@ -32,8 +32,8 @@ beforeAll(async () => {
   server = new EventEmitter();
   server.on('error', (e) => { console.error(e); });
   database = new MongoDBAdapter(global.__MONGO_URI__.replace('mongodb://', ''), '');
-  // agenda = new AgendaScheduler(global.__MONGO_URI__, server, database, mqtt);
-  agenda = new AgendaScheduler('mongodb://192.168.178.66/agenda', server, database, mqtt);
+  agenda = new AgendaScheduler(global.__MONGO_URI__, server, database, mqtt);
+  // agenda = new AgendaScheduler('mongodb://192.168.178.66/agenda', server, database, mqtt);
   await database.connect();
   await agenda.startScheduler();
   expressServer = new ExpressServer(server, database, agenda);
@@ -70,13 +70,12 @@ describe('Express schedule route testing', () => {
 
       const scheduledEvents = [];
       for (let i = 0; i < 10; i += 1) {
-        scheduledEvents.push(new ScheduleEvent(
+        scheduledEvents.push(new ScheduleEvent(undefined,
           `Test${i}`,
           new Time([1, 2, 3, 4, 5, 6, 7], new Date(Date.now())),
           [
             new Action(group._id.toString(), 'engineState', 'true'),
-          ],
-        ));
+          ]));
       }
 
       await scheduledEvents.reduce(async (memo, event) => {
@@ -94,6 +93,7 @@ describe('Express schedule route testing', () => {
         expect(res.body).toEqual(
           expect.arrayContaining([
             expect.objectContaining({
+              id: expect.anything(),
               name: scheduledEvents[i].name,
               time: {
                 days: scheduledEvents[i].time.days,
@@ -118,7 +118,7 @@ describe('Express schedule route testing', () => {
       const res = await request.get('/api/scheduler/event')
         .set('Content-Type', 'application/json')
         .set('cookie', [`UVCleanSID=${TestUtitities.createJWTToken('Admin')}`])
-        .send({ name: 'Test1' });
+        .send({ id: '123' });
 
       expect(res.status).toBe(404);
     });
@@ -126,36 +126,28 @@ describe('Express schedule route testing', () => {
     it('returns event object', async () => {
       const group = await database.addGroup({ name: 'Test Group' });
 
-      const scheduledEvents = [];
-      for (let i = 0; i < 10; i += 1) {
-        scheduledEvents.push(new ScheduleEvent(
-          `Test${i}`,
-          new Time([1, 2, 3, 4, 5, 6, 7], new Date(Date.now())),
-          [
-            new Action(group._id.toString(), 'engineState', 'true'),
-          ],
-        ));
-      }
-
-      await scheduledEvents.reduce(async (memo, event) => {
-        await memo;
-        await agenda.addEvent(event);
-      }, undefined);
+      const savedEvent = await agenda.addEvent(new ScheduleEvent(undefined,
+        'Test1',
+        new Time([1, 2, 3, 4, 5, 6, 7], new Date(Date.now())),
+        [
+          new Action(group._id.toString(), 'engineState', 'true'),
+        ]));
 
       const res = await request.get('/api/scheduler/event')
         .set('Content-Type', 'application/json')
         .set('cookie', [`UVCleanSID=${TestUtitities.createJWTToken('Admin')}`])
-        .send({ name: 'Test1' });
+        .send({ id: savedEvent.id });
 
       expect(res.status).toBe(201);
       expect(res.body).toEqual(
         expect.objectContaining({
-          name: scheduledEvents[1].name,
+          id: expect.anything(),
+          name: savedEvent.name,
           time: {
-            days: scheduledEvents[1].time.days,
-            timeofday: scheduledEvents[1].time.timeofday.toISOString(),
+            days: savedEvent.time.days,
+            timeofday: savedEvent.time.timeofday.toISOString(),
           },
-          actions: scheduledEvents[1].actions,
+          actions: savedEvent.actions,
         }),
       );
     });
@@ -171,13 +163,12 @@ describe('Express schedule route testing', () => {
     it('creates event and returns it', async () => {
       const group = await database.addGroup({ name: 'Test Group' });
 
-      const scheduledEvent = new ScheduleEvent(
+      const scheduledEvent = new ScheduleEvent(undefined,
         'Test1',
         new Time([1, 2, 3, 4, 5, 6, 7], new Date(Date.now())),
         [
           new Action(group._id.toString(), 'engineState', 'true'),
-        ],
-      );
+        ]);
 
       const res = await request.post('/api/scheduler/event')
         .set('Content-Type', 'application/json')
@@ -187,6 +178,7 @@ describe('Express schedule route testing', () => {
       expect(res.status).toBe(201);
       expect(res.body).toEqual(
         expect.objectContaining({
+          id: expect.anything(),
           name: scheduledEvent.name,
           time: {
             days: scheduledEvent.time.days,
@@ -200,13 +192,12 @@ describe('Express schedule route testing', () => {
     it('creates event object in database', async () => {
       const group = await database.addGroup({ name: 'Test Group' });
 
-      const scheduledEvent = new ScheduleEvent(
+      const scheduledEvent = new ScheduleEvent(undefined,
         'Test1',
         new Time([1, 2, 3, 4, 5, 6, 7], new Date(Date.now())),
         [
           new Action(group._id.toString(), 'engineState', 'true'),
-        ],
-      );
+        ]);
 
       const res = await request.post('/api/scheduler/event')
         .set('Content-Type', 'application/json')
@@ -215,8 +206,13 @@ describe('Express schedule route testing', () => {
 
       expect(res.status).toBe(201);
 
-      const dbScheduledEvent = await agenda.getEvent('Test1');
-      expect(dbScheduledEvent).toEqual(scheduledEvent);
+      const dbScheduledEvent = await agenda.getEvent(res.body.id);
+      expect(dbScheduledEvent.id).toBeDefined();
+      expect(dbScheduledEvent).toEqual(expect.objectContaining({
+        name: scheduledEvent.name,
+        actions: scheduledEvent.actions,
+        time: scheduledEvent.time,
+      }));
     });
 
     it('creates event object that runs', async (done) => {
@@ -229,13 +225,12 @@ describe('Express schedule route testing', () => {
       await database.addDeviceToGroup('1', group._id.toString());
 
       const triggerTime = new Date(Date.now() + 1000 * 60);
-      const scheduledEvent = new ScheduleEvent(
+      const scheduledEvent = new ScheduleEvent(undefined,
         'Test1',
         new Time([1, 2, 3, 4, 5, 6, 7], triggerTime),
         [
           new Action(group._id.toString(), 'engineState', 'true'),
-        ],
-      );
+        ]);
 
       const res = await request.post('/api/scheduler/event')
         .set('Content-Type', 'application/json')
@@ -268,34 +263,32 @@ describe('Express schedule route testing', () => {
     it('updates an event and returns it', async () => {
       const group = await database.addGroup({ name: 'Test Group' });
 
-      const scheduledEvent = new ScheduleEvent(
+      const event = await agenda.addEvent(new ScheduleEvent(undefined,
         'Test1',
         new Time([1, 2, 3, 4, 5, 6, 7], new Date(Date.now())),
         [
           new Action(group._id.toString(), 'engineState', 'true'),
-        ],
-      );
+        ]));
 
-      await agenda.addEvent(scheduledEvent);
-
-      scheduledEvent.name = 'Test2';
-      scheduledEvent.time = new Time([1, 2], new Date(Date.now() + 1000 * 30));
-      scheduledEvent.actions.push(new Action(group._id.toString(), 'engineLevel', '1'));
+      event.name = 'Test2';
+      event.time = new Time([1, 2], new Date(Date.now() + 1000 * 30));
+      event.actions.push(new Action(group._id.toString(), 'engineLevel', '1'));
 
       const res = await request.put('/api/scheduler/event')
         .set('Content-Type', 'application/json')
         .set('cookie', [`UVCleanSID=${TestUtitities.createJWTToken('Admin')}`])
-        .send({ name: 'Test1', scheduledEvent });
+        .send({ scheduledEvent: event });
 
       expect(res.status).toBe(201);
       expect(res.body).toEqual(
         expect.objectContaining({
-          name: scheduledEvent.name,
+          id: event.id.toString(),
+          name: event.name,
           time: {
-            days: scheduledEvent.time.days,
-            timeofday: scheduledEvent.time.timeofday.toISOString(),
+            days: event.time.days,
+            timeofday: event.time.timeofday.toISOString(),
           },
-          actions: scheduledEvent.actions,
+          actions: event.actions,
         }),
       );
     });
@@ -303,29 +296,26 @@ describe('Express schedule route testing', () => {
     it('updates an event object in database', async () => {
       const group = await database.addGroup({ name: 'Test Group' });
 
-      const scheduledEvent = new ScheduleEvent(
+      const event = await agenda.addEvent(new ScheduleEvent(undefined,
         'Test1',
         new Time([1, 2, 3, 4, 5, 6, 7], new Date(Date.now())),
         [
           new Action(group._id.toString(), 'engineState', 'true'),
-        ],
-      );
+        ]));
 
-      await agenda.addEvent(scheduledEvent);
-
-      scheduledEvent.name = 'Test2';
-      scheduledEvent.time = new Time([1, 2], new Date(Date.now() + 1000 * 30));
-      scheduledEvent.actions.push(new Action(group._id.toString(), 'engineLevel', '1'));
+      event.name = 'Test2';
+      event.time = new Time([1, 2], new Date(Date.now() + 1000 * 30));
+      event.actions.push(new Action(group._id.toString(), 'engineLevel', '1'));
 
       const res = await request.put('/api/scheduler/event')
         .set('Content-Type', 'application/json')
         .set('cookie', [`UVCleanSID=${TestUtitities.createJWTToken('Admin')}`])
-        .send({ name: 'Test1', scheduledEvent });
+        .send({ scheduledEvent: event });
 
       expect(res.status).toBe(201);
 
-      const dbScheduledEvent = await agenda.getEvent('Test2');
-      expect(dbScheduledEvent).toEqual(scheduledEvent);
+      const dbScheduledEvent = await agenda.getEvent(res.body.id);
+      expect(dbScheduledEvent).toEqual(event);
     });
 
     it('returns 401 if body properties are missing', async () => {
@@ -348,22 +338,20 @@ describe('Express schedule route testing', () => {
       await database.addDeviceToGroup('1', group._id.toString());
 
       const triggerTime = new Date(Date.now() + 1000 * 60);
-      const scheduledEvent = new ScheduleEvent(
+
+      const event = await agenda.addEvent(new ScheduleEvent(undefined,
         'Test1',
         new Time([1, 2, 3, 4, 5, 6, 7], new Date(Date.now() - 1000 * 60)),
         [
           new Action(group._id.toString(), 'engineState', 'true'),
-        ],
-      );
+        ]));
 
-      await agenda.addEvent(scheduledEvent);
-
-      scheduledEvent.time = new Time([1, 2, 3, 4, 5, 6, 7], triggerTime);
+      event.time = new Time([1, 2, 3, 4, 5, 6, 7], triggerTime);
 
       const res = await request.put('/api/scheduler/event')
         .set('Content-Type', 'application/json')
         .set('cookie', [`UVCleanSID=${TestUtitities.createJWTToken('Admin')}`])
-        .send({ name: 'Test1', scheduledEvent });
+        .send({ scheduledEvent: event });
 
       expect(res.status).toBe(201);
 
@@ -391,27 +379,24 @@ describe('Express schedule route testing', () => {
     it('deletes event object in database', async () => {
       const group = await database.addGroup({ name: 'Test Group' });
 
-      const scheduledEvent = new ScheduleEvent(
+      const savedEvent = await agenda.addEvent(new ScheduleEvent(undefined,
         'Test1',
         new Time([1, 2, 3, 4, 5, 6, 7], new Date(Date.now())),
         [
           new Action(group._id.toString(), 'engineState', 'true'),
-        ],
-      );
-
-      await agenda.addEvent(scheduledEvent);
+        ]));
 
       const res = await request.delete('/api/scheduler/event')
         .set('Content-Type', 'application/json')
         .set('cookie', [`UVCleanSID=${TestUtitities.createJWTToken('Admin')}`])
-        .send({ name: scheduledEvent.name });
+        .send({ id: savedEvent.id });
 
       expect(res.status).toBe(201);
 
       try {
         await agenda.getEvent('Test1');
       } catch (error) {
-        expect(error.message).toMatch('The event exists mulipletimes or does not exists');
+        expect(error.message).toMatch('The event does not exists');
       }
     });
   });
@@ -423,14 +408,24 @@ describe('Express schedule route testing', () => {
       await agenda.deleteEvents();
     });
 
-    it('returns 404 if the event does not exists', async () => {
+    it('returns 401 if the id is not defined', async () => {
       const res = await request.post('/api/scheduler/testevent')
         .set('Content-Type', 'application/json')
         .set('cookie', [`UVCleanSID=${TestUtitities.createJWTToken('Admin')}`])
         .send();
 
+      expect(res.body.msg).toEqual('id has to be defined and of type string');
+      expect(res.status).toBe(401);
+    });
+
+    it('returns 404 if the event does not exists', async () => {
+      const res = await request.post('/api/scheduler/testevent')
+        .set('Content-Type', 'application/json')
+        .set('cookie', [`UVCleanSID=${TestUtitities.createJWTToken('Admin')}`])
+        .send({ id: 'Test1' });
+
+      expect(res.body.msg).toEqual('The event does not exists');
       expect(res.status).toBe(404);
-      expect(res.body.msg).toEqual('The event exists mulipletimes or does not exists');
     });
 
     it('updates event object that runs at the new time', async (done) => {
@@ -442,15 +437,12 @@ describe('Express schedule route testing', () => {
 
       await database.addDeviceToGroup('1', group._id.toString());
 
-      const scheduledEvent = new ScheduleEvent(
+      const savedEvent = await agenda.addEvent(new ScheduleEvent(undefined,
         'Test1',
         new Time([1, 2, 3, 4, 5, 6, 7], new Date(Date.now() - 1000 * 60)),
         [
           new Action(group._id.toString(), 'engineState', 'true'),
-        ],
-      );
-
-      await agenda.addEvent(scheduledEvent);
+        ]));
 
       mqtt.publish = (topic, message) => {
         try {
@@ -465,7 +457,7 @@ describe('Express schedule route testing', () => {
       const res = await request.post('/api/scheduler/testevent')
         .set('Content-Type', 'application/json')
         .set('cookie', [`UVCleanSID=${TestUtitities.createJWTToken('Admin')}`])
-        .send({ name: 'Test1' });
+        .send({ id: savedEvent.id });
 
       expect(res.status).toBe(201);
     }, 1000 * 70);
