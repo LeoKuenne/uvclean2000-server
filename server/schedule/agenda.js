@@ -136,7 +136,8 @@ module.exports = class AgendaScheduler {
     const jobsWithCurrentName = jobsInDatabase.filter((job) => job.attrs.data.name === eventname);
     if (jobsWithCurrentName.length !== 1) throw new Error('The event exists mulipletimes or does not exists');
 
-    return new ScheduleEvent(jobsWithCurrentName[0].attrs.data.name,
+    return new ScheduleEvent(jobsWithCurrentName[0].attrs._id,
+      jobsWithCurrentName[0].attrs.data.name,
       new Time(jobsWithCurrentName[0].attrs.data.time.days,
         jobsWithCurrentName[0].attrs.data.time.timeofday),
       jobsWithCurrentName[0].attrs.data.actions.map(
@@ -150,7 +151,7 @@ module.exports = class AgendaScheduler {
    */
   async getEvents() {
     const jobsInDatabase = await this.agenda.jobs();
-    return jobsInDatabase.map((job) => new ScheduleEvent(job.attrs.data.name,
+    return jobsInDatabase.map((job) => new ScheduleEvent(job.attrs._id, job.attrs.data.name,
       new Time(job.attrs.data.time.days, job.attrs.data.time.timeofday),
       job.attrs.data.actions.map((a) => new Action(a.group, a.propertie, a.newValue))));
   }
@@ -163,7 +164,6 @@ module.exports = class AgendaScheduler {
     logger.debug('Deleting event %o', scheduleEvent);
     const jobsInDatabase = await this.agenda.jobs();
     jobsInDatabase.map((job) => {
-      console.log(job.attrs.data.name, scheduleEvent.name);
       if (job.attrs.data.name === scheduleEvent.name) {
         logger.debug('Found event %s, removing it', scheduleEvent.name);
         job.remove();
@@ -184,6 +184,11 @@ module.exports = class AgendaScheduler {
     });
   }
 
+  /**
+   * Runs the given event as a test run
+   * @param {String} eventname The name of the event to test
+   * @returns {Promise}
+   */
   async testEvent(eventname) {
     logger.debug('Testing event %s', eventname);
     const jobsInDatabase = await this.agenda.jobs();

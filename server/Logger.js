@@ -15,7 +15,7 @@ const normalFormat = printf((info) => `${info.timestamp} [${info.metadata.servic
 const logger = winston.createLogger({
   transports: [new winston.transports.Console({
     level: 'debug',
-    // silent: process.env.NODE_ENV === 'test',
+    silent: process.env.NODE_ENV === 'test',
     format: combine(
       colorize(),
       timestamp({

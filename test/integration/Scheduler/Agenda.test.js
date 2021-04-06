@@ -39,47 +39,25 @@ describe('Scheduling with agenda', () => {
       await database.clearCollection('groups');
     });
 
-    it('getEvent throws an error if the event exists multiple times', async (done) => {
+    it('adds an event', async () => {
       const group = await database.addGroup({ name: 'Test Group' });
 
-      await agenda.addEvent(new ScheduleEvent(
+      const scheduledEvent = new ScheduleEvent(undefined,
         'Test1',
         new Time([1, 2, 3, 4, 5, 6, 7], new Date(Date.now())),
         [
           new Action(group._id.toString(), 'engineState', 'true'),
-        ],
-      ));
-
-      try {
-        await agenda.addEvent(new ScheduleEvent(
-          'Test1',
-          new Time([1, 2, 3, 4, 5, 6, 7], new Date(Date.now())),
-          [
-            new Action(group._id.toString(), 'engineState', 'true'),
-          ],
-        ));
-        done(new Error('addEvent did not throw'));
-      } catch (error) {
-        expect(error.message).toMatch('Event already exists');
-        done();
-      }
-    });
-
-    it('addEvent adds an event', async () => {
-      const group = await database.addGroup({ name: 'Test Group' });
-
-      const scheduledEvent = new ScheduleEvent(
-        'Test1',
-        new Time([1, 2, 3, 4, 5, 6, 7], new Date(Date.now())),
-        [
-          new Action(group._id.toString(), 'engineState', 'true'),
-        ],
-      );
+        ]);
 
       await agenda.addEvent(scheduledEvent);
 
       const event = await agenda.getEvent('Test1');
-      expect(event).toEqual(scheduledEvent);
+      expect(event.id).toBeDefined();
+      expect(event).toEqual(expect.objectContaining({
+        name: scheduledEvent.name,
+        actions: scheduledEvent.actions,
+        time: scheduledEvent.time,
+      }));
     });
   });
 
@@ -94,13 +72,12 @@ describe('Scheduling with agenda', () => {
 
       const scheduledEvents = [];
       for (let i = 0; i < 10; i += 1) {
-        scheduledEvents.push(new ScheduleEvent(
+        scheduledEvents.push(new ScheduleEvent(undefined,
           `Test${i}`,
           new Time([1, 2, 3, 4, 5, 6, 7], new Date(Date.now())),
           [
             new Action(group._id.toString(), 'engineState', 'true'),
-          ],
-        ));
+          ]));
       }
 
       await scheduledEvents.reduce(async (memo, event) => {
@@ -109,7 +86,14 @@ describe('Scheduling with agenda', () => {
       }, undefined);
 
       const events = await agenda.getEvents();
-      expect(events).toEqual(scheduledEvents);
+      events.forEach((event) => {
+        expect(event.id).toBeDefined();
+        expect(event).toEqual(expect.objectContaining({
+          name: event.name,
+          actions: event.actions,
+          time: event.time,
+        }));
+      });
     });
   });
 
@@ -132,13 +116,12 @@ describe('Scheduling with agenda', () => {
 
       const scheduledEvents = [];
       for (let i = 0; i < 10; i += 1) {
-        scheduledEvents.push(new ScheduleEvent(
+        scheduledEvents.push(new ScheduleEvent(undefined,
           `Test${i}`,
           new Time([1, 2, 3, 4, 5, 6, 7], new Date(Date.now())),
           [
             new Action(group._id.toString(), 'engineState', 'true'),
-          ],
-        ));
+          ]));
       }
 
       await scheduledEvents.reduce(async (memo, event) => {
@@ -158,13 +141,12 @@ describe('Scheduling with agenda', () => {
 
       const scheduledEvents = [];
       for (let i = 0; i < 10; i += 1) {
-        scheduledEvents.push(new ScheduleEvent(
+        scheduledEvents.push(new ScheduleEvent(undefined,
           `Test${i}`,
           new Time([1, 2, 3, 4, 5, 6, 7], new Date(Date.now())),
           [
             new Action(group._id.toString(), 'engineState', 'true'),
-          ],
-        ));
+          ]));
       }
 
       await scheduledEvents.reduce(async (memo, event) => {
@@ -173,7 +155,14 @@ describe('Scheduling with agenda', () => {
       }, undefined);
 
       const event = await agenda.getEvent('Test2');
-      expect(event).toEqual(scheduledEvents[2]);
+      expect(event.id).toBeDefined();
+      expect(event).toEqual(
+        expect.objectContaining({
+          name: scheduledEvents[2].name,
+          actions: scheduledEvents[2].actions,
+          time: scheduledEvents[2].time,
+        }),
+      );
     });
   });
 
@@ -185,13 +174,12 @@ describe('Scheduling with agenda', () => {
 
     it('deleteEvent deletes an event', async () => {
       const group = await database.addGroup({ name: 'Test Group' });
-      const scheduleEvent = new ScheduleEvent(
+      const scheduleEvent = new ScheduleEvent(undefined,
         'Test1',
         new Time([1, 2, 3, 4, 5, 6, 7], new Date(Date.now())),
         [
           new Action(group._id.toString(), 'engineState', 'true'),
-        ],
-      );
+        ]);
 
       await agenda.addEvent(scheduleEvent);
       await agenda.deleteEvent(scheduleEvent);
@@ -209,20 +197,18 @@ describe('Scheduling with agenda', () => {
     it('throws an error if the event exists multiple times', async (done) => {
       const group = await database.addGroup({ name: 'Test Group' });
 
-      await agenda.addEvent(new ScheduleEvent(
+      await agenda.addEvent(new ScheduleEvent(undefined,
         'Test1',
         new Time([1, 2, 3, 4, 5, 6, 7], new Date(Date.now())),
         [
           new Action(group._id.toString(), 'engineState', 'true'),
-        ],
-      ));
-      const scheduledEvent = new ScheduleEvent(
+        ]));
+      const scheduledEvent = new ScheduleEvent(undefined,
         'Test1',
         new Time([1, 2, 3, 4, 5, 6, 7], new Date(Date.now())),
         [
           new Action(group._id.toString(), 'engineState', 'true'),
-        ],
-      );
+        ]);
       const job = agenda.agenda.create('sendMQTTEvent', scheduledEvent).repeatEvery(scheduledEvent.time.toCron());
       await job.save();
 
@@ -238,13 +224,12 @@ describe('Scheduling with agenda', () => {
     it('updates an event with the given object', async () => {
       const group = await database.addGroup({ name: 'Test Group' });
 
-      const scheduledEvent = new ScheduleEvent(
+      const scheduledEvent = new ScheduleEvent(undefined,
         'Test1',
         new Time([1, 2, 3, 4, 5, 6, 7], new Date(Date.now())),
         [
           new Action(group._id.toString(), 'engineState', 'true'),
-        ],
-      );
+        ]);
       await agenda.addEvent(scheduledEvent);
 
       scheduledEvent.time = new Time([1, 2, 3, 6, 7], new Date(Date.now() + 1000 * 2 * 60));
@@ -252,14 +237,21 @@ describe('Scheduling with agenda', () => {
       await agenda.updateEvent('Test1', scheduledEvent);
 
       const event = await agenda.getEvent('Test1');
-      expect(event).toEqual(scheduledEvent);
+      expect(event.id).toBeDefined();
+      expect(event).toEqual(
+        expect.objectContaining({
+          name: scheduledEvent.name,
+          actions: scheduledEvent.actions,
+          time: scheduledEvent.time,
+        }),
+      );
 
       const jobsInDatabase = await agenda.agenda.jobs();
       expect(jobsInDatabase[0].attrs.repeatInterval).toMatch(scheduledEvent.time.toCron());
     });
   });
 
-  describe.only('testEvent', () => {
+  describe('testEvent', () => {
     beforeEach(async () => {
       await agenda.deleteEvents();
       await database.clearCollection('groups');
@@ -284,13 +276,12 @@ describe('Scheduling with agenda', () => {
       const group = await database.addGroup({ name: 'Test Group' });
       await database.addDeviceToGroup('1', group._id.toString());
 
-      const scheduledEvent = new ScheduleEvent(
+      const scheduledEvent = new ScheduleEvent(undefined,
         'Test1',
         new Time([1, 2, 3, 4, 5, 6, 7], new Date(Date.now())),
         [
           new Action(group._id.toString(), 'engineState', 'true'),
-        ],
-      );
+        ]);
       await agenda.addEvent(scheduledEvent);
 
       mqtt.publish = jest.fn();
@@ -333,13 +324,12 @@ describe('Scheduling with agenda', () => {
         }
       };
 
-      await agenda.addEvent(new ScheduleEvent(
+      await agenda.addEvent(new ScheduleEvent(undefined,
         'Test1',
         new Time([1, 2, 3, 4, 5, 6, 7], triggerTime),
         [
           new Action(group._id.toString(), 'engineState', 'true'),
-        ],
-      ));
+        ]));
     }, 1000 * 70);
   });
 });
