@@ -41,40 +41,27 @@
       :title="heading"
       :show="showEditForm"
       :errorMessage="errorMessage"
+      :isEdit="isFormEdit"
+      @update="updateDevice(formDevice)"
+      @delete="deleteDevice(formDevice)"
+      @add="addDevice(formDevice)"
       @close="closeAddForm">
-      <label for="add_devicename">Devicename</label>
-      <input id="add_devicename"
-        :value="formDevice.name"
-        @input="formDevice.name = $event.target.value"
-        type="text"
-        placeholder="UVCClean2000 Dach"
-        class="rounded p-2 border-2 border-gray-500 mb-4">
-      <label for="add_deviceserialnumber">Serialnumber</label>
-      <input id="add_deviceserialnumber"
-        :value="formDevice.serialnumber"
-        :disabled="isFormEdit"
-        @input="formDevice.serialnumber = $event.target.value"
-        type="text"
-        placeholder="123456789"
-        class="rounded p-2 border-2 border-gray-500 mb-4">
-      <div class="flex flex-col md:inline-block md:float-left">
-        <button class="float-left p-2 font-semibold hover:transform hover:scale-105 transition-all
-          text-red-500"
-          v-show="isFormEdit"
-          @click="deleteDevice(formDevice)">
-          Delete
-        </button>
-        <div class="flex flex-col md:inline-block md:float-right space-x-2">
-          <button class="font-semibold p-2 hover:transform hover:scale-105 transition-all
-            bg-primary text-white" type="submit"
-            @click="(isFormEdit) ? updateDevice(formDevice) : addDevice(formDevice)">
-            {{okProp}}
-          </button>
-          <button class="font-semibold hover:transform hover:scale-105 transition-all"
-            @click="closeAddForm">
-            Close
-          </button>
-        </div>
+      <div class="">
+        <label for="add_devicename" class="">Devicename</label>
+        <input id="add_devicename"
+          :value="formDevice.name"
+          @input="formDevice.name = $event.target.value"
+          type="text"
+          placeholder="UVCClean2000 Dach"
+          class="block rounded p-2 border-2 border-gray-500 mb-4 w-full">
+        <label for="add_deviceserialnumber">Serialnumber</label>
+        <input id="add_deviceserialnumber"
+          :value="formDevice.serialnumber"
+          :disabled="isFormEdit"
+          @input="formDevice.serialnumber = $event.target.value"
+          type="text"
+          placeholder="123456789"
+          class="block rounded p-2 border-2 border-gray-500 mb-4 w-full">
       </div>
     </UVCForm>
 
@@ -82,6 +69,11 @@
       :title="'Group Assignment'"
       :show="showGroupAssignmentForm"
       :errorMessage="errorMessage"
+      :isEdit="formDevice.group.name !== undefined"
+      :confirmText="'Assign'"
+      :deleteText="'Remove assignment'"
+      @delete="removeGroupAssignment"
+      @add="assignDeviceToGroup"
       @close="closeGroupForm">
       <h2><span class="font-bold">Device:</span> {{formDevice.name}}</h2>
       <div class="w-full flex flex-col md:flex-row md:items-center md:space-x-2">
@@ -96,28 +88,6 @@
             {{group.name}}
           </option>
         </select>
-      </div>
-      <div class="flex flex-col md:inline-block md:float-left">
-        <button
-          v-if="formDevice.group.name"
-          @click="removeGroupAssignment"
-          class="float-left font-semibold p-2 text-red-500
-          hover:transform hover:scale-105 transition-all">
-          Remove assignment
-        </button>
-        <div class="flex flex-col md:inline-block md:float-right space-x-2">
-          <button
-            @click="assignDeviceToGroup"
-            class="font-semibold p-2 hover:transform hover:scale-105 transition-all
-              bg-primary text-white">
-            Assign
-          </button>
-          <button
-            @click="closeGroupForm"
-            class="font-semibold hover:transform hover:scale-105 transition-all">
-            Close
-          </button>
-        </div>
       </div>
     </UVCForm>
     <ConfirmPrompt

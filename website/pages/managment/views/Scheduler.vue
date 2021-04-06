@@ -1,7 +1,7 @@
 <template>
   <div class="p-2 flex flex-col overflow-auto">
-    <div class="flex items-center space-x-5 p-2 pb-5">
-      <h2 class="text-lg font-bold">Scheduled Events</h2>
+    <div class="flex items-center flex-wrap p-2 pb-5">
+      <h2 class="text-lg font-bold pr-5">Scheduled Events</h2>
       <button
         v-if="$dataStore.user.userrole.rules.canEditUser.allowed"
         @click="showAddForm()"
@@ -25,7 +25,7 @@
         :key="scheduledEvent.id" :scheduleEvent="scheduledEvent"
         :class="[(event === scheduledEvent.id) ? 'transform scale-105': '']"
         :ref="'event' + scheduledEvent.id"
-        class="duration-200 m-5 w-96"
+        class="duration-200 m-2 sm:m-5 w-80 md:w-96"
         @editScheduleEvent="showEditForm($event)"
         @testScheduleEvent="testScheduleEvent($event)">
       </schedule-event>
@@ -33,68 +33,54 @@
     <uvc-form
       :errorMessage="errorMessage"
       :show="showForm"
-      :title="formTitle">
-      <label for="eventTitle">Name:</label>
-      <input type="text" class="border border-gray-500 rounded p-2" placeholder="Turn on Stage"
-        :value="formEvent.name"
-        @input="(isFormEdit) ?
-          formEvent.newName = $event.target.value : formEvent.name = $event.target.value">
-      <h2>Time to execute at:</h2>
-      <div class="flex items-center">
-        <datetime
-          id="dateFrom"
-          :title="'Time to execute at:'"
-          v-model="formEvent.time.timeofday"
-          :type="'time'"
-          class="border border-gray-500 rounded">
-        </datetime>
-        <div class="flex w-full justify-center">
-          <execute-day v-for="index in 7" :key="index"
-            :active="formEvent.time.days.indexOf(index) >= 0" :day="index"
-            @dayClicked="formDayClicked(index)">
-          </execute-day>
+      :title="formTitle"
+      :isEdit="isFormEdit"
+      @update="updateScheduledEvent(formEvent)"
+      @delete="deleteScheduleEvent(formEvent)"
+      @add="addScheduledEvent(formEvent)"
+      @close="closeForm">
+      <div class="">
+        <label for="eventTitle">Name:</label>
+        <input type="text" class="block border border-gray-500 rounded p-2 w-full"
+          placeholder="Turn on Stage"
+          v-model="formEvent.name">
+        <h2>Time to execute at:</h2>
+        <div class="sm:flex sm:items-center">
+          <datetime
+            id="dateFrom"
+            :title="'Time to execute at:'"
+            v-model="formEvent.time.timeofday"
+            :type="'time'"
+            class="border border-gray-500 rounded">
+          </datetime>
+          <div class="mt-2 sm:mt-0 flex flex-wrap w-full justify-center">
+            <execute-day v-for="index in 7" :key="index"
+              :active="formEvent.time.days.indexOf(index) >= 0" :day="index"
+              @dayClicked="formDayClicked(index)">
+            </execute-day>
+          </div>
         </div>
-      </div>
-      <h2>Actions:</h2>
-      <div class="">
-        <action v-for="(action, i) in formEvent.actions"
-          :key="i" :action="action" :active="true"
-          @deleteClicked="formDeleteAction(i)">
-        </action>
-        <button class="flex justify-center items-center p-2 w-2/3 mx-auto
-          transform duration-75 hover:scale-105"
-              @click="formEvent.actions.push({
-                group: $dataStore.groups[0].id,
-                propertie: 'engineState',
-                newValue: 'false'
-              })">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" class="w-5 h-5 mr-2" viewBox="0 0 16 16">
-            <path d="M14 1a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h12zM2
-              0a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2H2z"/>
-            <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1
-              0-1h3v-3A.5.5 0 0 1 8 4z"/>
-          </svg>
-          <span>Add action</span>
-        </button>
-      </div>
-      <div class="">
-        <button
-          class="float-left p-2 font-semibold hover:transform hover:scale-105 transition-all
-          text-red-500"
-          v-show="isFormEdit"
-          :disabled="!isFormEdit"
-          @click="deleteScheduleEvent(formEvent)">
-          Delete
-        </button>
-        <div class="float-right space-x-2">
-          <button class="font-semibold p-2 hover:transform hover:scale-105 transition-all
-            bg-primary text-white"
-            @click="(isFormEdit) ? updateScheduledEvent(formEvent) : addScheduledEvent(formEvent)">
-            {{okProp}}
-          </button>
-          <button class="font-semibold p-2 hover:transform hover:scale-105 transition-all"
-            @click="closeUserForm">
-            Close
+        <h2>Actions:</h2>
+        <div class="p-2 h-80 overflow-auto bg-gray-100 border border-gray-500
+          rounded shadow">
+          <action v-for="(action, i) in formEvent.actions"
+            :key="i" :action="action" :active="true"
+            @deleteClicked="formDeleteAction(i)">
+          </action>
+          <button class="flex justify-center items-center p-2 w-2/3 mx-auto
+            transform duration-75 hover:scale-105"
+                @click="formEvent.actions.push({
+                  group: $dataStore.groups[0].id,
+                  propertie: 'engineState',
+                  newValue: 'false'
+                })">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" class="w-5 h-5 mr-2" viewBox="0 0 16 16">
+              <path d="M14 1a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h12zM2
+                0a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2H2z"/>
+              <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1
+                0-1h3v-3A.5.5 0 0 1 8 4z"/>
+            </svg>
+            <span>Add action</span>
           </button>
         </div>
       </div>
@@ -238,7 +224,7 @@ export default {
       this.formEvent.newName = event.name;
       this.showForm = true;
     },
-    closeUserForm() {
+    closeForm() {
       this.showForm = false;
     },
     /**

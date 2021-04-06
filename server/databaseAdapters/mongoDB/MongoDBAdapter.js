@@ -1074,7 +1074,7 @@ module.exports = class MongoDBAdapter extends EventEmitter {
     if (this.db === undefined) throw new Error('Database is not connected');
     if (group.id === undefined || typeof group.id !== 'string') throw new Error('id has to be defined and typeof string.');
 
-    logger.info(`Deleting group ${group}`);
+    logger.info('Deleting group %o', group);
 
     const devices = await (await this.getGroup(`${group.id}`)).devices;
     for (let i = 0; i < devices.length; i += 1) {

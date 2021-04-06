@@ -37,52 +37,38 @@
       :title="heading"
       :show="showEditForm"
       :errorMessage="errorMessage"
-      @close="closeAddForm">
-      <label for="add_groupname">Group Name</label>
-      <input id="add_groupname"
-        v-bind:value="formGroup.name"
-        @input="formGroup.name = $event.target.value"
-        type="text"
-        placeholder="Dach"
-        class="rounded p-2 border-2 border-gray-500 mb-4">
-      <label v-if="isFormEdit" for="add_groupid">Group ID</label>
-      <input v-if="isFormEdit" id="add_groupid"
-        v-bind:value="formGroup.id"
-        v-bind:disabled="isFormEdit"
-        @input="formGroup.id = $event.target.value"
-        type="text"
-        placeholder="123456789"
-        class="rounded p-2 border-2 border-gray-500 mb-4">
-      <div class="flex flex-col md:inline-block md:float-left">
-        <button
-          @click="deleteGroup(formGroup)"
-          class="float-left p-2 font-semibold hover:transform hover:scale-105 transition-all
-          text-red-500"
-          v-show="isFormEdit">
-          Delete
-        </button>
-        <div class="flex flex-col md:inline-block md:float-right space-x-2">
-          <button
-            @click="(isFormEdit) ? updateGroup(formGroup) : addGroup(formGroup)"
-            class="font-semibold p-2 hover:transform hover:scale-105 transition-all
-            bg-primary text-white">
-            {{okProp}}
-          </button>
-          <button
-            @click="closeAddForm"
-            class="font-semibold hover:transform hover:scale-105 transition-all">
-            Close
-          </button>
-        </div>
+      :isEdit="isFormEdit"
+      @close="closeAddForm"
+      @update="updateGroup(formGroup)"
+      @delete="deleteGroup(formGroup)"
+      @add="addGroup(formGroup)">
+      <div class="">
+        <label for="add_groupname">Group Name</label>
+        <input id="add_groupname"
+          v-bind:value="formGroup.name"
+          @input="formGroup.name = $event.target.value"
+          type="text"
+          placeholder="Dach"
+          class="block rounded p-2 border border-gray-500 mb-4 w-full">
+        <label v-if="isFormEdit" for="add_groupid">Group ID</label>
+        <input v-if="isFormEdit" id="add_groupid"
+          v-bind:value="formGroup.id"
+          v-bind:disabled="isFormEdit"
+          @input="formGroup.id = $event.target.value"
+          type="text"
+          placeholder="123456789"
+          class="block rounded p-2 border border-gray-500 mb-4 w-full">
       </div>
     </UVCForm>
     <UVCForm
       :title="'Set Devices in Group'"
       :show="showSetDeviceForm"
       :errorMessage="errorMessage"
-      @close="closeSetDeviceForm">
+      :confirmText="'Set'"
+      @close="closeSetDeviceForm"
+      @add="setDevices">
       <h2>Group: {{ formGroup.name }}</h2>
-      <div class="p-2 bg-white border border-gray-400 rounded">
+      <div class="flex-grow p-2 bg-white border border-gray-400 rounded">
         <div class="space-x-2"
           v-for="device in $root.$dataStore.devices"
           :key="device.serialnumber">
@@ -101,19 +87,6 @@
             ({{device.group.name}})
           </label>
         </div>
-      </div>
-      <div class="flex flex-col md:flex-row md:inline-flex md:justify-end space-x-2">
-        <button
-          class="font-semibold p-2 hover:transform hover:scale-105 transition-all
-          bg-primary text-white"
-          @click="setDevices">
-          Set
-        </button>
-        <button
-          @click="closeSetDeviceForm"
-          class="font-semibold p-2 hover:transform hover:scale-105 transition-all">
-          Close
-        </button>
       </div>
     </UVCForm>
     <ConfirmPrompt
