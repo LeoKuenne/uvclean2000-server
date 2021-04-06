@@ -166,7 +166,7 @@ module.exports = class AgendaScheduler {
     const jobsInDatabase = await this.agenda.jobs();
     jobsInDatabase.map((job) => {
       if (job.attrs._id.toString() === id) {
-        logger.debug('Found event %s, removing it', id.name);
+        logger.debug('Found event %s, removing it', id);
         job.remove();
       }
       return job;

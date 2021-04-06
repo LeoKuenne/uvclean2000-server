@@ -1,6 +1,6 @@
 <template>
-  <router-link :to="{ name: 'scheduler', query: { event: this.scheduleEvent.name } }"
-    class="flex m-2" tag="div">
+  <router-link :to="{ name: 'scheduler', query: { event: this.scheduleEvent.id } }"
+    class="flex" tag="div">
     <!-- <div class="w-28 p-2 px-5 flex items-center">
       <h2 class="w-full text-center">
         at {{new Date(scheduleEvent.time.timeofday).getHours()}}:{{
@@ -40,8 +40,8 @@
       <div class="px-2 text-sm">
         <h2>Actions to perform:</h2>
         <div class="p-2 flex flex-col">
-          <action v-for="(action) in scheduleEvent.actions"
-            :key="action.propertie" :action="action">
+          <action v-for="(action,i) in scheduleEvent.actions"
+            :key="i" :action="action">
           </action>
         </div>
       </div>

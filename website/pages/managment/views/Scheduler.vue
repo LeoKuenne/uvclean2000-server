@@ -22,10 +22,10 @@
       tag="div"
       @click="$route.query.event=''">
       <schedule-event v-for="scheduledEvent in $dataStore.scheduledEvents"
-        :key="scheduledEvent.name" :scheduleEvent="scheduledEvent"
-        :class="[(event === scheduledEvent.name) ? 'transform scale-105': '']"
-        :ref="'event' + scheduledEvent.name"
-        class="duration-200 p-5 w-96"
+        :key="scheduledEvent.id" :scheduleEvent="scheduledEvent"
+        :class="[(event === scheduledEvent.id) ? 'transform scale-105': '']"
+        :ref="'event' + scheduledEvent.id"
+        class="duration-200 m-5 w-96"
         @editScheduleEvent="showEditForm($event)"
         @testScheduleEvent="testScheduleEvent($event)">
       </schedule-event>
@@ -123,8 +123,7 @@ export default {
     },
   },
   watch: {
-    event(oldVal, newVal) {
-      console.log(oldVal, newVal);
+    event() {
       if (this.event !== undefined && this.event.match(/[0-9]/gm)) {
         this.scrollToElement(this.event);
       }
@@ -145,7 +144,7 @@ export default {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          name: event.name,
+          id: event.id,
         }),
       });
     },
@@ -156,12 +155,7 @@ export default {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          name: event.name,
-          scheduledEvent: {
-            name: event.newName,
-            actions: event.actions,
-            time: event.time,
-          },
+          scheduledEvent: event,
         }),
       });
 
@@ -180,7 +174,7 @@ export default {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ name: event.name }),
+        body: JSON.stringify({ id: event.id }),
       });
 
       if (response.status !== 201) {

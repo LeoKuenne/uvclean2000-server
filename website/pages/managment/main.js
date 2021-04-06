@@ -401,14 +401,16 @@ fetch('/api/loggedinUser')
             const events = [];
             const serverEvents = await response.json();
             serverEvents.forEach((scheduledEvent) => {
-              events.push({
-                name: scheduledEvent.name,
-                time: {
-                  timeofday: scheduledEvent.time.timeofday,
-                  days: scheduledEvent.time.days,
-                },
-                actions: scheduledEvent.actions,
-              });
+              events.push(scheduledEvent);
+              // {
+              //   id: scheduledEvent.id,
+              //   name: scheduledEvent.name,
+              //   time: {
+              //     timeofday: scheduledEvent.time.timeofday,
+              //     days: scheduledEvent.time.days,
+              //   },
+              //   actions: scheduledEvent.actions,
+              // },
             });
             return events;
           } catch (error) {
