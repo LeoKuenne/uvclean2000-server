@@ -7,18 +7,18 @@
       >
       <transition name="formAppearScale">
         <form @submit="submit($event)"
-          class="z-20 fixed flex flex-col w-full h-full justify-center items-center
-            sm:w-11/12 sm:max-w-3xl sm:h-auto text-color space-y-2 whitespace-nowrap bg-white p-3
-            rounded"
+          class="z-20 fixed w-full h-full max-h-full overflow-auto
+            sm:w-11/12 sm:max-w-3xl sm:h-auto
+            text-color space-y-2 whitespace-nowrap bg-white p-3 rounded"
           @click.stop>
-          <div class="flex flex-col w-5/6">
+          <div class="w-5/6 m-auto">
             <h1 class="text-xl font-bold pb-5 pt-2">{{ title }}</h1>
             <h1 class="font-bold pb-5 text-red-500 whitespace-pre-line"
               :class="[(errorMessage !== '') ? 'visible' : 'hidden']">
               Error: {{ errorMessage }}
             </h1>
-            <slot></slot>
-            <div class="inline-block float-left w-full mt-3">
+            <slot class="block"></slot>
+            <div class="block float-left w-full mt-3">
               <button
                 @click="$emit('delete')"
                 class="float-left p-2 font-semibold hover:transform hover:scale-105 transition-all
