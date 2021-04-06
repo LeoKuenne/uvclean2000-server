@@ -15,6 +15,7 @@ global.config = {
 let database = null;
 let agenda = null;
 const server = new EventEmitter();
+const io = new EventEmitter();
 const mqtt = {};
 
 beforeAll(async () => {
@@ -22,7 +23,7 @@ beforeAll(async () => {
   await database.connect();
   agenda = new AgendaScheduler(`${global.__MONGO_URI__}`, server, database, mqtt);
   // agenda = new AgendaScheduler('mongodb://192.168.178.66/agenda', server, database, mqtt);
-  await agenda.startScheduler();
+  await agenda.startScheduler(mqtt, io);
 });
 
 afterAll(async () => {

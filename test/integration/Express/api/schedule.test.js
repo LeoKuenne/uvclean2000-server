@@ -22,6 +22,7 @@ let expressServer = null;
 let agenda = null;
 let database = null;
 let server = null;
+const io = new EventEmitter();
 const mqtt = {
   publish: (topic, message) => {
     console.log(topic, message);
@@ -30,12 +31,12 @@ const mqtt = {
 
 beforeAll(async () => {
   server = new EventEmitter();
-  server.on('error', (e) => { console.error(e); });
+  server.on('error', (e) => { });
   database = new MongoDBAdapter(global.__MONGO_URI__.replace('mongodb://', ''), '');
   agenda = new AgendaScheduler(global.__MONGO_URI__, server, database, mqtt);
   // agenda = new AgendaScheduler('mongodb://192.168.178.66/agenda', server, database, mqtt);
   await database.connect();
-  await agenda.startScheduler();
+  await agenda.startScheduler(mqtt, io);
   expressServer = new ExpressServer(server, database, agenda);
   expressServer.startExpressServer();
   request = supertest(expressServer.app);

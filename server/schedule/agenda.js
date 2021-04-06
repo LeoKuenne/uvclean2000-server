@@ -1,6 +1,6 @@
 const Agenda = require('agenda');
 const { MqttClient } = require('mqtt');
-const MQTTGroupChangeState = require('../commands/MQTTCommands/MQTTGroupChangeState');
+const GroupChangeState = require('../commands/GroupChangeState');
 const Action = require('./module/Action');
 const ScheduleEvent = require('./module/ScheduleEvent');
 const Time = require('./module/Time');
@@ -47,7 +47,9 @@ module.exports = class AgendaScheduler {
     });
   }
 
-  async startScheduler() {
+  async startScheduler(mqtt, io) {
+    this.mqtt = mqtt;
+    this.io = io;
     await this.agenda.start();
     logger.info('Starting scheduler');
 
@@ -59,7 +61,7 @@ module.exports = class AgendaScheduler {
           try {
             await memo;
             const group = await this.database.getGroup(action.group);
-            await MQTTGroupChangeState.execute(this.mqtt, group, action.propertie,
+            await GroupChangeState.execute(this.database, this.io, this.mqtt, group.id, action.propertie,
               action.newValue);
           } catch (error) {
             console.error(error);

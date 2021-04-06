@@ -36,6 +36,7 @@ const Userrole = require('./dataModels/Userrole');
 const DeleteUserCommand = require('./commands/UserCommand/DeleteUserCommand');
 const UpdateUserroleRightsCommand = require('./commands/UserCommand/UpdateUserroleRightsCommand');
 const AgendaScheduler = require('./schedule/agenda');
+const schedulerRoutes = require('./ExpressServer/routes/schedulerRoutes');
 
 const logger = MainLogger.child({ service: 'UVCleanServer' });
 
@@ -85,7 +86,6 @@ class UVCleanServer extends EventEmitter {
     logger.info({ level: 'info', message: 'Starting server' });
     try {
       this.express.startExpressServer();
-      this.agenda.startScheduler();
 
       this.io = socketio(this.express.httpServer, {
         cors: {
@@ -224,6 +224,9 @@ class UVCleanServer extends EventEmitter {
       this.mqttClient.on('connect', async () => {
         logger.info(`Connected to: mqtt://${config.mqtt.broker}:${config.mqtt.port}`);
         this.io.emit('info', { message: 'MQTT Client connected' });
+
+        this.agenda.startScheduler(this.mqttClient, this.io);
+
         try {
           // Subscribe to all devices that already exists if the database is connected
           if (this.database.isConnected()) {
