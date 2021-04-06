@@ -2423,6 +2423,21 @@ describe('MongoDBAdapter Functions', () => {
       });
     });
 
+    it('deleteGroup deletes a group and returns it', async () => {
+      const group = {
+        name: 'Test Group 1',
+      };
+
+      const addedGroup = await database.addGroup(group);
+      const docGroup = await database.getGroup(addedGroup._id.toString());
+      group.id = addedGroup._id.toString();
+
+      const deletedGroup = await database.deleteGroup(group);
+      expect(deletedGroup._id).toEqual(docGroup.id);
+      expect(deletedGroup.name).toEqual(docGroup.name);
+      expect(deletedGroup.devices).toEqual(docGroup.devices);
+    });
+
     it('deleteGroup deletes a group and removes the group of each device in that group', async () => {
       const group = await database.addGroup({
         name: 'Test Group',

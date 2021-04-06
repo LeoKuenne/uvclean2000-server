@@ -4,7 +4,6 @@ const MainLogger = require('../../Logger.js').logger;
 const logger = MainLogger.child({ service: 'UserMiddleware' });
 
 module.exports = {
-  register: (databaseAdapter) => { database = databaseAdapter; },
   validateRegister: (req, res, next) => {
     logger.debug('Validate sign up parameters, username: %s, password %s', req.body.username, req.body.username);
     if (!req.body.username) {
@@ -49,7 +48,7 @@ module.exports = {
 
       logger.debug('User is logged in. %o', decoded);
       req.userData = decoded;
-      next();
+      return next();
     } catch (err) {
       logger.debug('User is not logged in.');
       logger.error(err);

@@ -201,7 +201,7 @@
                 </svg>
               </button>
             </div>
-            <transition name="slide">
+            <transition name="lampSlide">
               <div v-if="showLampValues" class="col-span-2  grid grid-cols-4">
                 <div class=""
                   v-for="(lampValue, lamp) in device.currentLampValue"
@@ -386,18 +386,18 @@ export default {
 </script>
 
 <style>
-.slide-enter-active,
-.slide-leave-active {
+.lampSlide-enter-active,
+.lampSlide-leave-active {
   @apply duration-200;
   @apply ease-in-out;
 }
 
-.slide-enter-to, .slide-leave {
-   max-height: 100px;
+.lampSlide-enter-to, .lampSlide-leave {
+   max-height: 800px;
    overflow: hidden;
 }
 
-.slide-enter, .slide-leave-to {
+.lampSlide-enter, .lampSlide-leave-to {
    overflow: hidden;
    max-height: 0;
 }

@@ -6,7 +6,7 @@ async function execute(db, io, mqtt, message) {
   logger.info('Event: group_delete: %o', message);
 
   if (message.id !== undefined && typeof message.id !== 'string') {
-    throw new Error('Name must be defined and of type string');
+    throw new Error('Id must be defined and of type string');
   }
 
   const group = {
@@ -14,7 +14,7 @@ async function execute(db, io, mqtt, message) {
   };
 
   const dbGroup = await db.deleteGroup(group);
-  const docGroup = await db.getGroup(`${dbGroup.id}`).catch((e) => {
+  await db.getGroup(`${dbGroup._id}`).catch((e) => {
     if (e.message === 'Group does not exists') {
       logger.debug('deleted group from database, sending group_deleted event');
 

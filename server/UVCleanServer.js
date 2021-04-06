@@ -35,6 +35,8 @@ const User = require('./dataModels/User');
 const Userrole = require('./dataModels/Userrole');
 const DeleteUserCommand = require('./commands/UserCommand/DeleteUserCommand');
 const UpdateUserroleRightsCommand = require('./commands/UserCommand/UpdateUserroleRightsCommand');
+const AgendaScheduler = require('./schedule/agenda');
+const schedulerRoutes = require('./ExpressServer/routes/schedulerRoutes');
 
 const logger = MainLogger.child({ service: 'UVCleanServer' });
 
@@ -42,10 +44,20 @@ class UVCleanServer extends EventEmitter {
   constructor() {
     super();
 
+    this.on('error', (e) => {
+      logger.error(e.error);
+    });
+
+    this.on('info', (options) => {
+      logger.info(options.message);
+    });
+
     this.database = new MongoDBAdapter(`${config.database.uri}:${config.database.port}`,
       config.database.database);
 
-    this.express = new ExpressServer(this, this.database);
+    this.agenda = new AgendaScheduler(`mongodb://${config.database.uri}:${config.database.port}/uvclean-server`, this, this.database, this.mqttClient);
+
+    this.express = new ExpressServer(this, this.database, this.agenda);
     fs.writeFileSync(config.mqtt.secret, 'NQCNtEul3sEuOwMSRExMeh_RQ0iYD0USEemo00G4pCg=', { encoding: 'base64' });
 
     CreateUserCommand.register(this.database);
@@ -65,7 +77,7 @@ class UVCleanServer extends EventEmitter {
 
     this.express.stopExpressServer();
 
-    if (this.client !== undefined) { this.client.end(); }
+    if (this.mqttClient !== undefined) { this.mqttClient.end(); }
 
     this.io.close();
   }
@@ -83,12 +95,10 @@ class UVCleanServer extends EventEmitter {
       });
 
       this.on('error', (e) => {
-        logger.error(e.error);
         this.io.emit('error', { message: `${e.service}: ${e.error.message}` });
       });
 
       this.on('info', (options) => {
-        logger.info(options.message);
         this.io.emit('info', { message: `${options.service}: ${options.message}` });
       });
 
@@ -97,22 +107,22 @@ class UVCleanServer extends EventEmitter {
         logger.info('A dashboard connected');
         logger.info(`Registering SocketIO Modules for socket ${socket.request.connection.remoteAddress}`);
 
-        AddDevice(this, this.database, this.io, this.client, socket);
-        DeleteDevice(this, this.database, this.io, this.client, socket);
-        DeviceChangeState(this, this.database, this.io, this.client, socket);
-        ResetDevice(this, this.database, this.io, this.client, socket);
-        AcknowledgeDeviceAlarm(this, this.database, this.io, this.client, socket);
-        AddGroup(this, this.database, this.io, this.client, socket);
-        DeleteGroup(this, this.database, this.io, this.client, socket);
-        GroupChangeState(this, this.database, this.io, this.client, socket);
-        AddDeviceToGroup(this, this.database, this.io, this.client, socket);
-        RemoveDeviceFromGroup(this, this.database, this.io, this.client, socket);
-        SetDevicesInGroup(this, this.database, this.io, this.client, socket);
-        AddUser(this, this.database, this.io, this.client, socket);
-        DeleteUser(this, this.database, this.io, this.client, socket);
-        UpdateUser(this, this.database, this.io, this.client, socket);
-        UpdateUserPassword(this, this.database, this.io, this.client, socket);
-        IdentifyDevice(this, this.database, this.io, this.client, socket);
+        AddDevice(this, this.database, this.io, this.mqttClient, socket);
+        DeleteDevice(this, this.database, this.io, this.mqttClient, socket);
+        DeviceChangeState(this, this.database, this.io, this.mqttClient, socket);
+        ResetDevice(this, this.database, this.io, this.mqttClient, socket);
+        AcknowledgeDeviceAlarm(this, this.database, this.io, this.mqttClient, socket);
+        AddGroup(this, this.database, this.io, this.mqttClient, socket);
+        DeleteGroup(this, this.database, this.io, this.mqttClient, socket);
+        GroupChangeState(this, this.database, this.io, this.mqttClient, socket);
+        AddDeviceToGroup(this, this.database, this.io, this.mqttClient, socket);
+        RemoveDeviceFromGroup(this, this.database, this.io, this.mqttClient, socket);
+        SetDevicesInGroup(this, this.database, this.io, this.mqttClient, socket);
+        AddUser(this, this.database, this.io, this.mqttClient, socket);
+        DeleteUser(this, this.database, this.io, this.mqttClient, socket);
+        UpdateUser(this, this.database, this.io, this.mqttClient, socket);
+        UpdateUserPassword(this, this.database, this.io, this.mqttClient, socket);
+        IdentifyDevice(this, this.database, this.io, this.mqttClient, socket);
 
         // Debug any messages that are coming from the frontend
         socket.onAny((event, ...args) => {
@@ -171,11 +181,11 @@ class UVCleanServer extends EventEmitter {
         }));
 
         try {
-          if (this.client.connected) {
+          if (this.mqttClient.connected) {
             const db = await this.database.getDevices();
             db.forEach((device) => {
               logger.info(`Subscribing to UVClean/${device.serialnumber}/#`);
-              this.client.subscribe(`UVClean/${device.serialnumber}/#`);
+              this.mqttClient.subscribe(`UVClean/${device.serialnumber}/#`);
             });
           }
         } catch (error) {
@@ -205,22 +215,25 @@ class UVCleanServer extends EventEmitter {
       });
 
       logger.info(`Trying to connect to: mqtt://${config.mqtt.broker}:${config.mqtt.port}`);
-      this.client = mqtt.connect(`mqtt://${config.mqtt.broker}:${config.mqtt.port}`);
+      this.mqttClient = mqtt.connect(`mqtt://${config.mqtt.broker}:${config.mqtt.port}`);
 
       // Register MQTT actions
       if (config.mqtt.useEncryption) DeviceStateChanged.use(decrypt);
-      DeviceStateChanged.register(this, this.database, this.io, this.client);
+      DeviceStateChanged.register(this, this.database, this.io, this.mqttClient);
 
-      this.client.on('connect', async () => {
+      this.mqttClient.on('connect', async () => {
         logger.info(`Connected to: mqtt://${config.mqtt.broker}:${config.mqtt.port}`);
         this.io.emit('info', { message: 'MQTT Client connected' });
+
+        this.agenda.startScheduler(this.mqttClient, this.io);
+
         try {
           // Subscribe to all devices that already exists if the database is connected
           if (this.database.isConnected()) {
             const db = await this.database.getDevices();
             db.forEach((device) => {
               logger.info(`Subscribing to UVClean/${device.serialnumber}/#`);
-              this.client.subscribe(`UVClean/${device.serialnumber}/#`);
+              this.mqttClient.subscribe(`UVClean/${device.serialnumber}/#`);
             });
           }
         } catch (error) {
@@ -228,7 +241,7 @@ class UVCleanServer extends EventEmitter {
         }
       });
 
-      this.client.on('offline', async () => {
+      this.mqttClient.on('offline', async () => {
         logger.info(`Disconnected from: mqtt://${config.mqtt.broker}:${config.mqtt.port}`);
         this.io.emit('warn', { message: 'MQTT Client disconnected' });
       });
