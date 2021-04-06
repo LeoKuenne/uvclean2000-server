@@ -224,12 +224,18 @@ export default {
      */
     addDevice(device) {
       if (device.name === '' || device.name.match(/[^0-9A-Za-z+ ]/gm) !== null) {
-        this.errorMessage = `Name has to be vaild. Only numbers, letters and "+" are allowed.\n Invalid characters: ${device.name.match(/[^0-9A-Za-z+ ]/gm).join(',')}`;
+        this.errorMessage = 'Name has to be vaild. Only numbers, letters and "+" are allowed.\n';
+        if (device.name.match(/[^0-9A-Za-z+ ]/gm)) {
+          this.errorMessage += `Invalid characters: ${device.name.match(/[^0-9A-Za-z+ ]/gm).join(',')}`;
+        }
         return;
       }
 
       if (device.serialnumber === '' || device.serialnumber.match(/[^0-9]/gm) !== null) {
-        this.errorMessage = `Serialnumber has to be vaild. Only Numbers are allowed.\n Invalid characters: ${device.serialnumber.match(/[^0-9]/gm).join(',')}`;
+        this.errorMessage = 'Serialnumber has to be vaild. Only Numbers are allowed.\n';
+        if (device.serialnumber.match(/[^0-9A-Za-z+ ]/gm)) {
+          this.errorMessage += `Invalid characters: ${device.serialnumber.match(/[^0-9A-Za-z+ ]/gm).join(',')}`;
+        }
         return;
       }
 

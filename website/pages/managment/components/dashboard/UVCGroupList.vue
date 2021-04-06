@@ -166,7 +166,10 @@ export default {
     },
     addGroup(group) {
       if (group.name === '' || group.name.match(/[^0-9A-Za-z+ ]/gm) !== null) {
-        this.errorMessage = `Name has to be vaild. Only numbers, letters and "+" are allowed.\n Invalid characters: ${group.name.match(/[^0-9A-Za-z+ ]/gm).join(',')}`;
+        this.errorMessage = 'Name has to be vaild. Only numbers, letters and "+" are allowed.\n';
+        if (group.name.match(/[^0-9A-Za-z+ ]/gm)) {
+          this.errorMessage += `Invalid characters: ${group.name.match(/[^0-9A-Za-z+ ]/gm).join(',')}`;
+        }
         return;
       }
 
