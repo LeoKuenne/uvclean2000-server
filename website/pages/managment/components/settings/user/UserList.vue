@@ -27,6 +27,10 @@
       :title="heading"
       :show="showUserForm"
       :errorMessage="errorMessage"
+      :isEdit="isFormEdit"
+      @delete="deleteUser(formUser)"
+      @add="addUser(formUser)"
+      @update="updateUser(formUser)"
       @close="closeUserForm">
       <label for="form_username">Username</label>
       <input id="form_username"
@@ -35,7 +39,7 @@
           formUser.newUsername = $event.target.value : formUser.username = $event.target.value"
         type="text"
         placeholder="Max Mustermann"
-        class="rounded p-2 border border-gray-500 mb-4">
+        class="block w-full p-2 mb-2 border border-gray-500 rounded">
       <div v-if="!isFormEdit"
         class="flex flex-col">
         <label for="form_password">Password</label>
@@ -49,13 +53,13 @@
           type="password"
           class="rounded p-2 border border-gray-500 mb-4">
       </div>
-      <button v-else class="hover:underline"
+      <button v-else class="w-full mb-4 hover:underline"
         @click="showUserForm = false; showChangePasswordForm = true;">
         Change Password
       </button>
-      <div class="flex w-full space-x-2 items-center">
+      <div class="flex w-full py-2 space-x-2 items-center">
         <h2 class="font-bold text-lg">Userrole:</h2>
-        <select class="text-lg w-full p-2 border border-gray-300 rounded"
+        <select class="text-lg w-full p-2 border border-gray-500 rounded"
           :value="formUser.userrole"
           @change="formUser.userrole = $event.target.value">
           <option v-for="role in $dataStore.userroles" :key="role.name" :value="role.name">
@@ -63,61 +67,29 @@
           </option>
         </select>
       </div>
-      <div class="">
-        <button
-          class="float-left p-2 font-semibold hover:transform hover:scale-105 transition-all
-          text-red-500"
-          v-show="isFormEdit"
-          :disabled="!isFormEdit"
-          @click="deleteUser(formUser)">
-          Delete
-        </button>
-        <div class="float-right space-x-2">
-          <button class="font-semibold p-2 hover:transform hover:scale-105 transition-all
-            bg-primary text-white"
-            @click="(isFormEdit) ? updateUser(formUser) : addUser(formUser)">
-            {{okProp}}
-          </button>
-          <button class="font-semibold p-2 hover:transform hover:scale-105 transition-all"
-            @click="closeUserForm">
-            Close
-          </button>
-        </div>
-      </div>
     </UVCForm>
     <UVCForm
       title="Change Password"
       :show="showChangePasswordForm"
       :errorMessage="errorMessage"
+      :confirmText="'Change'"
+      @add="changeUserPassword(formUser)"
       @close="closeUserForm">
       <label for="form_oldPassword">Old Password</label>
       <input id="form_oldPassword"
         v-model="formUser.oldPassword"
         type="password"
-        class="rounded p-2 border border-gray-500 mb-4">
+        class="block w-full p-2 mb-4 border border-gray-500 rounded">
       <label for="form_newPassword">New Password</label>
       <input id="form_newPassword"
         v-model="formUser.newPassword"
         type="password"
-        class="rounded p-2 border border-gray-500 mb-4">
+        class="block w-full p-2 mb-4 border border-gray-500 rounded">
       <label for="form_newPasswordrepeat">New Password repeat</label>
       <input id="form_newPasswordrepeat"
         v-model="formUser.newPasswordrepeat"
         type="password"
-        class="rounded p-2 border border-gray-500 mb-4">
-      <div class="">
-        <div class="float-right space-x-2">
-          <button class="font-semibold p-2 hover:transform hover:scale-105 transition-all
-            bg-primary text-white"
-            @click="changeUserPassword(formUser)">
-            Change
-          </button>
-          <button class="font-semibold hover:transform hover:scale-105 transition-all"
-            @click="closeUserForm">
-            Close
-          </button>
-        </div>
-      </div>
+        class="block w-full p-2 mb-4 border border-gray-500 rounded">
     </UVCForm>
   </div>
 </template>

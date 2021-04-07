@@ -27,6 +27,10 @@
       :title="heading"
       :show="showUserListForm"
       :errorMessage="errorMessage"
+      :isEdit="isFormEdit"
+      @update="updateUser(formUserrole)"
+      @delete="deleteUserrole(formUserrole)"
+      @add="addUserrole(formUserrole)"
       @close="closeUserForm">
       <label for="form_userrolename">Name</label>
       <input id="form_userrolename"
@@ -36,7 +40,7 @@
           : formUserrole.name = $event.target.value"
         type="text"
         placeholder="Technician"
-        class="rounded p-2 border border-gray-500 mb-4">
+        class="block w-full p-2 mb-4 border border-gray-500 rounded">
       <div class="flex w-full">
         <div class="w-1/2">
           <h2 class="font-bold text-lg">Userrights</h2>
@@ -62,27 +66,6 @@
               <label :for="'cbxuserrole' + role.name">{{role.name}}</label>
             </div>
           </div>
-        </div>
-      </div>
-      <div class="">
-        <button
-          class="float-left p-2 font-semibold hover:transform hover:scale-105 transition-all
-          text-red-500"
-          v-show="isFormEdit"
-          :disabled="!isFormEdit"
-          @click="deleteUserrole(formUserrole)">
-          Delete
-        </button>
-        <div class="float-right space-x-2">
-          <button class="font-semibold p-2 hover:transform hover:scale-105 transition-all
-            bg-primary text-white"
-            @click="(isFormEdit) ? updateUser(formUserrole) : addUserrole(formUserrole)">
-            {{okProp}}
-          </button>
-          <button class="font-semibold p-2 hover:transform hover:scale-105 transition-all"
-            @click="closeUserForm">
-            Close
-          </button>
         </div>
       </div>
     </UVCForm>
