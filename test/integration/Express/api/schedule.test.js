@@ -15,9 +15,13 @@ const TestUtitities = require('../../../TestUtitities');
 const Time = require('../../../../server/schedule/module/Time');
 const ScheduleEvent = require('../../../../server/schedule/module/ScheduleEvent');
 const Action = require('../../../../server/schedule/module/Action');
+const CreateEvent = require('../../../../server/commands/Scheduler/CreateEvent');
+const UpdateEvent = require('../../../../server/commands/Scheduler/UpdateEvent');
+const DeleteEvent = require('../../../../server/commands/Scheduler/DeleteEvent');
+const TestEvent = require('../../../../server/commands/Scheduler/TestEvent');
 
 let request = null;
-
+let group = null;
 let expressServer = null;
 let agenda = null;
 let database = null;
@@ -29,30 +33,42 @@ const mqtt = {
   },
 };
 
-beforeAll(async () => {
-  server = new EventEmitter();
-  server.on('error', (e) => { });
-  database = new MongoDBAdapter(global.__MONGO_URI__.replace('mongodb://', ''), '');
-  agenda = new AgendaScheduler(global.__MONGO_URI__, server, database, mqtt);
-  // agenda = new AgendaScheduler('mongodb://192.168.178.66/agenda', server, database, mqtt);
-  await database.connect();
-  await agenda.startScheduler(mqtt, io);
-  expressServer = new ExpressServer(server, database, agenda);
-  expressServer.startExpressServer();
-  request = supertest(expressServer.app);
-});
-
-afterAll(async () => {
-  await agenda.stopScheduler();
-  await database.close();
-  expressServer.stopExpressServer();
-});
+const itSchedulerRuntime = () => ((process.env.SCHEDULERRUNTIME === true) ? it : it.skip);
 
 describe('Express schedule route testing', () => {
+  beforeAll(async () => {
+    server = new EventEmitter();
+    server.on('error', (e) => { });
+    database = new MongoDBAdapter(global.__MONGO_URI__.replace('mongodb://', ''), '');
+    agenda = new AgendaScheduler(global.__MONGO_URI__, server, database, mqtt);
+    // agenda = new AgendaScheduler('mongodb://192.168.178.66/agenda', server, database, mqtt);
+    await database.connect();
+    await database.clearCollection('users');
+    await database.clearCollection('userroles');
+    await TestUtitities.createUserUserroleAdmin(database);
+
+    await agenda.startScheduler(mqtt, io);
+
+    expressServer = new ExpressServer(server, database, agenda);
+    expressServer.startExpressServer();
+    request = supertest(expressServer.app);
+
+    group = await database.addGroup({ name: 'Test Group' });
+
+    CreateEvent.register(database, agenda);
+    UpdateEvent.register(database, agenda);
+    DeleteEvent.register(database, agenda);
+    TestEvent.register(database, agenda);
+  });
+
+  afterAll(async () => {
+    await agenda.stopScheduler();
+    await database.close();
+    expressServer.stopExpressServer();
+  });
+
   describe('GET /api/events', () => {
     beforeEach(async () => {
-      await database.clearCollection('users');
-      await database.clearCollection('userroles');
       await agenda.deleteEvents();
     });
 
@@ -67,8 +83,6 @@ describe('Express schedule route testing', () => {
     });
 
     it('returns array with events', async () => {
-      const group = await database.addGroup({ name: 'Test Group' });
-
       const scheduledEvents = [];
       for (let i = 0; i < 10; i += 1) {
         scheduledEvents.push(new ScheduleEvent(undefined,
@@ -110,8 +124,6 @@ describe('Express schedule route testing', () => {
 
   describe('GET /api/event', () => {
     beforeEach(async () => {
-      await database.clearCollection('users');
-      await database.clearCollection('userroles');
       await agenda.deleteEvents();
     });
 
@@ -125,8 +137,6 @@ describe('Express schedule route testing', () => {
     });
 
     it('returns event object', async () => {
-      const group = await database.addGroup({ name: 'Test Group' });
-
       const savedEvent = await agenda.addEvent(new ScheduleEvent(undefined,
         'Test1',
         new Time([1, 2, 3, 4, 5, 6, 7], new Date(Date.now())),
@@ -156,14 +166,10 @@ describe('Express schedule route testing', () => {
 
   describe('POST /api/event', () => {
     beforeEach(async () => {
-      await database.clearCollection('users');
-      await database.clearCollection('userroles');
       await agenda.deleteEvents();
     });
 
     it('creates event and returns it', async () => {
-      const group = await database.addGroup({ name: 'Test Group' });
-
       const scheduledEvent = new ScheduleEvent(undefined,
         'Test1',
         new Time([1, 2, 3, 4, 5, 6, 7], new Date(Date.now())),
@@ -191,8 +197,6 @@ describe('Express schedule route testing', () => {
     });
 
     it('creates event object in database', async () => {
-      const group = await database.addGroup({ name: 'Test Group' });
-
       const scheduledEvent = new ScheduleEvent(undefined,
         'Test1',
         new Time([1, 2, 3, 4, 5, 6, 7], new Date(Date.now())),
@@ -216,8 +220,7 @@ describe('Express schedule route testing', () => {
       }));
     });
 
-    it('creates event object that runs', async (done) => {
-      const group = await database.addGroup({ name: 'Test Group' });
+    itSchedulerRuntime()('creates event object that runs', async (done) => {
       await database.addDevice({
         serialnumber: '1',
         name: 'TestGeraet1',
@@ -256,14 +259,10 @@ describe('Express schedule route testing', () => {
 
   describe('PUT /api/event', () => {
     beforeEach(async () => {
-      await database.clearCollection('users');
-      await database.clearCollection('userroles');
       await agenda.deleteEvents();
     });
 
     it('updates an event and returns it', async () => {
-      const group = await database.addGroup({ name: 'Test Group' });
-
       const event = await agenda.addEvent(new ScheduleEvent(undefined,
         'Test1',
         new Time([1, 2, 3, 4, 5, 6, 7], new Date(Date.now())),
@@ -295,8 +294,6 @@ describe('Express schedule route testing', () => {
     });
 
     it('updates an event object in database', async () => {
-      const group = await database.addGroup({ name: 'Test Group' });
-
       const event = await agenda.addEvent(new ScheduleEvent(undefined,
         'Test1',
         new Time([1, 2, 3, 4, 5, 6, 7], new Date(Date.now())),
@@ -326,11 +323,27 @@ describe('Express schedule route testing', () => {
         .send({});
 
       expect(res.status).toBe(401);
-      expect(res.body.msg).toEqual('Name and event have to been defined');
+      expect(res.body.msg).toEqual('The event has to been defined');
     });
 
-    it('updates event object that runs at the new time', async (done) => {
-      const group = await database.addGroup({ name: 'Test Group' });
+    it('returns 401 if the id is not defined', async () => {
+      const scheduledEvent = new ScheduleEvent(undefined,
+        'Test1',
+        new Time([1, 2, 3, 4, 5, 6, 7], new Date(Date.now())),
+        [
+          new Action(group._id.toString(), 'engineState', 'true'),
+        ]);
+
+      const res = await request.put('/api/scheduler/event')
+        .set('Content-Type', 'application/json')
+        .set('cookie', [`UVCleanSID=${TestUtitities.createJWTToken('Admin')}`])
+        .send({ scheduledEvent });
+
+      expect(res.body.msg).toEqual('Event can not be updated when the id is not defined');
+      expect(res.status).toBe(401);
+    });
+
+    itSchedulerRuntime()('updates event object that runs at the new time', async (done) => {
       await database.addDevice({
         serialnumber: '1',
         name: 'TestGeraet1',
@@ -372,14 +385,10 @@ describe('Express schedule route testing', () => {
 
   describe('DELETE /api/event', () => {
     beforeEach(async () => {
-      await database.clearCollection('users');
-      await database.clearCollection('userroles');
       await agenda.deleteEvents();
     });
 
     it('deletes event object in database', async () => {
-      const group = await database.addGroup({ name: 'Test Group' });
-
       const savedEvent = await agenda.addEvent(new ScheduleEvent(undefined,
         'Test1',
         new Time([1, 2, 3, 4, 5, 6, 7], new Date(Date.now())),
@@ -400,12 +409,20 @@ describe('Express schedule route testing', () => {
         expect(error.message).toMatch('The event does not exists');
       }
     });
+
+    it('returns 401 if id is not defined', async () => {
+      const res = await request.delete('/api/scheduler/event')
+        .set('Content-Type', 'application/json')
+        .set('cookie', [`UVCleanSID=${TestUtitities.createJWTToken('Admin')}`])
+        .send({});
+
+      expect(res.status).toBe(401);
+      expect(res.body.msg).toEqual('id has to be defined and of type string');
+    });
   });
 
   describe('POST /api/testevent', () => {
     beforeEach(async () => {
-      await database.clearCollection('users');
-      await database.clearCollection('userroles');
       await agenda.deleteEvents();
     });
 
@@ -415,7 +432,7 @@ describe('Express schedule route testing', () => {
         .set('cookie', [`UVCleanSID=${TestUtitities.createJWTToken('Admin')}`])
         .send();
 
-      expect(res.body.msg).toEqual('id has to be defined and of type string');
+      expect(res.body.msg).toEqual('Event can not be tested when the id is not defined');
       expect(res.status).toBe(401);
     });
 
@@ -429,8 +446,7 @@ describe('Express schedule route testing', () => {
       expect(res.status).toBe(404);
     });
 
-    it('updates event object that runs at the new time', async (done) => {
-      const group = await database.addGroup({ name: 'Test Group' });
+    it('immediately runs the event', async (done) => {
       await database.addDevice({
         serialnumber: '1',
         name: 'TestGeraet1',
@@ -461,6 +477,6 @@ describe('Express schedule route testing', () => {
         .send({ id: savedEvent.id });
 
       expect(res.status).toBe(201);
-    }, 1000 * 70);
+    });
   });
 });

@@ -1502,8 +1502,12 @@ describe('MongoDBAdapter Functions', () => {
         expect(docFanVoltages.length).toBe(fanVoltages.length);
 
         for (let i = 0; i < docFanVoltages.length; i += 1) {
-          expect(docFanVoltages[i].device).toBe('000000000000000001111111');
-          expect(docFanVoltages[i].voltage).toBe(fanVoltages[i].voltage);
+          expect(docFanVoltages).toEqual(expect.arrayContaining([
+            expect.objectContaining({
+              device: '000000000000000001111111',
+              voltage: fanVoltages[i].voltage,
+            }),
+          ]));
         }
       });
 
@@ -1862,8 +1866,12 @@ describe('MongoDBAdapter Functions', () => {
         expect(docTVOCs.length).toBe(TVOCs.length);
 
         for (let i = 0; i < docTVOCs.length; i += 1) {
-          expect(docTVOCs[i].device).toBe('000000000000000001111111');
-          expect(docTVOCs[i].tvoc).toBe(TVOCs[i].tvoc);
+          expect(docTVOCs).toEqual(expect.arrayContaining([
+            expect.objectContaining({
+              device: '000000000000000001111111',
+              tvoc: TVOCs[i].tvoc,
+            }),
+          ]));
         }
       });
 

@@ -16,7 +16,8 @@
         "canChangeProperties": true,
         "canViewAdvancedData": true,
         "canEditUserrole": true,
-        "canEditUser": true
+        "canEditUser": true,
+        "canEditScheduler": true
       },
       {
         "userrolename": "admin",
@@ -24,6 +25,7 @@
         "canViewAdvancedData": false,
         "canEditUserrole": true,
         "canEditUser": true,
+        "canEditScheduler": true,
         "canBeEditedByUserrole": ["feedback"]
       },
       {

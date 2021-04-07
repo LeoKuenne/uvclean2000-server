@@ -2,7 +2,12 @@ const express = require('express');
 const ScheduleEvent = require('../../schedule/module/ScheduleEvent');
 const Action = require('../../schedule/module/Action');
 const Time = require('../../schedule/module/Time');
+const userMiddleware = require('../middleware/user');
 const MainLogger = require('../../Logger.js').logger;
+const CreateEvent = require('../../commands/Scheduler/CreateEvent');
+const UpdateEvent = require('../../commands/Scheduler/UpdateEvent');
+const DeleteEvent = require('../../commands/Scheduler/DeleteEvent');
+const TestEvent = require('../../commands/Scheduler/TestEvent');
 
 const logger = MainLogger.child({ service: 'ExpressSchedulerAPI' });
 
@@ -10,7 +15,7 @@ const router = express.Router();
 let agenda = null;
 let eventBus = null;
 
-router.get('/events', async (req, res, next) => {
+router.get('/events', async (req, res) => {
   logger.info('Got get on events route. Request: %o', req.body);
 
   try {
@@ -26,7 +31,7 @@ router.get('/events', async (req, res, next) => {
   }
 });
 
-router.get('/event', async (req, res, next) => {
+router.get('/event', async (req, res) => {
   logger.info('Got get on event route. Request: %o', req.body);
 
   try {
@@ -44,15 +49,17 @@ router.get('/event', async (req, res, next) => {
   }
 });
 
-router.post('/event', async (req, res, next) => {
+router.post('/event', userMiddleware.isLoggedIn, async (req, res) => {
   logger.info('Got post on event route. Request: %o', req.body);
 
   const { name, time, actions } = req.body;
 
   try {
-    const scheduledEvent = await agenda.addEvent(
-      new ScheduleEvent(undefined, name, new Time(time.days, new Date(time.timeofday)),
-        actions.map((action) => new Action(action.group, action.propertie, action.newValue))),
+    const scheduledEvent = await CreateEvent.execute(
+      req.userData.username,
+      name,
+      new Time(time.days, new Date(time.timeofday)),
+      actions.map((action) => new Action(action.group, action.propertie, action.newValue)),
     );
 
     return res.status(201).send(scheduledEvent);
@@ -67,17 +74,21 @@ router.post('/event', async (req, res, next) => {
   }
 });
 
-router.put('/event', async (req, res, next) => {
+router.put('/event', userMiddleware.isLoggedIn, async (req, res) => {
   logger.info('Got put on event route. Request: %o', req.body);
   const { scheduledEvent } = req.body;
   try {
-    if (scheduledEvent === undefined) throw new Error('Name and event have to been defined');
-    const updatedEvent = await agenda.updateEvent(new ScheduleEvent(scheduledEvent.id,
-      scheduledEvent.name,
-      new Time(scheduledEvent.time.days, new Date(scheduledEvent.time.timeofday)),
-      scheduledEvent.actions.map(
-        (action) => new Action(action.group, action.propertie, action.newValue),
-      )));
+    if (scheduledEvent === undefined) throw new Error('The event has to been defined');
+
+    const updatedEvent = await UpdateEvent.execute(
+      req.userData.username,
+      new ScheduleEvent(scheduledEvent.id,
+        scheduledEvent.name,
+        new Time(scheduledEvent.time.days, new Date(scheduledEvent.time.timeofday)),
+        scheduledEvent.actions.map(
+          (action) => new Action(action.group, action.propertie, action.newValue),
+        )),
+    );
 
     return res.status(201).send(updatedEvent);
   } catch (error) {
@@ -91,11 +102,11 @@ router.put('/event', async (req, res, next) => {
   }
 });
 
-router.delete('/event', async (req, res, next) => {
+router.delete('/event', userMiddleware.isLoggedIn, async (req, res) => {
   logger.info('Got delete on event route. Request: %o', req.body);
 
   try {
-    await agenda.deleteEvent(req.body.id);
+    await DeleteEvent.execute(req.userData.username, req.body.id);
 
     return res.sendStatus(201);
   } catch (error) {
@@ -107,11 +118,11 @@ router.delete('/event', async (req, res, next) => {
   }
 });
 
-router.post('/testevent', async (req, res, next) => {
+router.post('/testevent', userMiddleware.isLoggedIn, async (req, res) => {
   logger.info('Got post on test event route. Request: %o', req.body);
 
   try {
-    await agenda.testEvent(req.body.id);
+    await TestEvent.execute(req.userData.username, req.body.id);
 
     return res.status(201);
   } catch (error) {

@@ -1,5 +1,5 @@
-const MQTTCommand = require('../../../server/commands/MQTTCommands/MQTTCommand');
-const { decodeFernetToken } = require('../../TestUtitities');
+const MQTTCommand = require('../../../../server/commands/MQTTCommands/MQTTCommand');
+const { decodeFernetToken } = require('../../../TestUtitities');
 
 global.config = {
   mqtt: {

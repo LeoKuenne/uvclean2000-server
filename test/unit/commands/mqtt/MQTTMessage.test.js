@@ -1,5 +1,5 @@
-const MQTTMessage = require('../../../server/commands/MQTTCommands/MQTTMessage');
-const { decodeFernetToken } = require('../../TestUtitities');
+const MQTTMessage = require('../../../../server/commands/MQTTCommands/MQTTMessage');
+const { decodeFernetToken } = require('../../../TestUtitities');
 
 global.config = {
   mqtt: {
@@ -14,19 +14,13 @@ const mqtt = {
   publish: jest.fn(),
 };
 
-beforeAll(async () => {
-});
-
-afterAll(async () => {
-});
-
 describe.each([
   true,
   false,
 ])('MQTT Message unit', (encryption) => {
   describe((encryption) ? 'With encryption' : 'Without encryption', () => {
     beforeAll(() => {
-      config.mqtt.useEncryption = encryption;
+      global.config.mqtt.useEncryption = encryption;
     });
 
     it.each([
@@ -38,7 +32,7 @@ describe.each([
       mqtt.publish = async (topic, message) => {
         expect(topic).toEqual(`UVClean/1/${path}`);
         if (encryption) {
-          const decode = await decodeFernetToken(message, config.mqtt.secret);
+          const decode = await decodeFernetToken(message, global.config.mqtt.secret);
           expect(decode).toEqual(value);
         } else {
           expect(message).toEqual(value);

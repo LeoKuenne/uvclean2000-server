@@ -1,5 +1,5 @@
-const MQTTChangeState = require('../../../server/commands/MQTTCommands/MQTTDeviceChangeState');
-const { decodeFernetToken } = require('../../TestUtitities');
+const MQTTChangeState = require('../../../../server/commands/MQTTCommands/MQTTDeviceChangeState');
+const { decodeFernetToken } = require('../../../TestUtitities');
 
 global.config = {
   mqtt: {

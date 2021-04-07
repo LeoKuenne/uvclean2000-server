@@ -18,6 +18,8 @@ const server = new EventEmitter();
 const io = new EventEmitter();
 const mqtt = {};
 
+const itSchedulerRuntime = () => ((process.env.SCHEDULERRUNTIME === true) ? it : it.skip);
+
 beforeAll(async () => {
   database = new MongoDBAdapter(global.__MONGO_URI__.replace('mongodb://', ''), '');
   await database.connect();
@@ -336,7 +338,7 @@ describe('Scheduling with agenda', () => {
       await database.clearCollection('groups');
     });
 
-    it('adds an event one minute in the future and waits for it to run', async (done) => {
+    itSchedulerRuntime()('adds an event one minute in the future and waits for it to run', async (done) => {
       const triggerTime = new Date(Date.now() + 1000 * 60);
       console.log(`Scheduled at ${(new Date(Date.now())).toISOString()}`);
       console.log(`Scheduled for ${triggerTime.toISOString()}`);

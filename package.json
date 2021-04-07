@@ -10,7 +10,8 @@
     "build-prod": "vue-cli-service build --mode production",
     "build-report": "vue-cli-service build --report",
     "lint": "vue-cli-service lint",
-    "test": "jest --verbose --silent --runInBand --coverage=true"
+    "test": "env SCHEDULERRUNTIME=false jest --verbose --silent --runInBand --coverage=true",
+    "testlong": "env SCHEDULERRUNTIME=true jest --verbose --silent --runInBand --coverage=true"
   },
   "main": "index.js",
   "dependencies": {
