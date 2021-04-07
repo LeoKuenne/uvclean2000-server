@@ -20,6 +20,7 @@ const store = Vue.observable({
   userroleRights: [],
   settings: {},
   users: [],
+  scheduledEvents: [],
 });
 
 fetch('/api/loggedinUser')
@@ -386,6 +387,33 @@ fetch('/api/loggedinUser')
             }
             this.errorMessage = '';
             return response.json();
+          } catch (error) {
+            console.error(error);
+          }
+          return [];
+        },
+        async getScheduledEvents() {
+          try {
+            const response = await fetch('/api/scheduler/events');
+            if (response.status === 404) {
+              throw new Error('No data avalaible');
+            }
+            this.errorMessage = '';
+            const events = [];
+            const serverEvents = await response.json();
+            serverEvents.forEach((scheduledEvent) => {
+              events.push(scheduledEvent);
+              // {
+              //   id: scheduledEvent.id,
+              //   name: scheduledEvent.name,
+              //   time: {
+              //     timeofday: scheduledEvent.time.timeofday,
+              //     days: scheduledEvent.time.days,
+              //   },
+              //   actions: scheduledEvent.actions,
+              // },
+            });
+            return events;
           } catch (error) {
             console.error(error);
           }

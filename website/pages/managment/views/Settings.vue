@@ -9,7 +9,8 @@
         <router-link
           :to="{ name: 'settingsUser' }"
           :class="[this.$route.path === '/settings/user' ?
-            'text-gray-600 transform scale-105 font-bold border-l-4 border-secondary' : '']"
+            'text-gray-600 transform scale-105 font-bold border-secondary '
+            + 'border-b-4 md:border-b-0 md:border-l-4' : '']"
           @click="$emit('showUser')"
           class="md:w-full p-2 text-left text-primary
             hover:text-gray-600 hover:transform hover:scale-105 hover:font-bold
@@ -25,7 +26,8 @@
         <router-link
           :to="{ name: 'settingsGeneral' }"
           :class="[this.$route.path === '/settings/general' ?
-            'text-gray-600 transform scale-105 font-bold border-l-4 border-secondary' : '']"
+            'text-gray-600 transform scale-105 font-bold border-secondary '
+            + 'border-b-4 md:border-b-0 md:border-l-4' : '']"
           @click="$emit('showUser')"
           class="md:w-full p-2 text-left text-primary
             hover:text-gray-600 hover:transform hover:scale-105 hover:font-bold

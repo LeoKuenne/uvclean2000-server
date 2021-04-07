@@ -1502,8 +1502,12 @@ describe('MongoDBAdapter Functions', () => {
         expect(docFanVoltages.length).toBe(fanVoltages.length);
 
         for (let i = 0; i < docFanVoltages.length; i += 1) {
-          expect(docFanVoltages[i].device).toBe('000000000000000001111111');
-          expect(docFanVoltages[i].voltage).toBe(fanVoltages[i].voltage);
+          expect(docFanVoltages).toEqual(expect.arrayContaining([
+            expect.objectContaining({
+              device: '000000000000000001111111',
+              voltage: fanVoltages[i].voltage,
+            }),
+          ]));
         }
       });
 
@@ -1862,8 +1866,12 @@ describe('MongoDBAdapter Functions', () => {
         expect(docTVOCs.length).toBe(TVOCs.length);
 
         for (let i = 0; i < docTVOCs.length; i += 1) {
-          expect(docTVOCs[i].device).toBe('000000000000000001111111');
-          expect(docTVOCs[i].tvoc).toBe(TVOCs[i].tvoc);
+          expect(docTVOCs).toEqual(expect.arrayContaining([
+            expect.objectContaining({
+              device: '000000000000000001111111',
+              tvoc: TVOCs[i].tvoc,
+            }),
+          ]));
         }
       });
 
@@ -2421,6 +2429,21 @@ describe('MongoDBAdapter Functions', () => {
       await database.getGroup(group.id).catch((err) => {
         expect(err.toString()).toBe('Error: Group does not exists');
       });
+    });
+
+    it('deleteGroup deletes a group and returns it', async () => {
+      const group = {
+        name: 'Test Group 1',
+      };
+
+      const addedGroup = await database.addGroup(group);
+      const docGroup = await database.getGroup(addedGroup._id.toString());
+      group.id = addedGroup._id.toString();
+
+      const deletedGroup = await database.deleteGroup(group);
+      expect(deletedGroup._id).toEqual(docGroup.id);
+      expect(deletedGroup.name).toEqual(docGroup.name);
+      expect(deletedGroup.devices).toEqual(docGroup.devices);
     });
 
     it('deleteGroup deletes a group and removes the group of each device in that group', async () => {

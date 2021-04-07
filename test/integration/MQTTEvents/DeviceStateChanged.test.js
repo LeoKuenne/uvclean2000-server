@@ -1,5 +1,5 @@
 const EventEmitter = require('events');
-const { register, updateGroup } = require('../../../server/events/MQTTEvents/DeviceStateChanged');
+const { register } = require('../../../server/events/MQTTEvents/DeviceStateChanged');
 const MongoDBAdapter = require('../../../server/databaseAdapters/mongoDB/MongoDBAdapter.js');
 
 let database;

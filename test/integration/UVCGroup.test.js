@@ -1,5 +1,5 @@
 const EventEmitter = require('events');
-const { updateGroupStates } = require('../../server/dataModels/UVCGroup');
+const { updateGroupDevicesWithOtherState } = require('../../server/dataModels/UVCGroup');
 const MongoDBAdapter = require('../../server/databaseAdapters/mongoDB/MongoDBAdapter.js');
 
 describe('Group update functions', () => {
@@ -68,6 +68,6 @@ describe('Group update functions', () => {
       }
     });
 
-    await updateGroupStates(group.id.toString(), prop, database, io);
+    await updateGroupDevicesWithOtherState(group.id.toString(), prop, database, io);
   });
 });

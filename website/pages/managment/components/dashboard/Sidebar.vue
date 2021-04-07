@@ -4,7 +4,8 @@
     <h1 class="hidden md:flex text-xl text-secondary font-bold">Overview</h1>
     <div
       :class="[this.$route.path === '/dashboard/devices' ?
-        'text-gray-600 transform scale-105 font-bold border-l-4 border-secondary' : '']"
+        'text-gray-600 transform scale-105 font-bold border-secondary '
+         + 'border-b-4 md:border-b-0 md:border-l-4' : '']"
       @click="$emit('showDevices')"
       class="md:w-full p-2 text-left text-primary
       hover:text-gray-600 hover:transform hover:scale-105 hover:font-bold
@@ -18,7 +19,8 @@
     </div>
     <div
       :class="[this.$route.path === '/dashboard/groups' ?
-        'text-gray-600 transform scale-105 font-bold border-l-4 border-secondary' : '']"
+        'text-gray-600 transform scale-105 font-bold border-secondary '
+         + 'border-b-4 md:border-b-0 md:border-l-4' : '']"
       @click="$emit('showGroups')"
       class="md:w-full p-2 text-left text-primary
         hover:text-gray-600 hover:transform hover:scale-105 hover:font-bold

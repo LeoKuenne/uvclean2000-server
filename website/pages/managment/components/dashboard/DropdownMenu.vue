@@ -18,7 +18,7 @@
       <slot></slot>
     </button>
     <div class="relative" @click.stop>
-      <transition name="slide">
+      <transition name="dropdownSlide">
         <div
           v-if="showDropdown"
           class="absolute right-0 bg-white rounded overflow-hidden shadow
@@ -63,7 +63,7 @@ export default {
 Vue.directive('click-outside', {
   bind(el, binding, vnode) {
     // eslint-disable-next-line no-param-reassign
-    el.clickOutsideEvent = function (event) {
+    el.clickOutsideEvent = (event) => {
       if (!(el === event.target || el.contains(event.target))) {
         vnode.context[binding.expression](event);
       }
@@ -77,18 +77,18 @@ Vue.directive('click-outside', {
 </script>
 
 <style>
-.slide-enter-active,
-.slide-leave-active {
+.dropdownSlide-enter-active,
+.dropdownSlide-leave-active {
   @apply duration-200;
   @apply ease-in-out;
 }
 
-.slide-enter-to, .slide-leave {
-   max-height: 100px;
+.dropdownSlide-enter-to, .dropdownSlide-leave {
+   max-height: 500px;
    overflow: hidden;
 }
 
-.slide-enter, .slide-leave-to {
+.dropdownSlide-enter, .dropdownSlide-leave-to {
    overflow: hidden;
    max-height: 0;
 }

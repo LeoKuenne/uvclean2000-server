@@ -10,11 +10,13 @@
     "build-prod": "vue-cli-service build --mode production",
     "build-report": "vue-cli-service build --report",
     "lint": "vue-cli-service lint",
-    "test": "jest --verbose --silent --runInBand --coverage=true"
+    "test": "env SCHEDULERRUNTIME=false jest --verbose --silent --runInBand --coverage=true",
+    "testlong": "env SCHEDULERRUNTIME=true jest --verbose --silent --runInBand --coverage=true"
   },
   "main": "index.js",
   "dependencies": {
     "@tailwindcss/postcss7-compat": "^2.0.2",
+    "agenda": "^4.1.0",
     "assert": "^1.5.0",
     "autoprefixer": "^9.8.6",
     "bcrypt": "^5.0.1",

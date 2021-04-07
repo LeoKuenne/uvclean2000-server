@@ -48,7 +48,7 @@ afterAll(async () => {
 
 describe('Express Route testing', () => {
   describe('GET /api/user', () => {
-    afterEach(async () => {
+    beforeEach(async () => {
       await database.clearCollection('users');
       await database.clearCollection('userroles');
     });

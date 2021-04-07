@@ -226,7 +226,8 @@ async function execute(db, io, mqtt, topic, message, next) {
 
   if (device.group._id !== undefined) {
     logger.debug('Device is in a group. Updating group');
-    await UVCGroup.updateGroupStates(device.group._id.toString(), newState.prop, db, io);
+    await UVCGroup.updateGroupDevicesWithOtherState(device.group._id.toString(),
+      newState.prop, db, io);
   }
 
   io.emit('device_stateChanged', newState);

@@ -1,6 +1,6 @@
 {
   "env": "production",
-  "version": "1.1.2b4",
+  "version": "1.2alpha-b1",
   "production": {
     "desc": "Production, frontend build completed and placed in dashboard/static, Backend is running on server. Cors is disabled",
     "logging": {
@@ -16,7 +16,8 @@
         "canChangeProperties": true,
         "canViewAdvancedData": true,
         "canEditUserrole": true,
-        "canEditUser": true
+        "canEditUser": true,
+        "canEditScheduler": true
       },
       {
         "userrolename": "admin",
@@ -24,6 +25,7 @@
         "canViewAdvancedData": false,
         "canEditUserrole": true,
         "canEditUser": true,
+        "canEditScheduler": true,
         "canBeEditedByUserrole": ["feedback"]
       },
       {
@@ -90,7 +92,8 @@
         "canChangeProperties": true,
         "canViewAdvancedData": true,
         "canEditUserrole": true,
-        "canEditUser": true
+        "canEditUser": true,
+        "canEditScheduler": true
       },
       {
         "userrolename": "admin",
@@ -98,6 +101,7 @@
         "canViewAdvancedData": false,
         "canEditUserrole": true,
         "canEditUser": true,
+        "canEditScheduler": true,
         "canBeEditedByUserrole": ["feedback"]
       },
       {
@@ -131,12 +135,12 @@
     },
     "mqtt": {
       "secret": "C:/workspace_nodejs/uvclean2000-server/server/ssl/fernetSecret",
-      "useEncryption": false,
+      "useEncryption": true,
       "useTTL": true,
       "ttl": 60,
       "broker": "127.0.0.1",
       "port": 1883,
-      "sendEngineLevelWhenOn": false,
+      "sendEngineLevelWhenOn": true,
       "sendEngineLevelWhenOnDelay": 2
     },
     "database": {
@@ -164,7 +168,8 @@
         "canChangeProperties": true,
         "canViewAdvancedData": true,
         "canEditUserrole": true,
-        "canEditUser": true
+        "canEditUser": true,
+        "canEditScheduler": true
       },
       {
         "userrolename": "admin",
@@ -172,6 +177,7 @@
         "canViewAdvancedData": false,
         "canEditUserrole": true,
         "canEditUser": true,
+        "canEditScheduler": true,
         "canBeEditedByUserrole": ["feedback"]
       },
       {

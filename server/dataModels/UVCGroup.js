@@ -28,7 +28,8 @@ const uvcGroupModel = mongoose.model('UVCGroup', uvcGroupSchema);
  * @param {String} prop The propertie of which the list should be updated
  * @param {Array} devicesWrongState Array of serialnumbers of the devices
  */
-async function updateGroupDevicesWithOtherState(database, groupID, prop, devicesWrongState) {
+async function updateDatabaseGroupDevicesWithOtherState(database, groupID, prop,
+  devicesWrongState) {
   logger.debug('updateGroup %s devices with other state for prop %s', groupID, prop);
   switch (prop) {
     case 'engineState':
@@ -42,8 +43,8 @@ async function updateGroupDevicesWithOtherState(database, groupID, prop, devices
   }
 }
 
-async function updateGroupStates(groupID, prop, db, io) {
-  logger.debug('updateGroup states');
+async function updateGroupDevicesWithOtherState(groupID, prop, db, io) {
+  logger.debug('updating group list of devices with other states');
 
   let group = await db.getGroup(groupID);
 
@@ -63,7 +64,7 @@ async function updateGroupStates(groupID, prop, db, io) {
       break;
     default:
       logger.debug('Can not update group state with propertie %s', prop);
-      return;
+      return null;
   }
 
   if (ioEvent) {
@@ -71,7 +72,7 @@ async function updateGroupStates(groupID, prop, db, io) {
     ioEvent = null;
   }
 
-  await updateGroupDevicesWithOtherState(db, groupID, prop, serialnumbers);
+  await updateDatabaseGroupDevicesWithOtherState(db, groupID, prop, serialnumbers);
   group = await db.getGroup(groupID);
 
   ioEvent = setTimeout(() => {
@@ -81,6 +82,8 @@ async function updateGroupStates(groupID, prop, db, io) {
       newValue: group[`${prop}DevicesWithOtherState`],
     });
   }, 500);
+
+  return group;
 }
 
 function checkAlarmState(group) {
@@ -92,8 +95,8 @@ function checkAlarmState(group) {
 }
 
 module.exports = {
-  updateGroupStates,
   checkAlarmState,
+  updateDatabaseGroupDevicesWithOtherState,
   updateGroupDevicesWithOtherState,
   uvcGroupModel,
 };

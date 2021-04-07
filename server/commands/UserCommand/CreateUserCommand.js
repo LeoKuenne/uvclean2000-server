@@ -1,6 +1,4 @@
-const MongoDBAdapter = require('../../databaseAdapters/mongoDB/MongoDBAdapter');
 const User = require('../../dataModels/User');
-const Userrole = require('../../dataModels/Userrole');
 const AuthenticationError = require('../../errors/AuthenticationError');
 const MainLogger = require('../../Logger.js').logger;
 

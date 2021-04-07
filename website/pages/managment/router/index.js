@@ -9,6 +9,7 @@ import UVCDeviceList from '../components/dashboard/UVCDeviceList.vue';
 import UVCGroupList from '../components/dashboard/UVCGroupList.vue';
 import UserSettings from '../components/settings/UserSettings.vue';
 import GeneralSettings from '../components/settings/GeneralSettings.vue';
+import SchedulerView from '../views/Scheduler.vue';
 
 Vue.use(VueRouter);
 
@@ -64,6 +65,14 @@ const routes = [
         },
       },
     ],
+  },
+  {
+    path: '/scheduler',
+    name: 'scheduler',
+    component: SchedulerView,
+    props(route) {
+      return route.query || {};
+    },
   },
   {
     path: '/settings',

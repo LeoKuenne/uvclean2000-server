@@ -45,6 +45,10 @@ module.exports = class Userrole {
         description: 'Can edit User',
         propertie: 'canEditUser',
       },
+      {
+        description: 'Can edit Scheduler',
+        propertie: 'canEditScheduler',
+      },
     ];
   }
 
