@@ -1,4 +1,4 @@
-const MQTTChangeState = require('../../../server/commands/MQTTCommands/MQTTChangeState');
+const MQTTChangeState = require('../../../server/commands/MQTTCommands/MQTTDeviceChangeState');
 const { decodeFernetToken } = require('../../TestUtitities');
 
 global.config = {
@@ -47,7 +47,7 @@ describe.each([
           done(error);
         }
       };
-      await MQTTChangeState.execute(undefined, mqtt, '1', path, value);
+      await MQTTChangeState.execute(mqtt, '1', path, value);
     });
   });
 });

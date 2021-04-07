@@ -1,5 +1,5 @@
 const MainLogger = require('../../Logger.js').logger;
-const MQTTDeviceChangeState = require('../MQTTCommands/MQTTDeviceChangeState');
+const MQTTChangeState = require('../MQTTCommands/MQTTDeviceChangeState');
 
 const logger = MainLogger.child({ service: 'DeviceChangeStateCommand' });
 
@@ -57,25 +57,16 @@ module.exports = function register(server, db, io, mqtt, ioSocket) {
   ioSocket.on('device_changeState', async (message) => {
     try {
       const newState = execute(db, io, mqtt, message);
-      const setting = await db.getSetting('UVCServerSetting');
       const device = await db.getDevice(newState.serialnumber);
 
-<<<<<<< HEAD
-      await MQTTChangeState.execute(setting, mqtt, newState.serialnumber, newState.prop,
-=======
-      await MQTTDeviceChangeState.execute(mqtt, newState.serialnumber, newState.prop,
->>>>>>> feature/schedulersystem
+      await MQTTChangeState.execute(mqtt, newState.serialnumber, newState.prop,
         newState.newValue);
 
-      if (config.mqtt.sendEngineLevelWhenOn && newState.prop === 'engineState' && newState.newValue === 'true') {
+      if (global.config.mqtt.sendEngineLevelWhenOn && newState.prop === 'engineState' && newState.newValue === 'true') {
         logger.debug('Device is turning on, sending change engineLevel state to with value %s', device.serialnumber, device.engineLevel);
-<<<<<<< HEAD
         setTimeout(async () => {
-          await MQTTChangeState.execute(setting, mqtt, newState.serialnumber, 'engineLevel', device.engineLevel.toString());
-        }, config.mqtt.sendEngineLevelWhenOnDelay * 1000);
-=======
-        await MQTTDeviceChangeState.execute(mqtt, newState.serialnumber, 'engineLevel', device.engineLevel.toString());
->>>>>>> feature/schedulersystem
+          await MQTTChangeState.execute(mqtt, newState.serialnumber, 'engineLevel', device.engineLevel.toString());
+        }, global.config.mqtt.sendEngineLevelWhenOnDelay * 1000);
       }
 
       io.emit('info', { service: 'DeviceChangeStateCommand', message: `Sended changeState (${newState.prop}) MQTT message to device ${newState.serialnumber}` });

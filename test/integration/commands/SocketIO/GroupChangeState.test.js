@@ -1,5 +1,5 @@
 const EventEmitter = require('events');
-const register = require('../../../../server/commands/SocketIOCommands/GroupChangeState');
+const register = require('../../../../server/commands/Socketio/GroupChangeState');
 const MongoDBAdapter = require('../../../../server/databaseAdapters/mongoDB/MongoDBAdapter.js');
 const Settings = require('../../../../server/dataModels/Settings');
 const GroupChangeState = require('../../../../server/commands/GroupChangeState');

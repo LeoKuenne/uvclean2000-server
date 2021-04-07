@@ -1,5 +1,5 @@
-const { updateDatabaseGroupDevicesWithOtherState } = require('../../server/dataModels/UVCGroup');
-const MongoDBAdapter = require('../../server/databaseAdapters/mongoDB/MongoDBAdapter.js');
+const { updateDatabaseGroupDevicesWithOtherState } = require('../../../server/dataModels/UVCGroup');
+const MongoDBAdapter = require('../../../server/databaseAdapters/mongoDB/MongoDBAdapter.js');
 
 describe('Group update functions', () => {
   let database = null;

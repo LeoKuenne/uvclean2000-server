@@ -13,7 +13,7 @@ async function execute(db, io, mqtt, message) {
   const dbDevice = await db.getDevice(message.serialnumber);
   logger.debug('Sending device acknowledge alarm mqtt message');
 
-  await MQTTCommand.execute(undefined, mqtt, dbDevice.serialnumber, 'acknowledge', true);
+  await MQTTCommand.execute(mqtt, dbDevice.serialnumber, 'acknowledge', true);
 
   io.emit('info', { message: `Acknowledgement send to device ${dbDevice.serialnumber}` });
 }

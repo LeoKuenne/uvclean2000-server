@@ -45,7 +45,7 @@ describe.each([
         }
         done();
       };
-      await MQTTMessage.execute(undefined, mqtt, '1', path, value);
+      await MQTTMessage.execute(mqtt, '1', path, value);
     });
   });
 });

@@ -1,6 +1,5 @@
 const MainLogger = require('../../Logger.js').logger;
 const MQTTMessage = require('./MQTTMessage');
-const { encrypt } = require('./middleware/encrypt');
 
 const logger = MainLogger.child({ service: 'MQTT-ChangeState' });
 
@@ -12,9 +11,9 @@ module.exports = {
    * @param {string} prop the propertie to be changed
    * @param {string} value the value to be send
    */
-  execute: async (setting, mqtt, serialnumber, prop, value) => {
+  execute: async (mqtt, serialnumber, prop, value) => {
     logger.debug('sending mqtt changestate message for device %s, changeState with propertie %s and value %s', serialnumber, prop, value);
 
-    await MQTTMessage.execute(setting, mqtt, serialnumber, `changeState/${prop}`, value);
+    await MQTTMessage.execute(mqtt, serialnumber, `changeState/${prop}`, value);
   },
 };

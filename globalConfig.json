@@ -1,5 +1,1 @@
-<<<<<<< HEAD
-{"mongoUri":"mongodb://127.0.0.1:30189/test?","mongoDBName":"test"}
-=======
-{"mongoUri":"mongodb://127.0.0.1:52369/test?","mongoDBName":"test"}
->>>>>>> feature/schedulersystem
+{"mongoUri":"mongodb://127.0.0.1:4362/test?","mongoDBName":"test"}

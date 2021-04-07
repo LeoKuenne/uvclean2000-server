@@ -1,6 +1,6 @@
 const EventEmitter = require('events');
-const SetDevicesInGroup = require('../../../server/commands/SocketIOCommands/SetDevicesInGroup');
-const MongoDBAdapter = require('../../../server/databaseAdapters/mongoDB/MongoDBAdapter.js');
+const SetDevicesInGroup = require('../../../../server/commands/Socketio/SetDevicesInGroup');
+const MongoDBAdapter = require('../../../../server/databaseAdapters/mongoDB/MongoDBAdapter.js');
 
 let database;
 

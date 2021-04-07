@@ -17,7 +17,7 @@ module.exports = {
       await MQTTDeviceChangeState.execute(mqtt, device.serialnumber, prop, value);
     }));
 
-    if (config.mqtt.sendEngineLevelWhenOn && prop === 'engineState' && value === 'true') {
+    if (global.config.mqtt.sendEngineLevelWhenOn && prop === 'engineState' && value === 'true') {
       await Promise.all(group.devices.map(async (device) => {
         logger.debug('Device is turning on, sending change engineLevel state to with value %s', device.serialnumber, device.engineLevel);
         await MQTTDeviceChangeState.execute(mqtt, device.serialnumber, 'engineLevel', device.engineLevel.toString());

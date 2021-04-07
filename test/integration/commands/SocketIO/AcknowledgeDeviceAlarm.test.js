@@ -1,7 +1,7 @@
 const EventEmitter = require('events');
-const AcknowledgeDeviceAlarm = require('../../../server/commands/SocketIOCommands/AcknowledgeDeviceAlarm');
-const MongoDBAdapter = require('../../../server/databaseAdapters/mongoDB/MongoDBAdapter.js');
-const { decodeFernetToken } = require('../../TestUtitities');
+const AcknowledgeDeviceAlarm = require('../../../../server/commands/Socketio/AcknowledgeDeviceAlarm');
+const MongoDBAdapter = require('../../../../server/databaseAdapters/mongoDB/MongoDBAdapter.js');
+const { decodeFernetToken } = require('../../../TestUtitities');
 
 let database = null;
 

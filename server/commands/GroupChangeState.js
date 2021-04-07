@@ -56,6 +56,7 @@ async function execute(db, io, mqtt, groupID, propertie, newValue) {
   });
 
   io.emit('info', { message: `Sended changeState (${propertie}) MQTT message to device in group ${groupID}` });
+  return {};
 }
 
 module.exports = {
