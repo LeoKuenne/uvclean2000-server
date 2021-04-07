@@ -3,7 +3,7 @@
     <div class="flex items-center flex-wrap p-2 pb-5">
       <h2 class="text-lg font-bold pr-5">Scheduled Events</h2>
       <button
-        v-if="$dataStore.user.userrole.rules.canEditUser.allowed"
+        v-if="$dataStore.user.userrole.rules.canEditScheduler.allowed"
         @click="showAddForm()"
         class="flex text-left text-primary bg-white shadow-md items-center p-2
         hover:text-gray-500 hover:transform hover:scale-105

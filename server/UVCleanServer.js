@@ -36,7 +36,10 @@ const Userrole = require('./dataModels/Userrole');
 const DeleteUserCommand = require('./commands/UserCommand/DeleteUserCommand');
 const UpdateUserroleRightsCommand = require('./commands/UserCommand/UpdateUserroleRightsCommand');
 const AgendaScheduler = require('./schedule/agenda');
-const schedulerRoutes = require('./ExpressServer/routes/schedulerRoutes');
+const CreateEvent = require('./commands/Scheduler/CreateEvent');
+const DeleteEvent = require('./commands/Scheduler/DeleteEvent');
+const UpdateEvent = require('./commands/Scheduler/UpdateEvent');
+const TestEvent = require('./commands/Scheduler/TestEvent');
 
 const logger = MainLogger.child({ service: 'UVCleanServer' });
 
@@ -52,13 +55,13 @@ class UVCleanServer extends EventEmitter {
       logger.info(options.message);
     });
 
-    this.database = new MongoDBAdapter(`${config.database.uri}:${config.database.port}`,
-      config.database.database);
+    this.database = new MongoDBAdapter(`${global.config.database.uri}:${global.config.database.port}`,
+      global.config.database.database);
 
-    this.agenda = new AgendaScheduler(`mongodb://${config.database.uri}:${config.database.port}/uvclean-server`, this, this.database, this.mqttClient);
+    this.agenda = new AgendaScheduler(`mongodb://${global.config.database.uri}:${global.config.database.port}/uvclean-server`, this, this.database, this.mqttClient);
 
     this.express = new ExpressServer(this, this.database, this.agenda);
-    fs.writeFileSync(config.mqtt.secret, 'NQCNtEul3sEuOwMSRExMeh_RQ0iYD0USEemo00G4pCg=', { encoding: 'base64' });
+    fs.writeFileSync(global.config.mqtt.secret, 'NQCNtEul3sEuOwMSRExMeh_RQ0iYD0USEemo00G4pCg=', { encoding: 'base64' });
 
     CreateUserCommand.register(this.database);
     DeleteUserCommand.register(this.database);
@@ -68,6 +71,11 @@ class UVCleanServer extends EventEmitter {
     DeleteUserroleCommand.register(this.database);
     UpdateUserroleNameCommand.register(this.database);
     UpdateUserroleRightsCommand.register(this.database);
+
+    CreateEvent.register(this.database, this.agenda);
+    DeleteEvent.register(this.database, this.agenda);
+    UpdateEvent.register(this.database, this.agenda);
+    TestEvent.register(this.database, this.agenda);
   }
 
   async stopServer() {
@@ -89,7 +97,7 @@ class UVCleanServer extends EventEmitter {
 
       this.io = socketio(this.express.httpServer, {
         cors: {
-          origin: `http://${config.http.cors}`,
+          origin: `http://${global.config.http.cors}`,
           methods: ['GET', 'POST'],
         },
       });
@@ -139,7 +147,7 @@ class UVCleanServer extends EventEmitter {
 
         this.io.emit('databaseConnected');
 
-        await config.userrole.reduce(async (memo, userrole) => {
+        await global.config.userrole.reduce(async (memo, userrole) => {
           await memo;
           logger.info(`Checking Userrole ${userrole.userrolename} to exists in database.`);
           try {
@@ -165,7 +173,7 @@ class UVCleanServer extends EventEmitter {
           }
         }, undefined);
 
-        await Promise.all(config.user.map(async (user) => {
+        await Promise.all(global.config.user.map(async (user) => {
           logger.info(`Checking User ${user.username} to exists in database.`);
           try {
             await this.database.getUser(user.username);
@@ -198,10 +206,12 @@ class UVCleanServer extends EventEmitter {
           logger.info('Setting exists in database');
         } catch (error) {
           if (error.message === 'Setting does not exists') {
-            logger.info('Setting does not exists in database. Creating setting with %o', config.settings);
+            logger.info('Setting does not exists in database. Creating setting with %o', global.config.settings);
 
             const setting = new Settings('UVCServerSetting');
-            if (config.settings.defaultEngineLevel) setting.defaultEngineLevel = config.settings.defaultEngineLevel;
+            if (global.config.settings.defaultEngineLevel) {
+              setting.defaultEngineLevel = global.config.settings.defaultEngineLevel;
+            }
             await this.database.addSettings(setting);
             return;
           }
@@ -214,15 +224,15 @@ class UVCleanServer extends EventEmitter {
         this.io.emit('warn', { message: 'Database disconnected' });
       });
 
-      logger.info(`Trying to connect to: mqtt://${config.mqtt.broker}:${config.mqtt.port}`);
-      this.mqttClient = mqtt.connect(`mqtt://${config.mqtt.broker}:${config.mqtt.port}`);
+      logger.info(`Trying to connect to: mqtt://${global.config.mqtt.broker}:${global.config.mqtt.port}`);
+      this.mqttClient = mqtt.connect(`mqtt://${global.config.mqtt.broker}:${global.config.mqtt.port}`);
 
       // Register MQTT actions
-      if (config.mqtt.useEncryption) DeviceStateChanged.use(decrypt);
+      if (global.config.mqtt.useEncryption) DeviceStateChanged.use(decrypt);
       DeviceStateChanged.register(this, this.database, this.io, this.mqttClient);
 
       this.mqttClient.on('connect', async () => {
-        logger.info(`Connected to: mqtt://${config.mqtt.broker}:${config.mqtt.port}`);
+        logger.info(`Connected to: mqtt://${global.config.mqtt.broker}:${global.config.mqtt.port}`);
         this.io.emit('info', { message: 'MQTT Client connected' });
 
         this.agenda.startScheduler(this.mqttClient, this.io);
@@ -242,7 +252,7 @@ class UVCleanServer extends EventEmitter {
       });
 
       this.mqttClient.on('offline', async () => {
-        logger.info(`Disconnected from: mqtt://${config.mqtt.broker}:${config.mqtt.port}`);
+        logger.info(`Disconnected from: mqtt://${global.config.mqtt.broker}:${global.config.mqtt.port}`);
         this.io.emit('warn', { message: 'MQTT Client disconnected' });
       });
 

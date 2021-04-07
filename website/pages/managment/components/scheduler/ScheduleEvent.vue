@@ -17,6 +17,7 @@
           <h1 class="text-lg font-bold">{{scheduleEvent.name}}</h1>
         </div>
         <dropdownMenu
+          v-if="$root.$dataStore.user.userrole.rules.canEditScheduler.allowed"
           class="text-primary z-10 justify-self-end"
           :showIcon="true"
           :menuItems="[
