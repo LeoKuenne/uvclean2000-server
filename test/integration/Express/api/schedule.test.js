@@ -33,7 +33,8 @@ const mqtt = {
   },
 };
 
-const itSchedulerRuntime = () => ((process.env.SCHEDULERRUNTIME === true) ? it : it.skip);
+const itSchedulerRuntime = () => ((process.env.SCHEDULERRUNTIME === 'true') ? it : it.skip);
+console.log(process.env);
 
 describe('Express schedule route testing', () => {
   beforeAll(async () => {

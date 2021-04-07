@@ -130,7 +130,7 @@ describe('GroupChangeState command', () => {
     [true],
     [false],
   ])('changeState with prop engineState and value %s, true emits a second mqtt message for setting the current engineLevel, false does not', async (value, done) => {
-    config.mqtt.sendEngineLevelWhenOn = true;
+    global.config.mqtt.sendEngineLevelWhenOn = true;
     const io = new EventEmitter();
     const server = new EventEmitter();
     const mqtt = {
@@ -161,16 +161,18 @@ describe('GroupChangeState command', () => {
     };
 
     io.on('group_stateChanged', (options) => {
-      expect(mqtt.publish.mock.calls).toEqual((value) ? [
-        ['UVClean/1/changeState/engineState', 'true'],
-        ['UVClean/2/changeState/engineState', 'true'],
-        ['UVClean/1/changeState/engineLevel', '1'],
-        ['UVClean/2/changeState/engineLevel', '1'],
-      ] : [
-        ['UVClean/1/changeState/engineState', 'false'],
-        ['UVClean/2/changeState/engineState', 'false'],
-      ]);
-      done();
+      setTimeout(() => {
+        expect(mqtt.publish.mock.calls).toEqual((value) ? [
+          ['UVClean/1/changeState/engineState', 'true'],
+          ['UVClean/2/changeState/engineState', 'true'],
+          ['UVClean/1/changeState/engineLevel', '1'],
+          ['UVClean/2/changeState/engineLevel', '1'],
+        ] : [
+          ['UVClean/1/changeState/engineState', 'false'],
+          ['UVClean/2/changeState/engineState', 'false'],
+        ]);
+        done();
+      }, 1100);
     });
 
     server.on('error', (error) => done(error.error));

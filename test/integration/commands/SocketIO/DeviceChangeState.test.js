@@ -127,7 +127,7 @@ describe('DeviceChangeState Module', () => {
     [true],
     [false],
   ])('changeState emits a second mqtt message after sendEndingeLevenWhenOnDelay for engineLevel if sendEndingeLevenWhenOn is true when device is turning on, device state is %s', async (value, done) => {
-    config.mqtt.sendEngineLevelWhenOn = true;
+    global.config.mqtt.sendEngineLevelWhenOn = true;
     const io = new EventEmitter();
     const ioSocket = new EventEmitter();
     const mqtt = {
@@ -163,7 +163,7 @@ describe('DeviceChangeState Module', () => {
         } catch (error) {
           done(error);
         }
-      }, config.mqtt.sendEngineLevelWhenOnDelay * 1000);
+      }, global.config.mqtt.sendEngineLevelWhenOnDelay * 1000);
     });
 
     server.on('error', (e) => {
@@ -177,7 +177,7 @@ describe('DeviceChangeState Module', () => {
     [true],
     [false],
   ])('changeState does not emit an engineLevel message if sendEngineLevelWhenOn is false and device is turning on, device state is %s', async (value, done) => {
-    config.mqtt.sendEngineLevelWhenOn = false;
+    global.config.mqtt.sendEngineLevelWhenOn = false;
     const io = new EventEmitter();
     const ioSocket = new EventEmitter();
     const mqtt = {
@@ -202,9 +202,7 @@ describe('DeviceChangeState Module', () => {
 
     io.on('info', () => {
       try {
-        expect(mqtt.publish.mock.calls).toEqual((value) ? [
-          ['UVClean/1/changeState/engineState', prop.newValue],
-        ] : [
+        expect(mqtt.publish.mock.calls).toEqual([
           ['UVClean/1/changeState/engineState', prop.newValue],
         ]);
         done();

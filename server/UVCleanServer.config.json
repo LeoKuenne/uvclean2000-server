@@ -135,12 +135,12 @@
     },
     "mqtt": {
       "secret": "C:/workspace_nodejs/uvclean2000-server/server/ssl/fernetSecret",
-      "useEncryption": false,
+      "useEncryption": true,
       "useTTL": true,
       "ttl": 60,
       "broker": "127.0.0.1",
       "port": 1883,
-      "sendEngineLevelWhenOn": false,
+      "sendEngineLevelWhenOn": true,
       "sendEngineLevelWhenOnDelay": 2
     },
     "database": {

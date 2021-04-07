@@ -212,6 +212,7 @@ class UVCleanServer extends EventEmitter {
             if (global.config.settings.defaultEngineLevel) {
               setting.defaultEngineLevel = global.config.settings.defaultEngineLevel;
             }
+
             await this.database.addSettings(setting);
             return;
           }

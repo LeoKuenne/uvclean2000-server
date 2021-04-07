@@ -18,7 +18,7 @@ const server = new EventEmitter();
 const io = new EventEmitter();
 const mqtt = {};
 
-const itSchedulerRuntime = () => ((process.env.SCHEDULERRUNTIME === true) ? it : it.skip);
+const itSchedulerRuntime = () => ((process.env.SCHEDULERRUNTIME === 'true') ? it : it.skip);
 
 beforeAll(async () => {
   database = new MongoDBAdapter(global.__MONGO_URI__.replace('mongodb://', ''), '');

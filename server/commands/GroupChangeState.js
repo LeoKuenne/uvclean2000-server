@@ -1,5 +1,5 @@
 const MainLogger = require('../Logger.js').logger;
-const MQTTGroupChangeState = require('./MQTTCommands/MQTTGroupChangeState');
+const MQTTDeviceChangeState = require('./MQTTCommands/MQTTDeviceChangeState');
 const UVCGroup = require('../dataModels/UVCGroup');
 
 const logger = MainLogger.child({ service: 'GroupChangeStateCommand' });
@@ -47,7 +47,19 @@ async function execute(db, io, mqtt, groupID, propertie, newValue) {
   dbGroup = await UVCGroup.updateGroupDevicesWithOtherState(groupID.toString(), propertie,
     db, io);
 
-  await MQTTGroupChangeState.execute(mqtt, dbGroup, propertie, newValue);
+  await Promise.all(dbGroup.devices.map(async (device) => {
+    await MQTTDeviceChangeState.execute(mqtt, device.serialnumber, propertie, newValue);
+  }));
+
+  if (global.config.mqtt.sendEngineLevelWhenOn && propertie === 'engineState' && newValue === 'true') {
+    dbGroup.devices.map((device) => {
+      logger.debug('Device is turning on, sending extra changeState engineLevel');
+      setTimeout(async () => {
+        await MQTTDeviceChangeState.execute(mqtt, device.serialnumber, 'engineLevel', device.engineLevel.toString());
+      }, global.config.mqtt.sendEngineLevelWhenOnDelay * 1000);
+      return device;
+    });
+  }
 
   io.emit('group_stateChanged', {
     id: groupID,

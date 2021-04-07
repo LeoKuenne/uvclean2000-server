@@ -30,7 +30,7 @@ describe.each([
 ])('SocketIO AcknowledgeDeviceAlarm command unit sends', (encryption) => {
   describe((encryption) ? 'With encryption' : 'Without encryption', () => {
     beforeAll(() => {
-      config.mqtt.useEncryption = encryption;
+      global.config.mqtt.useEncryption = encryption;
     });
 
     it.each([
