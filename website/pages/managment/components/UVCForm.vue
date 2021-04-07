@@ -11,7 +11,7 @@
             sm:w-11/12 sm:max-w-3xl sm:h-auto
             text-color space-y-2 whitespace-nowrap bg-white p-3 rounded"
           @click.stop>
-          <div class="w-5/6 m-auto my-auto">
+          <div class="w-5/6 m-auto">
             <h1 class="text-xl font-bold pb-5 pt-2">{{ title }}</h1>
             <h1 class="font-bold pb-5 text-red-500 whitespace-pre-line"
               :class="[(errorMessage !== '') ? 'visible' : 'hidden']">
